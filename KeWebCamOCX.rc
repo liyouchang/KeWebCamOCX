@@ -1,0 +1,224 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(中华人民共和国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "1 TYPELIB ""KeWebCamOCX.tlb""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080403a8"
+        BEGIN
+            VALUE "CompanyName", "Kaer"
+            VALUE "FileDescription", "Kaer web camera activex"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "KeWebCamOCX.ocx"
+            VALUE "LegalCopyright", "(C)2013 Kaer。保留所有权利。"
+            VALUE "OriginalFilename", "KeWebCamOCX.ocx"
+            VALUE "ProductName", "KeWebCam"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 936
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_KEWEBCAMOCX         BITMAP                  "KeWebCamOCXCtrl.bmp"
+IDB_DIVLOGO             BITMAP                  "res\\DivLogo.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PROPPAGE_KEWEBCAMOCX DIALOGEX 0, 0, 269, 92
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+END
+
+IDD_DIALOG_PANNEL DIALOGEX 0, 0, 305, 204
+STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE
+EXSTYLE WS_EX_CLIENTEDGE | WS_EX_APPWINDOW
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_CAMERA0,"Static",SS_BLACKRECT | SS_NOTIFY,7,7,48,43
+    CONTROL         "",IDC_CAMERA1,"Static",SS_BLACKFRAME | SS_NOTIFY,63,7,48,43
+    CONTROL         "",IDC_CAMERA2,"Static",SS_BLACKFRAME | SS_NOTIFY,119,7,48,43
+    CONTROL         "",IDC_CAMERA4,"Static",SS_BLACKFRAME | SS_NOTIFY,7,56,48,43
+    CONTROL         "",IDC_CAMERA5,"Static",SS_BLACKFRAME | SS_NOTIFY,63,56,48,43
+    CONTROL         "",IDC_CAMERA6,"Static",SS_BLACKFRAME | SS_NOTIFY,119,56,48,43
+    CONTROL         "",IDC_CAMERA7,"Static",SS_BLACKFRAME | SS_NOTIFY,174,56,48,43
+    CONTROL         "",IDC_CAMERA8,"Static",SS_BLACKFRAME | SS_NOTIFY,7,105,48,43
+    CONTROL         "",IDC_CAMERA9,"Static",SS_BLACKFRAME | SS_NOTIFY,63,105,48,43
+    CONTROL         "",IDC_CAMERA10,"Static",SS_BLACKFRAME | SS_NOTIFY,119,105,48,43
+    CONTROL         "",IDC_CAMERA11,"Static",SS_BLACKFRAME | SS_NOTIFY,174,105,48,43
+    CONTROL         "",IDC_CAMERA12,"Static",SS_BLACKFRAME | SS_NOTIFY,7,154,48,43
+    CONTROL         "",IDC_CAMERA13,"Static",SS_BLACKFRAME | SS_NOTIFY,63,154,48,43
+    CONTROL         "",IDC_CAMERA14,"Static",SS_BLACKFRAME | SS_NOTIFY,119,154,48,43
+    CONTROL         "",IDC_CAMERA15,"Static",SS_BLACKFRAME | SS_NOTIFY,174,154,48,43
+    CONTROL         "",IDC_CAMERA3,"Static",SS_BLACKFRAME | SS_NOTIFY,174,7,48,43
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_PROPPAGE_KEWEBCAMOCX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 262
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 85
+    END
+
+    IDD_DIALOG_PANNEL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 298
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 197
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// HTML
+//
+
+IDR_HTML_WEBCAMPANNEL   HTML                    "WebCamPannel.htm"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU_CAMSELECT MENU 
+BEGIN
+    POPUP "Select Camera"
+    BEGIN
+        MENUITEM "我们",                          ID_MENU_SAVEAS
+        MENUITEM "Save Image All",              ID_MENU_SAVEALL
+        MENUITEM SEPARATOR
+        MENUITEM "Print Image",                 ID_MENU_PRINT_IMAGE
+        MENUITEM SEPARATOR
+        MENUITEM "Reset Channel",               ID_MENU_RESET
+        MENUITEM "Reset Channel ALL",           ID_MENU_RESET_ALL
+        MENUITEM SEPARATOR
+        MENUITEM "Show Watermark",              32783
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_KEWEBCAMOCX         "KeWebCamOCX Control"
+    IDS_KEWEBCAMOCX_PPG     "KeWebCamOCX Property Page"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_KEWEBCAMOCX_PPG_CAPTION "常规"
+END
+
+#endif    // 中文(中华人民共和国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+1 TYPELIB "KeWebCamOCX.tlb"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

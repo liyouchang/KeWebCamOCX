@@ -1,0 +1,51 @@
+// KeWebCamOCX.idl : ActiveX 控件项目的类型库源。
+
+// 此文件将由 MIDL 编译器工具处理以
+// 产生类型库(KeWebCamOCX.tlb)，该类型库将成为
+// KeWebCamOCX.ocx.
+
+#include <olectl.h>
+#include <idispids.h>
+
+[ uuid(FF2B2757-E552-4DA1-9E3C-93BC40EF7EC3), version(1.0),
+  helpfile("KeWebCamOCX.hlp"),
+  helpstring("KeWebCamOCX ActiveX 控件模块"),
+  control ]
+library KeWebCamOCXLib
+{
+	importlib(STDOLE_TLB);
+
+	//  CKeWebCamOCXCtrl 的主调度接口
+
+	[ uuid(DDC0C3D6-E09B-493D-8C6C-12A9916C60E1),
+	  helpstring("KeWebCamOCX Control 的调度接口")]
+	dispinterface _DKeWebCamOCX
+	{
+		properties:
+		methods:
+			[id(1), helpstring("分屏方法")] void SetDivision(LONG nDivision);
+	};
+
+	//  CKeWebCamOCXCtrl 的事件调度接口
+
+	[ uuid(F4C17E60-A7C0-44FE-98B3-D7DEACE50252),
+	  helpstring("KeWebCamOCX Control 的事件接口") ]
+	dispinterface _DKeWebCamOCXEvents
+	{
+		properties:
+			//  事件接口没有任何属性
+
+		methods:
+	};
+
+	//  CKeWebCamOCXCtrl 的类信息
+
+	[ uuid(F4418F4B-4A6B-4A93-948F-332025F395E8), licensed,
+	  helpstring("KeWebCamOCX Control"), control ]
+	coclass KeWebCamOCX
+	{
+		[default] dispinterface _DKeWebCamOCX;
+		[default, source] dispinterface _DKeWebCamOCXEvents;
+	};
+
+};

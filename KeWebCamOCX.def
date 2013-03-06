@@ -1,0 +1,9 @@
+; KeWebCamOCX.def : 定义模块参数。
+
+LIBRARY      "KeWebCamOCX.OCX"
+
+EXPORTS
+	DllCanUnloadNow     PRIVATE
+	DllGetClassObject   PRIVATE
+	DllRegisterServer   PRIVATE
+	DllUnregisterServer PRIVATE
