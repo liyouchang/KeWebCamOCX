@@ -26,11 +26,11 @@
 #ifndef _WIN64
 
 #ifndef _AFX_NO_DB_SUPPORT
-#include <afxdb.h>                      // MFC ODBC 数据库类
+//#include <afxdb.h>                      // MFC ODBC 数据库类
 #endif // _AFX_NO_DB_SUPPORT
 
 #ifndef _AFX_NO_DAO_SUPPORT
-#include <afxdao.h>                     // MFC DAO 数据库类
+//#include <afxdao.h>                     // MFC DAO 数据库类
 #endif // _AFX_NO_DAO_SUPPORT
 
 #endif // _WIN64

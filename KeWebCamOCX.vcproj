@@ -22,6 +22,7 @@
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
+			UseOfATL="0"
 			CharacterSet="1"
 			>
 			<Tool
@@ -47,7 +48,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;SOCKHANDLE_USE_OVERLAPPED"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -70,7 +71,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="../bin/cximagecrtdu.lib"
+				AdditionalDependencies="./cximagecrtdu.lib ./AVPlay.lib"
 				OutputFile="$(OutDir)\$(ProjectName).ocx"
 				LinkIncremental="2"
 				ModuleDefinitionFile=".\KeWebCamOCX.def"
@@ -135,7 +136,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;SOCKHANDLE_USE_OVERLAPPED;PLATFORM_HAS_INETFUNC"
 				MinimalRebuild="false"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -158,6 +159,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
+				AdditionalDependencies="../bin/cximagecrtdu.lib"
 				OutputFile="$(OutDir)\$(ProjectName).ocx"
 				LinkIncremental="1"
 				ModuleDefinitionFile=".\KeWebCamOCX.def"
@@ -225,10 +227,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\OneCamera.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -247,10 +245,6 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\WebCamPannel.cpp"
-				>
 			</File>
 		</Filter>
 		<Filter
@@ -291,10 +285,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\OneCamera.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Resource.h"
 				>
 			</File>
@@ -304,10 +294,6 @@
 			</File>
 			<File
 				RelativePath=".\targetver.h"
-				>
-			</File>
-			<File
-				RelativePath=".\WebCamPannel.h"
 				>
 			</File>
 		</Filter>
@@ -330,6 +316,66 @@
 			</File>
 			<File
 				RelativePath=".\KeWebCamOCXCtrl.bmp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Communication"
+			>
+			<File
+				RelativePath=".\CmdSocket.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CmdSocket.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SocketClientImpl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SocketHandle.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SocketHandle.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Play"
+			>
+			<File
+				RelativePath=".\AVPlay.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MyAVPlayer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MyAVPlayer.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Dlg"
+			>
+			<File
+				RelativePath=".\OneCamera.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\OneCamera.h"
+				>
+			</File>
+			<File
+				RelativePath=".\WebCamPannel.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\WebCamPannel.h"
 				>
 			</File>
 		</Filter>

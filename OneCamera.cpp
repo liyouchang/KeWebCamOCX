@@ -32,8 +32,8 @@ COneCamera::COneCamera()
 	m_nChannelLive	= 0;
 	m_nAviIndex		= 0;
 
-	menu.LoadMenu(IDR_MENU_CAMSELECT);
-
+	//menu.LoadMenu(IDR_MENU_CAMSELECT);
+	menu.LoadMenu(IDR_MENU1);
 	m_CamRef.Brightness	= 0;
 	m_CamRef.Hue		= 0;
 	m_CamRef.Contrast	= 128;
@@ -60,13 +60,15 @@ BEGIN_MESSAGE_MAP(COneCamera, CStatic)
 	ON_WM_LBUTTONDBLCLK()
 	ON_WM_RBUTTONDOWN()
 	ON_COMMAND(ID_MENU_SAVEAS, OnMenuSaveas)
-	ON_COMMAND(ID_MENU_SAVEALL, OnMenuSaveall)
 	ON_COMMAND(ID_MENU_RESET, OnMenuResetChannel)
 	ON_COMMAND(ID_MENU_RESET_ALL, OnMenuResetAll)
-	ON_COMMAND(ID_MENU_PRINT_IMAGE, OnMenuPrintImage)
 	ON_WM_ERASEBKGND()
 	ON_COMMAND(ID_MENU_SHOW_WATERMARK, OnMenuShowWatermark)
+	
 	//}}AFX_MSG_MAP
+	ON_COMMAND(ID_MENU_PLAY, &COneCamera::OnMenuPlay)
+	ON_COMMAND(ID_MENU_SLOW, &COneCamera::OnMenuSlow)
+	ON_COMMAND(ID_MENU_FAST, &COneCamera::OnMenuFast)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -300,69 +302,36 @@ void COneCamera::MoveWindows(CRect rect, BOOL Visible)
 
 void COneCamera::OnRButtonDown(UINT nFlags, CPoint point) 
 {
-	TCHAR			menu_string1[32];
-	TCHAR			menu_string2[32];
-	TCHAR			menu_string3[32];
-	TCHAR			menu_string4[32];
+		CURSORINFO ci;
+		CString ciInfo;
+		ci.cbSize = sizeof(CURSORINFO);
 	CRect			rect;
-
 	GetWindowRect(rect);
-
 	int x = rect.TopLeft().x + point.x;
 	int y = rect.TopLeft().y + point.y;
-
 	TRACE(TEXT("menu x= %d, y=%d\n"), x, y);
+	GetCursorInfo(&ci);
 
-	memset(&menu_string1, 0x00, sizeof(menu_string1));
-	memset(&menu_string2, 0x00, sizeof(menu_string2));
-	memset(&menu_string3, 0x00, sizeof(menu_string3));
-	memset(&menu_string3, 0x00, sizeof(menu_string4));
-
-//	sprintf(menu_string, "Save \"CamNo %02d\" Image...", m_pOwner->m_camarray[m_nCamNo].m_nCamDisp+1);
-	_stprintf(menu_string1, _T("Save \"CamNo %02d\" Image..."), m_nChannel+1);
-	_stprintf(menu_string2, TEXT("Print \"CamNo %02d\" Image..."), m_nChannel+1);
-	_stprintf(menu_string3, TEXT("Reset \"CamNo %02d\" Channel"), m_nChannel+1);
-
-	if(m_pOwner->m_nWatermark)
-		_stprintf(menu_string4, TEXT("Hide Watermark"));
-	else
-		_stprintf(menu_string4, TEXT("Show Watermark"));
-	
-	UINT new_id1 = menu.GetSubMenu(0)->GetMenuItemID(0);
-	menu.GetSubMenu(0)->ModifyMenu(ID_MENU_SAVEAS, MF_BYCOMMAND|MF_STRING, new_id1, (LPCTSTR)(LPSTR)menu_string1);
-
-	UINT new_id2 = menu.GetSubMenu(0)->GetMenuItemID(3);
-	menu.GetSubMenu(0)->ModifyMenu(ID_MENU_PRINT_IMAGE, MF_BYCOMMAND|MF_STRING, new_id2, (LPCTSTR)(LPSTR)menu_string2);
-
-	UINT new_id3 = menu.GetSubMenu(0)->GetMenuItemID(5);
-	menu.GetSubMenu(0)->ModifyMenu(ID_MENU_RESET, MF_BYCOMMAND|MF_STRING, new_id3, (LPCTSTR)(LPSTR)menu_string3);
-
-	UINT new_id4 = menu.GetSubMenu(0)->GetMenuItemID(8);
-	menu.GetSubMenu(0)->ModifyMenu(ID_MENU_SHOW_WATERMARK, MF_BYCOMMAND|MF_STRING, new_id4, (LPCTSTR)(LPSTR)menu_string4);
-
+	ciInfo.Format(TEXT("The curser show is %d\n"),ci.flags);
+	TRACE(ciInfo);
 	menu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
 
+	GetCursorInfo(&ci);
+	
+	ciInfo.Format(TEXT("The curser show is %d\n"),ci.flags);
+	TRACE(ciInfo);
 	CStatic::OnRButtonDown(nFlags, point);
+	
 }
 
 
 void COneCamera::OnMenuResetChannel()
 {
 	m_pOwner->m_Imagearray[m_nCamNo].Destroy();
-	m_pOwner->m_Imagearray[m_nCamNo].Copy(*m_pOwner->temp_image);
+	m_pOwner->m_Imagearray[m_nCamNo].Copy(m_pOwner->temp_image);
 	m_pOwner->m_camarray[m_nCamNo].m_bLoss = TRUE;
 	m_pOwner->m_camarray[m_nCamNo].m_strDateTime.Empty();
 	m_pOwner->m_camarray[m_nCamNo].Invalidate();
-}
-
-void COneCamera::OnMenuPrintImage() 
-{
-//	m_pOwner->m_nSelectCamera = m_nChannel;
-	m_pOwner->m_nSelectCamera = m_nCamNo;
-
-	//CDlgPrint	dlgPrint;
-	
-//	dlgPrint.DoModal();		
 }
 
 void COneCamera::OnMenuShowWatermark() 
@@ -377,7 +346,7 @@ void COneCamera::OnMenuResetAll()
 	for(int i = 0; i < CAM_MAX; i++)
 	{
 		m_pOwner->m_Imagearray[i].Destroy();
-		m_pOwner->m_Imagearray[i].Copy(*m_pOwner->temp_image);
+		m_pOwner->m_Imagearray[i].Copy(m_pOwner->temp_image);
 		m_pOwner->m_camarray[i].m_bLoss = TRUE;
 		m_pOwner->m_camarray[i].m_strDateTime.Empty();
 		m_pOwner->m_camarray[i].Invalidate();
@@ -502,4 +471,20 @@ void COneCamera::ResetAVI()
 //	}
 
 	//m_bSaveToAVI = TRUE;
+}
+
+
+void COneCamera::OnMenuPlay()
+{
+	m_AVIPlayer.PlayFile(this->GetSafeHwnd());
+}
+
+void COneCamera::OnMenuSlow()
+{
+	// TODO: 在此添加命令处理程序代码
+}
+
+void COneCamera::OnMenuFast()
+{
+	// TODO: 在此添加命令处理程序代码
 }

@@ -28,7 +28,7 @@ public:
 	int	m_nActiveCamera;
 	int	m_nToggledDivision;
 	int	m_nWatermark;
-	CxImage*	temp_image;
+	CxImage 	temp_image;
 	int	m_nSelectCamera;
 
 	CClientDemon	demon;

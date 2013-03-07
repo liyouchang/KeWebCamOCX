@@ -134,6 +134,13 @@ BEGIN
     CONTROL         "",IDC_CAMERA3,"Static",SS_BLACKFRAME | SS_NOTIFY,174,7,48,43
 END
 
+IDD_DLG_PLAYCONTROL DIALOGEX 0, 0, 359, 77
+STYLE DS_SETFONT | DS_MODALFRAME | WS_CHILD | WS_CAPTION
+CAPTION "Play Control"
+FONT 9, "宋体", 400, 0, 0x0
+BEGIN
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -158,6 +165,11 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 197
     END
+
+    IDD_DLG_PLAYCONTROL, DIALOG
+    BEGIN
+        RIGHTMARGIN, 185
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -178,15 +190,28 @@ IDR_MENU_CAMSELECT MENU
 BEGIN
     POPUP "Select Camera"
     BEGIN
-        MENUITEM "我们",                          ID_MENU_SAVEAS
-        MENUITEM "Save Image All",              ID_MENU_SAVEALL
+        MENUITEM "播放",                          ID_MENU_PLAY
+        MENUITEM "快进",                          ID_MENU_FAST
+        MENUITEM "慢放",                          ID_MENU_SLOW
         MENUITEM SEPARATOR
-        MENUITEM "Print Image",                 ID_MENU_PRINT_IMAGE
+        MENUITEM "抓拍",                          ID_MENU_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Reset Channel",               ID_MENU_RESET
-        MENUITEM "Reset Channel ALL",           ID_MENU_RESET_ALL
+        MENUITEM "关闭",                          ID_MENU_RESET
+        MENUITEM "全部关闭",                        ID_MENU_RESET_ALL
         MENUITEM SEPARATOR
-        MENUITEM "Show Watermark",              32783
+        MENUITEM "显示水印",                        ID_MENU_SHOW_WATERMARK
+    END
+    POPUP "1"
+    BEGIN
+        MENUITEM "2",                           ID_1_2
+    END
+END
+
+IDR_MENU1 MENU 
+BEGIN
+    POPUP "1"
+    BEGIN
+        MENUITEM "2",                           ID_1_3
     END
 END
 

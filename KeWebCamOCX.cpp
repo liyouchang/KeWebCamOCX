@@ -3,9 +3,9 @@
 #include "stdafx.h"
 #include "KeWebCamOCX.h"
 
-#include "comcat.h"
-#include "strsafe.h"
-#include "objsafe.h"
+#include <comcat.h>
+#include <strsafe.h>
+#include <objsafe.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

@@ -124,7 +124,7 @@ void CWebCamPannel::SetDivision( int nDivision, int nRotation /*= -1*/, BOOL fla
 			if(m_camarray[m_camarray[i].m_nChannelLive].m_nChannel != i)
 			{
 				m_Imagearray[i].Destroy();
-				m_Imagearray[i].Copy(*temp_image);
+				m_Imagearray[i].Copy(temp_image);
 				m_camarray[i].m_bLoss = TRUE;
 				m_camarray[i].Invalidate();
 			}
@@ -349,18 +349,13 @@ BOOL CWebCamPannel::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  在此添加额外的初始化
-
 	HBITMAP		hBitmap;
 	CBitmap		bmpObj;
 
 	bmpObj.LoadBitmap(IDB_DIVLOGO);
 	hBitmap = (HBITMAP)bmpObj.m_hObject;
-
-	temp_image = NULL;
-	temp_image = new CxImage;
-	//	temp_image->Load(IDB_DIVLOGO, CXIMAGE_FORMAT_BMP);
-	temp_image->CreateFromHBITMAP(hBitmap);
+	
+	temp_image.CreateFromHBITMAP(hBitmap);
 
 	for(int i = 0; i < CAM_MAX; i++)
 	{
@@ -380,15 +375,14 @@ BOOL CWebCamPannel::OnInitDialog()
 
 		m_camarray[i].m_strDateTime.Empty();
 		m_camarray[i].m_bFull		= FALSE;
-		//		m_Imagearray[i].Load(DIVLOG, CXIMAGE_FORMAT_BMP);
-		m_Imagearray[i].Copy(*temp_image);
+		m_Imagearray[i].Copy(temp_image);
 	}
 	if(theApp.m_nMAXCHANNEL == DIV_DEFAULT_CH8)
 		SetDivision(DIV_DEFAULT_CH9, -1);
 	else
 		SetDivision(theApp.m_nMAXCHANNEL, -1);
 
-	MoveWindow(0, 0, 800, 600, TRUE);
+	//MoveWindow(0, 0, 800, 600, TRUE);
 
 	//m_nTimer		= SetTimer(0, 1000, 0);
 //	m_nFrameCount	= 0;
@@ -404,9 +398,11 @@ BOOL CWebCamPannel::OnInitDialog()
 
 void CWebCamPannel::OnDestroy()
 {
+	
+
 	CDialog::OnDestroy();
 
-	_SAFE_DELETE(temp_image);
+	
 }
 
 void CWebCamPannel::GetCameraRect( int nMode )
@@ -508,6 +504,7 @@ void CWebCamPannel::OnPaint()
 	// TODO: 在此处添加消息处理程序代码
 	// 不为绘图消息调用 CDialog::OnPaint()
 
+
 	DrawAllCameraImages(FnDivision);
-	// CDialog::OnPaint();
+	CDialog::OnPaint();
 }

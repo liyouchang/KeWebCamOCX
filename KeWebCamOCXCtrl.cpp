@@ -179,7 +179,7 @@ void CKeWebCamOCXCtrl::OnDraw(
 	//pdc->Ellipse(rcBounds);
 
 	m_pannel.MoveWindow(rcBounds,TRUE);
-
+	
 
 }
 
@@ -216,8 +216,8 @@ int CKeWebCamOCXCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (COleControl::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
-	// TODO:  在此添加您专用的创建代码
 	m_pannel.Create(IDD_DIALOG_PANNEL,this);
+	
 
 	return 0;
 }

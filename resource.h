@@ -5,6 +5,7 @@
 #define IDS_KEWEBCAMOCX                 1
 #define IDB_KEWEBCAMOCX                 1
 #define IDS_KEWEBCAMOCX_PPG             2
+#define IDD_DLG_PLAYCONTROL             101
 #define IDR_HTML_WEBCAMPANNEL           103
 #define IDS_KEWEBCAMOCX_PPG_CAPTION     200
 #define IDD_PROPPAGE_KEWEBCAMOCX        200
@@ -19,6 +20,7 @@
 #define IDB_DIVLOGO                     205
 #define IDC_CAMERA5                     206
 #define IDC_CAMERA6                     207
+#define IDR_MENU1                       207
 #define IDC_CAMERA7                     208
 #define IDC_CAMERA8                     209
 #define IDC_CAMERA9                     210
@@ -45,13 +47,19 @@
 #define ID_MENU_RESET_ALL               32782
 #define ID_MENU_SHOW_WATERMARK          32783
 #define ID_MENU_SAVEAS                  32784
+#define ID_MENU_PLAY                    32785
+#define ID_Menu                         32786
+#define ID_MENU_SLOW                    32787
+#define ID_MENU_FAST                    32788
+#define ID_1_2                          32789
+#define ID_1_3                          32790
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        206
-#define _APS_NEXT_COMMAND_VALUE         32785
+#define _APS_NEXT_RESOURCE_VALUE        208
+#define _APS_NEXT_COMMAND_VALUE         32791
 #define _APS_NEXT_CONTROL_VALUE         218
 #define _APS_NEXT_SYMED_VALUE           105
 #endif

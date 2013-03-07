@@ -9,6 +9,7 @@
 
 #include "../CxImage/ximage.h"
 #include "../CxImage/xfile.h"
+#include "MyAVPlayer.h"
 
 #define FLOAT_CAM_FONT_COLOR     RGB(0, 0, 0)//clWhite
 #define FLOAT_CAM_FRAME_COLOR    RGB(128, 128, 128)//clGray
@@ -49,6 +50,7 @@ public:
 	CWebCamPannel*		m_pOwner;
 	CRect				m_defaultArea;
 	CPoint				m_DownPos;
+	CMyAVPlayer m_AVIPlayer;
 	BOOL				m_bPress;
 	int					m_nTag;
     int					m_nCamNo;	
@@ -113,11 +115,17 @@ protected:
 	afx_msg void OnMenuSaveall();
 	afx_msg void OnMenuResetChannel();
 	afx_msg void OnMenuResetAll();
-	afx_msg void OnMenuPrintImage();
+
 	afx_msg void OnMenuShowWatermark();
+
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()
+
+public:
+	afx_msg void OnMenuPlay();
+	afx_msg void OnMenuSlow();
+	afx_msg void OnMenuFast();
 };
 
 /////////////////////////////////////////////////////////////////////////////
