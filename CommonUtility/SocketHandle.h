@@ -130,14 +130,14 @@ public:
      * @return true if object is equal
      */
     bool    operator==(const SockAddrIn& sin) const { return IsEqual( sin ); }
-
+	
     /**
      * Not Equal operator
      * @param sin reference object to test
      * @return true if object is different
      */
     bool    operator!=(const SockAddrIn& sin) const { return !IsEqual( sin ); }
-
+	
     /**
      * SOCKADDR conversion. Return SOCKADDR of this object.
      */

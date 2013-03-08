@@ -160,6 +160,8 @@ int CKeWebCamOCXApp::ExitInstance()
 
 STDAPI DllRegisterServer(void)
 {
+	HRESULT hr;    // HResult used by Safety Functions
+
 	AFX_MANAGE_STATE(_afxModuleAddrThis);
 
 	if (!AfxOleRegisterTypeLib(AfxGetInstanceHandle(), _tlid))
@@ -167,6 +169,25 @@ STDAPI DllRegisterServer(void)
 
 	if (!COleObjectFactoryEx::UpdateRegistryAll(TRUE))
 		return ResultFromScode(SELFREG_E_CLASS);
+	// Mark the control as safe for initializing.
+
+	hr = CreateComponentCategory(CATID_SafeForInitializing, L"Controls safely initializable from persistent data!");
+	if (FAILED(hr))
+		return hr;
+
+	hr = RegisterCLSIDInCategory(CLSID_SafeItem, CATID_SafeForInitializing);
+	if (FAILED(hr))
+		return hr;
+
+	// Mark the control as safe for scripting.
+
+	hr = CreateComponentCategory(CATID_SafeForScripting, L"Controls safely  scriptable!");
+	if (FAILED(hr))
+		return hr;
+
+	hr = RegisterCLSIDInCategory(CLSID_SafeItem, CATID_SafeForScripting);
+	if (FAILED(hr))
+		return hr;
 
 	return NOERROR;
 }
@@ -177,6 +198,8 @@ STDAPI DllRegisterServer(void)
 
 STDAPI DllUnregisterServer(void)
 {
+	HRESULT hr;    // HResult used by Safety Functions
+
 	AFX_MANAGE_STATE(_afxModuleAddrThis);
 
 	if (!AfxOleUnregisterTypeLib(_tlid, _wVerMajor, _wVerMinor))
@@ -184,6 +207,18 @@ STDAPI DllUnregisterServer(void)
 
 	if (!COleObjectFactoryEx::UpdateRegistryAll(FALSE))
 		return ResultFromScode(SELFREG_E_CLASS);
+
+	// Remove entries from the registry.
+
+	hr=UnRegisterCLSIDInCategory(CLSID_SafeItem, 
+		CATID_SafeForInitializing);
+	if (FAILED(hr))
+		return hr;
+
+	hr=UnRegisterCLSIDInCategory(CLSID_SafeItem, 
+		CATID_SafeForScripting);
+	if (FAILED(hr))
+		return hr;
 
 	return NOERROR;
 }

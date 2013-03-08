@@ -48,6 +48,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="LogModule"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;SOCKHANDLE_USE_OVERLAPPED"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -71,7 +72,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="./cximagecrtdu.lib ./AVPlay.lib"
+				AdditionalDependencies="../bin/cximagecrtdu.lib ../bin/AVPlay.lib ../bin/log4cplusUD.lib"
 				OutputFile="$(OutDir)\$(ProjectName).ocx"
 				LinkIncremental="2"
 				ModuleDefinitionFile=".\KeWebCamOCX.def"
@@ -331,15 +332,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SocketClientImpl.h"
+				RelativePath=".\KeMsg.h"
 				>
 			</File>
 			<File
-				RelativePath=".\SocketHandle.cpp"
+				RelativePath=".\SocketThreadHandler.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SocketHandle.h"
+				RelativePath=".\SocketThreadHandler.h"
 				>
 			</File>
 		</Filter>
@@ -376,6 +377,66 @@
 			</File>
 			<File
 				RelativePath=".\WebCamPannel.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="CommonUtility"
+			>
+			<File
+				RelativePath=".\CommonUtility\CommonFunctions.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CommonUtility\CommonFunctions.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CommonUtility\SimpleThreadBase.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CommonUtility\SimpleThreadBase.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CommonUtility\SocketClientImpl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CommonUtility\SocketHandle.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CommonUtility\SocketHandle.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CommonUtility\TypedFifo.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="LogModule"
+			>
+			<File
+				RelativePath=".\LogModule\inifile.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\LogModule\inifile.h"
+				>
+			</File>
+			<File
+				RelativePath=".\LogModule\LogModule.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\LogModule\LogModule.h"
+				>
+			</File>
+			<File
+				RelativePath=".\LogModule\tstdlibs.h"
 				>
 			</File>
 		</Filter>

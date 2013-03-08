@@ -33,7 +33,7 @@ COneCamera::COneCamera()
 	m_nAviIndex		= 0;
 
 	//menu.LoadMenu(IDR_MENU_CAMSELECT);
-	menu.LoadMenu(IDR_MENU1);
+	menu.LoadMenu(IDR_MENU_CAMSELECT);
 	m_CamRef.Brightness	= 0;
 	m_CamRef.Hue		= 0;
 	m_CamRef.Contrast	= 128;
@@ -310,16 +310,7 @@ void COneCamera::OnRButtonDown(UINT nFlags, CPoint point)
 	int x = rect.TopLeft().x + point.x;
 	int y = rect.TopLeft().y + point.y;
 	TRACE(TEXT("menu x= %d, y=%d\n"), x, y);
-	GetCursorInfo(&ci);
-
-	ciInfo.Format(TEXT("The curser show is %d\n"),ci.flags);
-	TRACE(ciInfo);
 	menu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
-
-	GetCursorInfo(&ci);
-	
-	ciInfo.Format(TEXT("The curser show is %d\n"),ci.flags);
-	TRACE(ciInfo);
 	CStatic::OnRButtonDown(nFlags, point);
 	
 }

@@ -83,6 +83,13 @@ struct TCamStatus
     BOOL	bVideoLoss;
 };
 
+
+enum KEERRORCODE
+{
+	KE_SUCCESS = 0,
+	KE_SOCKET_NOTOPEN,
+};
+
 /*
 #ifdef _DEBUG
     inline void ASSERT(bool ok) {
