@@ -10,6 +10,7 @@
 #define new DEBUG_NEW
 #endif
 
+extern CKeWebCamOCXApp theApp;
 
 IMPLEMENT_DYNCREATE(CKeWebCamOCXCtrl, COleControl)
 
@@ -28,6 +29,7 @@ END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CKeWebCamOCXCtrl, COleControl)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "SetDivision", dispidSetDivision, SetDivision, VT_EMPTY, VTS_I4)
+	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "KE_UserLoginServer", dispidKE_UserLoginServer, KE_UserLoginServer, VT_I4, VTS_BSTR VTS_BSTR VTS_BSTR)
 END_DISPATCH_MAP()
 
 
@@ -229,4 +231,25 @@ void CKeWebCamOCXCtrl::SetDivision(LONG nDivision)
 
 	// TODO: 在此添加调度处理程序代码
 	m_pannel.SetDivision(nDivision,-1);
+}
+
+LONG CKeWebCamOCXCtrl::KE_UserLoginServer(LPCTSTR userName, LPCTSTR password, LPCTSTR ipAddr)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	if (theApp.m_cmdSocket.IsConnect())
+	{
+		theApp.m_cmdSocket.CloseConnect();
+	}
+	if (!theApp.m_cmdSocket.ConnectToServer(ipAddr))
+	{
+		AfxMessageBox(_T("connet to server error"));
+		return -1;
+	}
+	int ret = theApp.m_cmdSocket.LoginServer(userName,password);
+	if (ret != KE_SUCCESS)
+	{
+		AfxMessageBox(_T("login server error"));
+	}
+	return ret;
 }

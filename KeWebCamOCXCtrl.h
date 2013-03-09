@@ -45,10 +45,12 @@ protected:
 // 调度和事件 ID
 public:
 	enum {
+		dispidKE_UserLoginServer = 2L,
 		dispidSetDivision = 1L
 	};
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 protected:
 	void SetDivision(LONG nDivision);
+	LONG KE_UserLoginServer(LPCTSTR userName, LPCTSTR password, LPCTSTR ipAddr);
 };
 

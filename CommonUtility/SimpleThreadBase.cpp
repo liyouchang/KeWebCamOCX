@@ -44,7 +44,15 @@ void SimpleThreadBase::Join()
 	flags |= fJOINED;
 }
 
-void SimpleThreadBase::Stop( void )
+void SimpleThreadBase::Stop( DWORD dwTimeout/* = INFINITE */)
 {
 	toStop = true;
+	if ( _thread != NULL )
+	{
+		if ( WaitForSingleObject(_thread, dwTimeout) == WAIT_TIMEOUT ) {
+			TerminateThread(_thread, 1);
+		}
+		CloseHandle(_thread);
+		_thread = NULL;
+	}
 }

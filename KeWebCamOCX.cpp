@@ -137,7 +137,10 @@ BOOL CKeWebCamOCXApp::InitInstance()
 		m_nMAXCHANNEL	= CAM_MAX;
 		m_bConnectOK	= FALSE;
 		m_nCurrentMappingCamera = 0;
-
+		InitLogModule();
+		CSocketHandle::InitLibrary( MAKEWORD(2,2) );
+		m_cmdSocket.Init();
+		
 	}
 
 	return bInit;
@@ -150,7 +153,7 @@ BOOL CKeWebCamOCXApp::InitInstance()
 int CKeWebCamOCXApp::ExitInstance()
 {
 	// TODO: 在此添加您自己的模块终止代码。
-
+	//LogModule::Instance().RemoveAppender();
 	return COleControlModule::ExitInstance();
 }
 

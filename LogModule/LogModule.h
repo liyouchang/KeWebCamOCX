@@ -17,10 +17,6 @@ using namespace log4cplus;
 #endif
 
 
-using namespace std;
-
-#define  Max_File_Name 100
-#define  Max_File_Path 256
 
 enum LogLevel
 {
@@ -32,31 +28,19 @@ enum LogLevel
 	
 };
 
+void InitLogModule();
 
-class LogModule
-{
-public:
-	LogModule(void);
-	~LogModule(void);
-	void SetLogLevel(int level);
-	Logger GetLogger();
-	static LogModule & Instance();
-	static tstring GetCurrentPath();
-protected:
-	Logger _singleLogger;
-	int logLevel;
-	static LogModule  _instance;
-};
+
 
 #ifndef _NOLOG
 #define  LOG_DEBUG(logEvent) \
-	LOG4CPLUS_DEBUG(LogModule::Instance().GetLogger() , logEvent)
+	LOG4CPLUS_DEBUG(Logger::getRoot() , logEvent<<"  <"__FUNCTION__<<">  ")
 #define  LOG_INFO(logEvent) \
-	LOG4CPLUS_INFO(LogModule::Instance().GetLogger() , logEvent)
+	LOG4CPLUS_INFO(Logger::getRoot() , logEvent<<"  <"__FUNCTION__<<">  ")
 #define  LOG_WARN(logEvent) \
-	LOG4CPLUS_WARN(LogModule::Instance().GetLogger() , logEvent)
+	LOG4CPLUS_WARN(Logger::getRoot() , logEvent<<"  <"__FUNCTION__<<">  ")
 #define  LOG_ERROR(logEvent) \
-	LOG4CPLUS_ERROR(LogModule::Instance().GetLogger() , logEvent)
+	LOG4CPLUS_ERROR(Logger::getRoot(), logEvent<<"  <"__FUNCTION__<<">  ")
 #else
 #define  LOG_DEBUG(logEvent)
 #define  LOG_INFO(logEvent)

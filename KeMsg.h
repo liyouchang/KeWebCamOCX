@@ -1,11 +1,9 @@
-#ifndef ___COMMAND_H___
-#define ___COMMAND_H___
+#ifndef ___KEMSG_H___
+#define ___KEMSG_H___
 
 
 
 //********************protocol type*****************************
-#define PROTOCOL_HEAD                0xFF									//协议头
-#define ASK_KEY                      0xD0									//申请密钥
 #define CHANGE_CENTERIP              0xD1                                   //更改中心IP
 #define MODIFY_PASSWORD              0x8E									//修改密码
 #define LOGIN_JRSERVER               0x80									//登录服务器
@@ -51,8 +49,27 @@
 #define SET_OUTPUT_ALARM             0x41                                   //设置输出报警
 
 
-#define MSG_WAIT_TIMEOUT 3000
+#define PROTOCOL_HEAD                0xFF									//协议头
+#define MSG_WAIT_TIMEOUT 10000	//相应消息读取等待时间
 
+
+enum KEMSG_TYPE
+{
+	KEMSG_TYPE_ASKKEY = 0xD0,
+	KEMSG_TYPE_LOGIN = 0x80,
+};
+
+enum KEMSG_EVENT
+{
+	KEMSG_EVENT_ASKKEY = 0,
+	KEMSG_EVENT_LOGIN,
+	KEMSG_EVENT_MAX
+};
+
+#define SECRETKEY_LEN 8 
+#define USERNAME_LEN 8
+#define PASSWORD_LEN 8
+#define  ENCRYPTED_DATA_LEN 16
 
 #pragma pack(1)
 
@@ -63,6 +80,7 @@ typedef struct _KEMsgHead
 	int length;
 }KEMsgHead,*PKEMsgHead;
 
+
 typedef struct _KEMsgSecretKeyReq
 {
 	KEMsgHead head;
@@ -72,26 +90,29 @@ typedef struct _KEMsgSecretKeyResp
 {
 	KEMsgHead head;
 	int clientID;
-	char keyt[8];
+	char keyt[SECRETKEY_LEN];
 } MsgSecretKeyResp ,*PMsgSecretKeyResp;
 
-struct KEMsgUserLoginReq
+typedef struct _KEMsgUserLoginReq
 {
 	KEMsgHead head;
 	int clientID;
 	int clientLevel;
-	char userName[8];
-	char keyt[8];
-	char encreptData[16];
-};
+	char userName[USERNAME_LEN];
+	char keyt[SECRETKEY_LEN];
+	char encreptData[ENCRYPTED_DATA_LEN];
+}KEMsgUserLoginReq ,*PKEMsgUserLoginReq;
 
-struct KEMsgUserLoginResp
+
+typedef struct _KEMsgUserLoginResp
 {
 	KEMsgHead head;
 	int clientID;
 	int clientLevel;
 	char respData;
-};
+}KEMsgUserLoginResp,*PKEMsgUserLoginResp;
+
+
 struct KEMsgXMLInfoReq
 {
 	KEMsgHead head;
@@ -112,7 +133,6 @@ struct KEMsgHeartbeatResp
 	int clientID;
 	char status;
 };
-
 
 #pragma pack()
 

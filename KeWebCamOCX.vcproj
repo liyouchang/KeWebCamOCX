@@ -49,7 +49,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="LogModule"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;SOCKHANDLE_USE_OVERLAPPED"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -73,7 +73,7 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				AdditionalDependencies="../bin/cximagecrtdu.lib ../bin/AVPlay.lib ../bin/log4cplusUD.lib"
-				OutputFile="$(OutDir)\$(ProjectName).ocx"
+				OutputFile="$(OutDir)\$(ProjectName)D.ocx"
 				LinkIncremental="2"
 				ModuleDefinitionFile=".\KeWebCamOCX.def"
 				GenerateDebugInformation="true"
@@ -106,7 +106,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="../bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="2"
@@ -137,7 +137,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;SOCKHANDLE_USE_OVERLAPPED;PLATFORM_HAS_INETFUNC"
+				AdditionalIncludeDirectories="LogModule"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL"
 				MinimalRebuild="false"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -160,7 +161,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="../bin/cximagecrtdu.lib"
+				AdditionalDependencies="../bin/cximagecrtu.lib ../bin/AVPlay.lib ../bin/log4cplusU.lib"
 				OutputFile="$(OutDir)\$(ProjectName).ocx"
 				LinkIncremental="1"
 				ModuleDefinitionFile=".\KeWebCamOCX.def"
@@ -282,10 +283,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\memdc.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Resource.h"
 				>
 			</File>
@@ -364,6 +361,10 @@
 			Name="Dlg"
 			>
 			<File
+				RelativePath=".\memdc.h"
+				>
+			</File>
+			<File
 				RelativePath=".\OneCamera.cpp"
 				>
 			</File>
@@ -389,6 +390,14 @@
 			</File>
 			<File
 				RelativePath=".\CommonUtility\CommonFunctions.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CommonUtility\Md5A.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CommonUtility\Md5A.h"
 				>
 			</File>
 			<File

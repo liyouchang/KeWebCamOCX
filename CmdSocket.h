@@ -1,23 +1,23 @@
 #pragma once
-#include "SocketThreadHandler.h"
-#include <afxmt.h>
 
+#include <afxmt.h>
+#include "SocketThreadHandler.h"
+
+
+
+ 
 
 
 class CCmdSocket :public CSocketThreadHandler
 {
-	
+	#define  RECV_BUF_SIZE  0x40000
 public:
 	CCmdSocket(void);
 	virtual ~CCmdSocket(void);
 
-	// SocketClient Interface handler
-	//virtual void OnThreadBegin(CSocketHandle* pSH);
-	virtual void OnThreadExit(CSocketHandle* pSH);
-	virtual void OnDataReceived(CSocketHandle* pSH, const BYTE* pbData, DWORD dwCount, const SockAddrIn& addr);
-	//virtual void OnConnectionDropped(CSocketHandle* pSH);
-	//virtual void OnConnectionError(CSocketHandle* pSH, DWORD dwError);
+	virtual bool Init();
 
+	
 	bool ConnectToServer(CString severAddr);
 	int LoginServer(CString userName,CString pwd);
 
@@ -27,19 +27,28 @@ public:
 	// Returns:   int
 	// Qualifier:
 	//************************************
-	int AskKeyt();
-
+	
+	
 protected:
+	virtual void HandleMessage(const BYTE* msgData);
+protected:
+	int AskKeyt(char * keyt);
+	int SendLoginMsg(const char * userName,const char *encryptData);
+	void AskKeyMsgResp(const BYTE* msgData);
+	void LoginMsgResp(const BYTE* msgData);
 
 private:
 	
-	CString m_UserName;//用户名
-	CString m_Password;
+	
 	CString serverPort;//服务器port 22616
 	
+	int m_clientID;
+
+	CEvent keEvent[KEMSG_EVENT_MAX];		//申请key
+	void * tmpData[KEMSG_EVENT_MAX];	//传递消息读取的数据,resp函数生成,使用者释放
 
 
-	CEvent eventKeyt;		//申请key
+private:
 
-
+	void EncryptData(const char * userName,const char * pwd,const char * keyt,char * encryptedData);
 };

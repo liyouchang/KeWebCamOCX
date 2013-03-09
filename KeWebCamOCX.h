@@ -8,7 +8,8 @@
 
 #include "resource.h"       // 主符号
 #include "WebCamPannel.h"
-
+#include "CmdSocket.h"
+#include "LogModule/LogModule.h"
 // CKeWebCamOCXApp : 有关实现的信息，请参阅 KeWebCamOCX.cpp。
 
 class CKeWebCamOCXApp : public COleControlModule
@@ -24,6 +25,8 @@ public:
 	BOOL		m_bOneChTransfer;
 	BOOL		m_bConnectOK;
 	//CWebCamPannel	*m_pMainWnd;
+
+	CCmdSocket m_cmdSocket;
 };
 
 extern const GUID CDECL _tlid;

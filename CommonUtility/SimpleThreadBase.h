@@ -9,7 +9,7 @@ public:
 	bool isRunning() const { return (flags & fRUNNING) != 0; }
 	virtual void Run() =0 ;
 	void Join ();
-	virtual void Stop(void);
+	virtual void Stop(DWORD dwTimeout = INFINITE);
 	virtual void Start();
 protected:
 	static unsigned int __stdcall ThreadProc(void* arg);

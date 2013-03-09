@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 using namespace std;
+
 int strtohex(const char *str, char *hex_buf);
 char ascii_to_hex(char data);
 string ConvertString(string str);
