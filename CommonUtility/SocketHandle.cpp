@@ -42,10 +42,7 @@
 #define HOSTNAME_SIZE   MAX_PATH
 #define STRING_LENGTH   40
 
-#if !defined(PLATFORM_HAS_INETFUNC)
-const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
-int inet_pton(int af, const char *src, void *dst);
-#endif
+
 
 #ifdef WIN32
 #ifndef UNDER_CE

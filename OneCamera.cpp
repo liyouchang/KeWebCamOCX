@@ -29,7 +29,6 @@ COneCamera::COneCamera()
 	m_nCamNo		= 0;
 	m_bActive		= FALSE;
 	m_bPress		= FALSE;
-	m_nChannelLive	= 0;
 	m_nAviIndex		= 0;
 
 	//menu.LoadMenu(IDR_MENU_CAMSELECT);
@@ -42,7 +41,7 @@ COneCamera::COneCamera()
 	m_event.bAlarm		= FALSE;
 	m_event.bLoss		= FALSE;
 	m_event.bMotion		= FALSE;
-
+	m_bIsPlaying = FALSE;
 	InitCarmera();
 
 }
@@ -69,6 +68,13 @@ BEGIN_MESSAGE_MAP(COneCamera, CStatic)
 	ON_COMMAND(ID_MENU_PLAY, &COneCamera::OnMenuPlay)
 	ON_COMMAND(ID_MENU_SLOW, &COneCamera::OnMenuSlow)
 	ON_COMMAND(ID_MENU_FAST, &COneCamera::OnMenuFast)
+
+
+	ON_MESSAGE(DROPM_DRAGOVER,OnDragOver)
+	ON_MESSAGE(DROPM_DROPEX,OnDropEx)
+	ON_MESSAGE(DROPM_DROP,OnDrop)
+
+	ON_WM_CREATE()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -79,28 +85,23 @@ void COneCamera::OnPaint()
 	CPaintDC dc(this); // device context for painting
 	CRect rect;
 	GetClientRect(rect);
+	
+	if (m_bIsPlaying )//如果正在播放视频,则不刷新
+	{
+		return;
+	}
 
 	if(m_pOwner != NULL)
 	{
 		COLORREF clFrame;
 
-		if(!m_bFull)
-		{
-			clFrame = (m_pOwner->m_nActiveCamera==m_nChannel) ? clBlue:FLOAT_CAM_FRAME_COLOR;
-			if(m_nChannel < theApp.m_nMAXCHANNEL)
-				m_strCaption.Format(_T("CamNo %02d "), m_nChannel+1);
-			else
-				m_strCaption.Empty();
-		}
-		else
-		{
-			clFrame = (m_pOwner->m_nActiveCamera==m_nCamNo) ? clBlue:FLOAT_CAM_FRAME_COLOR;
-			if(m_nCamNo < theApp.m_nMAXCHANNEL)
-				m_strCaption.Format(_T("CamNo %02d "), m_nCamNo+1);
-			else
-				m_strCaption.Empty();
 
-		}
+		clFrame = (m_pOwner->m_nActiveCamera==m_nCamNo) ? clBlue:FLOAT_CAM_FRAME_COLOR;
+		if(m_nCamNo < theApp.m_nMAXCHANNEL)
+			m_strCaption.Format(_T("CamNo %02d "), m_nCamNo+1);
+		else
+			m_strCaption.Empty();
+
 
 		DrawCameraImage(&dc, rect, m_strCaption + m_strDateTime, m_pOwner->GetCamFontColor(), clFrame);
 	}
@@ -112,9 +113,9 @@ void COneCamera::LButtonDown(UINT nFlags, CPoint point)
 {
 	m_DownPos = point;
 
-	if( m_pOwner->m_nActiveCamera != m_nChannel )
+	if( m_pOwner->m_nActiveCamera != m_nCamNo )
 	{
-		m_pOwner->m_nActiveCamera = m_nChannel;
+		m_pOwner->m_nActiveCamera = m_nCamNo;
 		m_pOwner->InvalidateAll();
 	}
 }
@@ -125,7 +126,7 @@ void COneCamera::LButtonDblClk(UINT nFlags, CPoint point)
 	int		dx	 = rect.Width()  / 4;
 	int		dy	 = rect.Height() / 4;
 
-	if(m_pOwner->m_nActiveCamera == m_nChannel)
+	if(m_pOwner->m_nActiveCamera == m_nCamNo)
 	{
 		if( m_pOwner->FnDivision == DIV_TOGGLED)
 		{
@@ -140,17 +141,16 @@ void COneCamera::LButtonDblClk(UINT nFlags, CPoint point)
 				case DIV_CH10:		nRotation = m_pOwner->m_nRotation_10;		break;
 				default :			nRotation = -1;
 			}
-			m_pOwner->SetDivision(m_pOwner->m_nToggledDivision, nRotation, FALSE);
+			m_pOwner->SetPlayDivision(m_pOwner->m_nToggledDivision);
 			TRACE("m_nActiveCamera %d\n", m_pOwner->m_nActiveCamera);
 			TRACE("DIV_TOGGLED= %d\n", m_pOwner->m_nToggledDivision);
 		}
 		else
 		{
-			// 1Div 老 锭 DClick 陛瘤
 			if(m_pOwner->FnDivision == DIV_CH1)
 				return;
 
-			int	mapped_camno = m_nChannel;//m_nCamNo;
+			int	mapped_camno = m_nCamNo;//m_nCamNo;
 
 
 			//m_pOwner->DrawAllCameraImages(DIV_CH1);
@@ -158,22 +158,16 @@ void COneCamera::LButtonDblClk(UINT nFlags, CPoint point)
 			// daeny2@ Channel ID Mapping
 			if(theApp.m_nMAXCHANNEL == DIV_DEFAULT_CH9)
 			{
-				mapped_camno = new_MappiingID[m_nChannel];
-
-				// 沥惑 盲澄捞 酒囱 版快
-				if(m_nChannel >= DIV_DEFAULT_CH9)
+				mapped_camno = new_MappiingID[m_nCamNo];
+				if(m_nCamNo >= DIV_DEFAULT_CH9)
 					return;
 			}
 			else if(theApp.m_nMAXCHANNEL == DIV_DEFAULT_CH8)
 			{
-				mapped_camno = new_MappiingID[m_nChannel];
-
-				// 沥惑 盲澄捞 酒囱 版快
-				if(m_nChannel >= DIV_DEFAULT_CH8)
+				mapped_camno = new_MappiingID[m_nCamNo];
+				if(m_nCamNo >= DIV_DEFAULT_CH8)
 					return;
 			}
-
-			// CIF Mode 老锭 channel mapping
 			if(m_nRec_Type == 3)
 			{
 				if((mapped_camno % 2) != 0)
@@ -181,20 +175,18 @@ void COneCamera::LButtonDblClk(UINT nFlags, CPoint point)
 			}
 
 			theApp.m_nCurrentMappingCamera = mapped_camno;
-
 			TRACE("MAP CH-%d\n", mapped_camno);
-			// daeny2@ 2005/08/18	Full screen 贸府
 			long	value = MAKELONG(full_screen_on, mapped_camno);
 			if(theApp.m_bOneChTransfer)
 				m_pOwner->SendMsg(dvr_cmd_msg, dvrsub_cmd_msg, full_screen_request, value);
 
 			CRect r;
 			r = m_pOwner->GetFullPaintRect();
-			m_pOwner->m_nActiveCamera = m_nChannel;
-			m_pOwner->m_camarray[m_nChannel].MoveWindows(r, TRUE);
+			m_pOwner->m_nActiveCamera = m_nCamNo;
+			m_pOwner->m_camarray[m_nCamNo].MoveWindows(r, TRUE);
 
 			m_pOwner->m_nToggledDivision = m_pOwner->FnDivision;
-			m_pOwner->SetDivision(DIV_TOGGLED, -1, FALSE);
+			m_pOwner->SetPlayDivision(DIV_TOGGLED);
 
 			TRACE("LButtonDblClk m_nCamNo = %d\n", m_nCamNo);
 			TRACE("m_nActiveCamera %d\n", m_pOwner->m_nActiveCamera);
@@ -222,6 +214,7 @@ void COneCamera::InitCarmera()
 	m_bEvent		= 0;
 	m_bSaveToAVI	= FALSE;
 	m_bFull			= FALSE;
+	m_bDrawable = FALSE;
 }
 
 int COneCamera::GetCameraCanvasTextHeight()
@@ -271,14 +264,13 @@ void __fastcall COneCamera::DrawCameraImage(CDC *pDC, CRect destFrame, CString c
 		pDC->FillRect(stringArea, &brush);
 		pDC->SetBkMode(TRANSPARENT);
 		pDC->SetTextColor(FontColor);
-
 		pDC->TextOut(destFrame.left + 2, destFrame.top, caption);
 		pDC->SelectObject(pOldFont);
 	}
 
-	if(m_pOwner->m_Imagearray[m_nCamDisp].IsValid())
+	if(m_pOwner->m_Imagearray[m_nCamNo].IsValid())
 	{
-		m_pOwner->m_Imagearray[m_nCamDisp].Stretch(pDC->GetSafeHdc(), dest);
+		m_pOwner->m_Imagearray[m_nCamNo].Stretch(pDC->GetSafeHdc(), dest);
 	}
 
 	if(pDC->GetSafeHdc() != NULL)
@@ -350,7 +342,7 @@ void COneCamera::OnMenuSaveas()
 	WCHAR		file_name[16];
 	static WCHAR BASED_CODE OpenFilter[] = _T("JPG Files (*.jpg)|*.jpg; *.jpg||");
 
-	swprintf(file_name, _T("image_%02d.jpg"), m_pOwner->m_camarray[m_nCamNo].m_nCamDisp+1);
+	swprintf(file_name, _T("image_%02d.jpg"), m_nCamNo+1);
 
 	CFileDialog FileOpenDialog(
 		FALSE,
@@ -468,6 +460,7 @@ void COneCamera::ResetAVI()
 void COneCamera::OnMenuPlay()
 {
 	m_AVIPlayer.PlayFile(this->GetSafeHwnd());
+	m_bIsPlaying = TRUE;
 }
 
 void COneCamera::OnMenuSlow()
@@ -478,4 +471,42 @@ void COneCamera::OnMenuSlow()
 void COneCamera::OnMenuFast()
 {
 	// TODO: 在此添加命令处理程序代码
+}
+
+BOOL COneCamera::RegisterDrop()
+{
+	return m_dropEx.Register( this );
+}
+
+LRESULT COneCamera::OnDrop( WPARAM pDropInfoClass, LPARAM lParm )
+{
+	return (LRESULT)-1;
+}
+
+LRESULT COneCamera::OnDropEx( WPARAM pDropInfoClass, LPARAM lParm )
+{
+	return (LRESULT)-1;
+}
+
+LRESULT COneCamera::OnDragOver( WPARAM pDropInfoClass,LPARAM lParm )
+{
+	COleDropInfo* pInfo = (COleDropInfo* )pDropInfoClass;
+	ASSERT(pInfo->IsKindOf(RUNTIME_CLASS(COleDropInfo)));
+
+	//实时不再接受拖放
+
+	if( pInfo->m_pDataObject->IsDataAvailable( CF_TEXT ) )
+		return DROPEFFECT_COPY;
+	else
+		return DROPEFFECT_NONE;
+}
+
+int COneCamera::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (CStatic::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	// TODO:  在此添加您专用的创建代码
+	this->m_AVIPlayer.SetPlayWnd(this->GetSafeHwnd());
+	return 0;
 }

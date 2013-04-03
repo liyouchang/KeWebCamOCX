@@ -13,6 +13,7 @@
 #define IDD_DIALOG_PANNEL               201
 #define IDC_CAMERA1                     202
 #define IDR_MENU_CAMSELECT              202
+#define IDD_FORMVIEW_PLAY               202
 #define IDC_CAMERA2                     203
 #define IDC_CAMERA3                     204
 #define IDC_CAMERA4                     205
@@ -30,6 +31,10 @@
 #define IDC_CAMERA13                    214
 #define IDC_CAMERA14                    215
 #define IDC_CAMERA15                    216
+#define IDC_STATIC_PICTURE              218
+#define IDC_TEXT_LEFT                   219
+#define IDC_TEXT_MID                    220
+#define IDC_TEXT_RIGHT                  221
 #define ID_SELECTCAMERA_SAVEIMAGE       32768
 #define ID_SELECTCAMERA_SAVEIMAGEALL    32769
 #define ID_SELECTCAMERA_PRINTIMAGE      32770
@@ -58,9 +63,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        208
+#define _APS_NEXT_RESOURCE_VALUE        209
 #define _APS_NEXT_COMMAND_VALUE         32791
-#define _APS_NEXT_CONTROL_VALUE         218
+#define _APS_NEXT_CONTROL_VALUE         222
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

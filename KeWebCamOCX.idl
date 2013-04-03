@@ -25,6 +25,9 @@ library KeWebCamOCXLib
 		methods:
 			[id(1), helpstring("分屏方法")] void SetDivision(LONG nDivision);
 			[id(2), helpstring("方法KE_UserLoginServer")] LONG KE_UserLoginServer(BSTR userName, BSTR password, BSTR ipAddr);
+			[id(3), helpstring("获取用户摄像头")] BSTR QueryUserCamera(void);
+	
+			[id(4), helpstring("播放实时视频")] BSTR PlayRTV(BSTR cameralName);
 	};
 
 	//  CKeWebCamOCXCtrl 的事件调度接口

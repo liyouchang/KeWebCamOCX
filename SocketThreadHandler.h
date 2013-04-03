@@ -2,10 +2,15 @@
 #include "CommonUtility/SocketClientImpl.h"
 #include "CommonUtility/TypedFifo.h"
 #include "CommonUtility/SimpleThreadBase.h"
-#include "LogModule/LogModule.h"
+#include "CommonUtility/LogModule.h"
 #include "Common.h"
 #include "KeMsg.h"
 
+
+const int AF_IPV4   = 0;
+const int AF_IPV6   = 1;
+const int SOCK_TCP  = SOCK_STREAM-1;
+const int SOCK_UDP  = SOCK_DGRAM-1;
 
 
 class CSocketThreadHandler :
@@ -20,7 +25,8 @@ public:
 	CSocketThreadHandler(const UINT nCnt);
 	virtual ~CSocketThreadHandler(void);
 
-	virtual bool Init(const UINT nCnt);
+	virtual bool Init(const UINT nCnt );
+	DWORD Write(const LPBYTE lpBuffer,DWORD dwCount);
 
 	bool IsConnect();
 	void CloseConnect();
@@ -41,12 +47,15 @@ protected:
 	SockAddrIn m_loacalAddr;
 	CByteFifo m_recvBuf;
 	int m_recvBufSize;
-	
+
+	CString m_serverPort;//服务器port 22616
+	CString m_serverIP;
+	int m_nSockType;
 	//数据处理函数
 	virtual void Run();
 };
 
 
 //add by lht for print log
-std::ostream& operator<<(std::ostream& output, SockAddrIn& obj);
-std::wostream& operator<<(std::wostream& output, SockAddrIn& obj);
+std::ostream& operator<<(std::ostream& output, const SockAddrIn& obj);
+std::wostream& operator<<(std::wostream& output,const  SockAddrIn& obj);

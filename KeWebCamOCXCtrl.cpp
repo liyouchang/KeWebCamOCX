@@ -4,7 +4,7 @@
 #include "KeWebCamOCX.h"
 #include "KeWebCamOCXCtrl.h"
 #include "KeWebCamOCXPropPage.h"
-
+#include <json/json.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -30,6 +30,9 @@ END_MESSAGE_MAP()
 BEGIN_DISPATCH_MAP(CKeWebCamOCXCtrl, COleControl)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "SetDivision", dispidSetDivision, SetDivision, VT_EMPTY, VTS_I4)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "KE_UserLoginServer", dispidKE_UserLoginServer, KE_UserLoginServer, VT_I4, VTS_BSTR VTS_BSTR VTS_BSTR)
+	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "QueryUserCamera", dispidQueryUserCamera, QueryUserCamera, VT_BSTR, VTS_NONE)
+
+	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "PlayRTV", dispidPlayRTV, PlayRTV, VT_BSTR, VTS_BSTR)
 END_DISPATCH_MAP()
 
 
@@ -155,6 +158,8 @@ CKeWebCamOCXCtrl::CKeWebCamOCXCtrl()
 {
 	InitializeIIDs(&IID_DKeWebCamOCX, &IID_DKeWebCamOCXEvents);
 	// TODO: 在此初始化控件的实例数据。
+
+	InitLogModule();
 }
 
 
@@ -220,6 +225,7 @@ int CKeWebCamOCXCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	m_pannel.Create(IDD_DIALOG_PANNEL,this);
 	
+	theApp.g_PlayWnd = &m_pannel;
 
 	return 0;
 }
@@ -230,7 +236,7 @@ void CKeWebCamOCXCtrl::SetDivision(LONG nDivision)
 
 
 	// TODO: 在此添加调度处理程序代码
-	m_pannel.SetDivision(nDivision,-1);
+	m_pannel.SetPlayDivision(nDivision);
 }
 
 LONG CKeWebCamOCXCtrl::KE_UserLoginServer(LPCTSTR userName, LPCTSTR password, LPCTSTR ipAddr)
@@ -249,7 +255,52 @@ LONG CKeWebCamOCXCtrl::KE_UserLoginServer(LPCTSTR userName, LPCTSTR password, LP
 	int ret = theApp.m_cmdSocket.LoginServer(userName,password);
 	if (ret != KE_SUCCESS)
 	{
-		AfxMessageBox(_T("login server error"));
+		//AfxMessageBox(_T("login server error"));
 	}
 	return ret;
+}
+
+BSTR CKeWebCamOCXCtrl::QueryUserCamera(void)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	CString strResult;
+
+	// TODO: 在此添加调度处理程序代码.
+	using namespace std;
+
+	std::string strValue = "{\"name\":\"json\",\"array\":[{\"cpp\":\"jsoncpp\"},{\"java\":\"jsoninjava\"},{\"php\":\"support\"}]}";
+
+	Json::Value root;
+	Json::Value arrayObj;
+	Json::Value item;
+
+	item["cpp"] ="jsoncpp";
+	item["java"] = "jsoninjava";
+	item["php"] = "support";
+	arrayObj.append(item);
+
+	root["name"] = "json";
+	root["array"] = arrayObj;
+
+	root.toStyledString();
+	std::string out = root.toStyledString();
+	//std::cout << out << std::endl;
+
+	strResult = out.c_str();
+
+	return strResult.AllocSysString();
+}
+
+BSTR CKeWebCamOCXCtrl::PlayRTV(LPCTSTR cameralName)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	CString strResult;
+
+	// TODO: 在此添加调度处理程序代码
+	
+
+
+	return strResult.AllocSysString();
 }

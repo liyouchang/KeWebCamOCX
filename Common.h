@@ -30,7 +30,7 @@ const int new_CIF_ID_16[16]  = { 0,  0,  2,  2,  4,  4,  6,  6,  8,  8, 10, 10, 
 
 #define CAM_PER_DVR				16
 #define DVR_MAX					1
-#define CAM_MAX					(DVR_MAX*CAM_PER_DVR)
+#define CAM_MAX					16
 
 #define	DF						40
 #define HEADER_SIZE				16
@@ -45,8 +45,13 @@ const int new_CIF_ID_16[16]  = { 0,  0,  2,  2,  4,  4,  6,  6,  8,  8, 10, 10, 
 #define AUDIO_PREAMBLE	        0x55
 #define AUDIO_PREAMBLE_COUNT	2
 
-#define BOTTOM_MARGIN			0
-#define RIGHT_MARGIN			0
+
+//边距
+#define BOTTOM_MARGIN			10
+#define RIGHT_MARGIN			10
+#define LEFT_MARGIN 10
+#define TOP_MARGIN 10
+#define  SPLIT_LINE 1
 
 #define MAX_AVI_SIZE            600000000L
 #define MAX_DVR_SIZE            600000000L
@@ -88,11 +93,29 @@ enum KEERRORCODE
 {
 	KE_SUCCESS = 0,
 	KE_SOCKET_NOTOPEN,
+	KE_SOCKET_WRITEERROR,
 	KE_CONNECT_SERVER_ERROR,
 	KE_MSG_TIMEOUT,
 	KE_LOGIN_NAMEPWDERROR,
 	KE_LOGIN_OTHERERROR,
 };
+
+inline CString GetKEErrorDescript(int errorCode)
+{
+	switch(errorCode)
+	{
+	//case KE_MSG_FAILED:return _T("服务器操作失败");
+	case KE_SUCCESS: return _T("成功");
+	case KE_SOCKET_NOTOPEN: return _T("通讯未建立");
+	case KE_CONNECT_SERVER_ERROR: return _T("连接服务器失败");
+	case KE_MSG_TIMEOUT: return _T("消息超时");
+	//case KE_READ_DATAERROR: return _T("读取消息错误");
+	//case KE_WRITE_ERROR: return _T("发送消息错误");
+	//case KE_PASSWORD_ERROR:return _T("密码不匹配");
+	default:
+		return _T("其他错误");
+	}
+}
 
 /*
 #ifdef _DEBUG

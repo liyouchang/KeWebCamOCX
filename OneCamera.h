@@ -10,6 +10,7 @@
 #include "../CxImage/ximage.h"
 #include "../CxImage/xfile.h"
 #include "MyAVPlayer.h"
+#include "OleDropTargetEx.h"
 
 #define FLOAT_CAM_FONT_COLOR     RGB(0, 0, 0)//clWhite
 #define FLOAT_CAM_FRAME_COLOR    RGB(128, 128, 128)//clGray
@@ -40,10 +41,8 @@ class CLock;
 
 class COneCamera : public CStatic
 {
-
 private:
 	int		FCamNo;
-
 // Construction
 public:
 	CMenu				menu;
@@ -51,35 +50,40 @@ public:
 	CRect				m_defaultArea;
 	CPoint				m_DownPos;
 	CMyAVPlayer m_AVIPlayer;
+	
+	int videoID;
+	int channelNo;
+
 	BOOL				m_bPress;
 	int					m_nTag;
-    int					m_nCamNo;	
-    int					m_nCamDisp;		
-    int					m_nChannel;		
-	BOOL				m_bDrawable;	// 6, 8, 13 mode
+    int					m_nCamNo;//在父窗口中的镜头数组中的位置
+	BOOL				m_bDrawable;	//是否显示 6, 8, 13 mode
 	BOOL				m_bActive;		
 	int					m_nRec_Type;	// CIF mode type
 	CString				m_strCaption;
 	CString				m_strDateTime;
     cam_reference		m_CamRef;
 	event_information	m_event;
-
 	int					m_nAviIndex;
-
 	BOOL				m_bMotion;
 	BOOL				m_bAlaram;
 	BOOL				m_bLoss;
 	BOOL				m_bFull;
-	BOOL				m_nChannelLive;
-
     BYTE				m_bEvent;
     BOOL				m_bSaveToAVI;
-//    TAVI				*m_AVI;
-
+	BOOL m_bIsPlaying;
 
 	COneCamera();
 
 	void SetOwner(CWebCamPannel* pOwner) { m_pOwner = pOwner; };
+	virtual BOOL RegisterDrop();
+protected:
+	COleDropTargetEx m_dropEx;
+	//处理OnDropEx消息是必须的，否则OnDrop函数不会被执行
+	//当然也可以在OnDropEx函数中处理数据
+	virtual LRESULT OnDrop(WPARAM pDropInfoClass, LPARAM lParm);
+	virtual LRESULT OnDropEx(WPARAM pDropInfoClass, LPARAM lParm);
+	virtual LRESULT OnDragOver(WPARAM pDropInfoClass,LPARAM lParm);
 
 // Attributes
 public:
@@ -126,6 +130,7 @@ public:
 	afx_msg void OnMenuPlay();
 	afx_msg void OnMenuSlow();
 	afx_msg void OnMenuFast();
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 };
 
 /////////////////////////////////////////////////////////////////////////////

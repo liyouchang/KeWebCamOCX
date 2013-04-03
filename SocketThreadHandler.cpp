@@ -36,7 +36,7 @@ void CSocketThreadHandler::OnDataReceived( CSocketHandle* pSH, const BYTE* pbDat
 
 	if (!CheckMessage(pbData,dwCount))
 	{
-		LOG_WARN( m_loacalAddr<< " received error message from "<< addr);
+		LOG_WARN( m_loacalAddr<< " received error message from " << addr);
 		return;
 	}
 	m_recvBuf.Write(pbData,dwCount);
@@ -63,15 +63,12 @@ void CSocketThreadHandler::OnThreadBegin( CSocketHandle* pSH )
 
 bool CSocketThreadHandler::Init( const UINT nCnt )
 {
-
-	
 	BOOL ret =  m_recvBuf.Init(nCnt);
 	if (ret == FALSE)
 	{
 		return false;
 	}
 	return  true;
-	
 }
 
 void CSocketThreadHandler::Run()
@@ -98,11 +95,11 @@ void CSocketThreadHandler::Run()
 			continue;
 		}
 		msgRecv.clear();
-		msgRecv.resize(head.length,0);
+		msgRecv.resize(head.msgLength,0);
 		memcpy(&msgRecv[0],&head,headLen);
 		
-		nRead = m_recvBuf.Read(&msgRecv[headLen],head.length-headLen);
-		if (nRead != head.length-headLen)
+		nRead = m_recvBuf.Read(&msgRecv[headLen],head.msgLength-headLen);
+		if (nRead != head.msgLength-headLen)
 		{
 			LOG_ERROR("Read fifo buffer error!");
 			continue;
@@ -123,13 +120,13 @@ void CSocketThreadHandler::GetAddress( const SockAddrIn& addrIn, CString& rStrin
 {
 	TCHAR szIPAddr[MAX_PATH] = { 0 };
 	CSocketHandle::FormatIP(szIPAddr, MAX_PATH, addrIn);
-	rString.Format(_T("%s : %d"), szIPAddr, static_cast<int>(static_cast<UINT>(ntohs(addrIn.GetPort()))) );
+	rString.Format(_T("%s:%d"), szIPAddr, static_cast<int>(static_cast<UINT>(ntohs(addrIn.GetPort()))) );
 }
 
 bool CSocketThreadHandler::CheckMessage( const BYTE* data, DWORD dwCount )
 {
 	PKEMsgHead pHead = (PKEMsgHead)data;
-	if (pHead->length != dwCount)
+	if (pHead->msgLength != dwCount)
 	{
 		return false;
 	}
@@ -149,7 +146,29 @@ void CSocketThreadHandler::CloseConnect()
 
 }
 
-std::ostream& operator<<( std::ostream& output, SockAddrIn& obj )
+DWORD CSocketThreadHandler::Write( const LPBYTE lpBuffer,DWORD dwCount )
+{
+	if ( m_SocketClient.IsOpen() )
+	{
+
+		if (m_nSockType == SOCK_TCP)
+		{
+			return m_SocketClient.Write(lpBuffer, dwCount, NULL);
+		}
+		else
+		{
+			SockAddrIn sockAddr;
+			sockAddr.CreateFrom(m_serverIP, m_serverPort, AF_INET);
+			return m_SocketClient.Write(lpBuffer, dwCount, sockAddr);
+		}
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+std::ostream& operator<<( std::ostream& output,const SockAddrIn& obj )
 {
 	CString info;
 	CSocketThreadHandler::GetAddress(obj,info);
@@ -157,7 +176,7 @@ std::ostream& operator<<( std::ostream& output, SockAddrIn& obj )
 	return output;
 }
 
-std::wostream& operator<<( std::wostream& output, SockAddrIn& obj )
+std::wostream& operator<<( std::wostream& output,const  SockAddrIn& obj )
 {
 	CString info;
 	CSocketThreadHandler::GetAddress(obj,info);

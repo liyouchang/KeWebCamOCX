@@ -44,3 +44,39 @@ void CMyAVPlayer::PlayFile(HWND hWnd)
 		}
 	}
 }
+
+int CMyAVPlayer::OpenStream( int videoID,int channelNo )
+{
+	long iEncodeFlag = 1;
+
+	int iRet = AV_OpenStream(&m_lPlayHandle,&iEncodeFlag,0);
+	if (iRet != 0)
+	{
+		TRACE("²¥·ÅÆ÷´ò¿ªÊ§°Ü videoID=%d,channelNo=%d,iRet=%d\n",videoID,channelNo,iRet);
+		m_PlayStatus = STA_QUESTDATA_FREE;
+		return iRet;
+	}
+	iRet = AV_Play(m_lPlayHandle,m_hPlayWnd);
+	if (iRet != 0 )
+	{
+		TRACE("²¥·ÅÆ÷²¥·ÅÊ§°Ü videoID=%d,channelNo=%d,iRet=%d\n",videoID,channelNo,iRet);
+		m_PlayStatus = STA_QUESTDATA_FREE;
+		return iRet;
+	}
+	AV_SetPlayVideoInfo(m_lPlayHandle,videoID,channelNo);
+	m_videoID = videoID;
+	m_channelNo = channelNo;
+
+	return iRet;
+}
+
+void CMyAVPlayer::SetPlayWnd( HWND hWnd )
+{
+	m_hPlayWnd = hWnd;
+}
+
+int CMyAVPlayer::InputStream( char * data,int dataLen )
+{
+	AV_InputData(m_lPlayHandle,(long *)(data), dataLen);
+	return 0;
+}

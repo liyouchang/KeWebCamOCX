@@ -14,7 +14,6 @@
 #define GET_VDOPARAM                 0x86									//获取视频参数
 #define SET_YT                       0x85									//云台设置 
 #define SENDDATA_TO_CLIENT           0x89									//向二级客户端发送报警图像数据
-#define REQUEST_TO_SERVER            0x8F									//向服务器请求数据
 #define REQUEST_FILE_LIST            0x53									//请求文件列表
 #define REQUEST_DOWNLOAD_FILE        0x54									//请求下载文件
 #define SEARCH_VIDEOSTATUS           0x8b									//视频通道状态查询
@@ -50,21 +49,29 @@
 
 
 #define PROTOCOL_HEAD                0xFF									//协议头
-#define MSG_WAIT_TIMEOUT 10000	//相应消息读取等待时间
+#define MSG_WAIT_TIMEOUT 3000	//相应消息读取等待时间
 
 
 enum KEMSG_TYPE
 {
 	KEMSG_TYPE_ASKKEY = 0xD0,
 	KEMSG_TYPE_LOGIN = 0x80,
+	KEMSG_TYPE_AskTreeStruct = 0x81,
+	KEMSG_TYPE_HEARTBEAT=0x82,
+	KEMSG_TYPE_REALTIMEDATA = 0x83,
+	KEMSG_TYPE_MalfunctionAlert = 0x8A,
+	KEMSG_TYPE_MEDIATRANS = 0x8F,
+	KEMSG_TYPE_MediaStream = 0x39,
 };
 
 enum KEMSG_EVENT
 {
 	KEMSG_EVENT_ASKKEY = 0,
 	KEMSG_EVENT_LOGIN,
+	KEMSG_EVENT_REALTIMEDATA,
 	KEMSG_EVENT_MAX
 };
+
 
 #define SECRETKEY_LEN 8 
 #define USERNAME_LEN 8
@@ -76,27 +83,26 @@ enum KEMSG_EVENT
 typedef struct _KEMsgHead
 {
 	BYTE protocal;
-	BYTE type;
-	int length;
+	BYTE msgType;
+	int msgLength;
+	int clientID;
 }KEMsgHead,*PKEMsgHead;
 
 
 typedef struct _KEMsgSecretKeyReq
 {
 	KEMsgHead head;
-	int clientID;
+
 } MsgSecretKeyReq,*PMsgSecretKeyReq;
 typedef struct _KEMsgSecretKeyResp
 {
 	KEMsgHead head;
-	int clientID;
 	char keyt[SECRETKEY_LEN];
 } MsgSecretKeyResp ,*PMsgSecretKeyResp;
 
 typedef struct _KEMsgUserLoginReq
 {
 	KEMsgHead head;
-	int clientID;
 	int clientLevel;
 	char userName[USERNAME_LEN];
 	char keyt[SECRETKEY_LEN];
@@ -107,32 +113,93 @@ typedef struct _KEMsgUserLoginReq
 typedef struct _KEMsgUserLoginResp
 {
 	KEMsgHead head;
-	int clientID;
 	int clientLevel;
 	char respData;
 }KEMsgUserLoginResp,*PKEMsgUserLoginResp;
 
 
-struct KEMsgXMLInfoReq
+typedef struct _KEMsgXMLInfo
 {
 	KEMsgHead head;
-	int clientID;
 	int dataServerID;
+}KEMsgXMLInfo,*PKEMsgXMLInfo;
 
-};
-
-struct KEMsgHeartbeatReq
+typedef struct _KEMsgHeartBeat
 {
 	KEMsgHead head;
-	int clientID;
 	char status;
-};
-struct KEMsgHeartbeatResp
+}KEMsgHeartBeat,*PKEMsgHeartBeat;
+
+typedef struct _KEMsgRealTimeDataReq
 {
-	KEMsgHead head;
+	BYTE protocal;//0x83
+	BYTE msgType;
+	int msgLength;
+	int vedioID;//视频服务器id
 	int clientID;
+	char channelNo;//通道号
+	char reqType;//0:请求,1:断开
+	char dataType;//0请求视频,1请求音频,2请求对讲
+}KEMsgRequestDataReq,*PKEMsgRequestDataReq;
+
+typedef struct _KEMsgRealTimeDataResp
+{
+	KEMsgHead head;//
+	int videoID;
+	char channelNo;
+	int transIP;//转发服务器IP
+	int videoIP;//视频服务器IP/录像服务器IP
+	char iDecodeStyle;////0:正常解码 1:不处理丢帧丢片情况
+	char data;//0请求视频,1请求音频,2请求对讲
+	char online;// 0=都在线  1=视频服务器在线  2=转发服务器在线 3都不在线
+	short port;
+	short dummy;
+}KEMsgRealTimeDataResp,*PKEMsgRealTimeDataResp;
+
+typedef struct _KEMediaTransReq
+{
+	KEMsgHead head;//0x8f
+	int videoID;
+	char channelNo;
+	char video;//视频=0请求   =1 停止
+	char listen;//监听=0请求   =1 停止
+	char talk;// 对讲=0请求   =1 停止
+	char devType;// 2：客户端   3：平台   5：录像服务器
+}KEMediaTransReq,*PKEMediaTransReq;
+
+typedef struct _KEMediaTransResp
+{
+	KEMsgHead head;//0x8f
+	int videoID;
+	char channelNo;
+	char video;//视频=0请求   =1 停止
+	char listen;//监听=0请求   =1 停止
+	char talk;//, , 对讲=0请求   =1 停止
+	char respType;// 响应类型:0请求成功;1 失败;2视频服务器不在线;	3通道被禁用;4超出最大转发数;8每通道最多可发给8个客户端、一个录像和一个平台;6 最多可建立600个TCP连接	
+}KEMediaTransResp,*PKEMediaTransResp;
+
+typedef struct _KEMalfunctionAlert
+{
+	KEMsgHead head;//0x8a
+	int serverID;
+	char channelID;
+	char alertType;//故障类型：1设备告警，2性能告警，3处理出错告警，4通讯告警，5环境告警
+	char alertNo;// 故障编号：1 CPU使用能力百分比超过阈值报警，
+						//2磁盘使用空间百分比超过阈值报警 
+							//3内存使用百分比超过阈值报警，
+						//4外接输入检测故障异常报警/温度过高报警,
+						//5透明通道故障异常告警，
+						//6编码器鉴权不成功报警，
+						//7操作Flash失败报警,
+						//8磁盘读写失败报警/硬盘故障报警，
+						//9图像遮挡功能报警,10移动侦测故障报警，11磁盘空间满
 	char status;
-};
+	char timeSpan[5];
+}KEMalfunctionAlert,*PKEMalfunctionAlert;
+
+
+
+
 
 #pragma pack()
 

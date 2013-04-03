@@ -133,14 +133,14 @@ BOOL CKeWebCamOCXApp::InitInstance()
 
 	if (bInit)
 	{
-		// TODO: 在此添加您自己的模块初始化代码。
+		//我的初始化
 		m_nMAXCHANNEL	= CAM_MAX;
 		m_bConnectOK	= FALSE;
 		m_nCurrentMappingCamera = 0;
-		InitLogModule();
+		//InitLogModule();
 		CSocketHandle::InitLibrary( MAKEWORD(2,2) );
 		m_cmdSocket.Init();
-		
+		g_PlayWnd = NULL;
 	}
 
 	return bInit;
@@ -153,8 +153,25 @@ BOOL CKeWebCamOCXApp::InitInstance()
 int CKeWebCamOCXApp::ExitInstance()
 {
 	// TODO: 在此添加您自己的模块终止代码。
-	//LogModule::Instance().RemoveAppender();
 	return COleControlModule::ExitInstance();
+}
+
+
+
+int CKeWebCamOCXApp::SetMediaSocket( int videoID,int channelNo,CMediaSocket * media)
+{
+	int nIndex = videoID<<2 + channelNo;
+	if (media != NULL)
+	{
+		g_mediaMap[nIndex] = media;
+	}
+	return nIndex;
+}
+
+CMediaSocket * CKeWebCamOCXApp::GetMediaSocket( int videoID,int channelNo )
+{
+	int nIndex = videoID<<2 + channelNo;
+	return g_mediaMap[nIndex];
 }
 
 

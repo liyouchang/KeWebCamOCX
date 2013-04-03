@@ -191,7 +191,7 @@ void CTypedFifo<T>::Write(const T * pBuf, UINT nCnt)
 		pBuf += nLen;
 		nCnt -= nLen;
 	} while (nCnt > 0);
-
+	Sleep(0);
 	m_eNewData.PulseEvent();
 }
 

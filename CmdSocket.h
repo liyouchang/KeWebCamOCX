@@ -4,7 +4,7 @@
 #include "SocketThreadHandler.h"
 
 
-
+#define WM_HEARTBEATSTOP WM_USER+1029
  
 
 
@@ -20,35 +20,33 @@ public:
 	
 	bool ConnectToServer(CString severAddr);
 	int LoginServer(CString userName,CString pwd);
+	int StartView(int vedioID,int ChannelID,long PlayHwd );
+	int SendRealTimeDataMsg(int vedioID,char channelNo,char reqType,char dataType);
 
-	//************************************
-	// Method:    AskKeyt 申请密钥
-	// Access:    public 
-	// Returns:   int
-	// Qualifier:
-	//************************************
-	
-	
 protected:
 	virtual void HandleMessage(const BYTE* msgData);
+
+	//heartbeat
+	static unsigned int __stdcall ThreadHeartBeat(void* arg);
+	HANDLE heartbeatThread;
+	void StartHeartBeat();
+	void StopHeartBeat();
+	int m_heartCount;
+	bool heartBeatStart;
+	int m_HeartbeatTime;
+
 protected:
 	int AskKeyt(char * keyt);
 	int SendLoginMsg(const char * userName,const char *encryptData);
 	void AskKeyMsgResp(const BYTE* msgData);
 	void LoginMsgResp(const BYTE* msgData);
-
+	void RecvRealTimeMedia(const BYTE* msgData);
+	void RecvMalfunctionAlert(const BYTE *msgData);
 private:
-	
-	
-	CString serverPort;//服务器port 22616
-	
+
 	int m_clientID;
-
 	CEvent keEvent[KEMSG_EVENT_MAX];		//申请key
-	void * tmpData[KEMSG_EVENT_MAX];	//传递消息读取的数据,resp函数生成,使用者释放
-
-
+	int respData[KEMSG_EVENT_MAX];	//传递消息读取的数据,resp函数生成,使用者释放
 private:
-
 	void EncryptData(const char * userName,const char * pwd,const char * keyt,char * encryptedData);
 };

@@ -3,6 +3,7 @@
 // KeWebCamOCXCtrl.h : CKeWebCamOCXCtrl ActiveX 控件类的声明。
 
 #include "WebCamPannel.h"
+
 // CKeWebCamOCXCtrl : 有关实现的信息，请参阅 KeWebCamOCXCtrl.cpp。
 
 class CKeWebCamOCXCtrl : public COleControl
@@ -45,6 +46,8 @@ protected:
 // 调度和事件 ID
 public:
 	enum {
+		dispidPlayRTV = 4L,
+		dispidQueryUserCamera = 3L,
 		dispidKE_UserLoginServer = 2L,
 		dispidSetDivision = 1L
 	};
@@ -52,5 +55,7 @@ public:
 protected:
 	void SetDivision(LONG nDivision);
 	LONG KE_UserLoginServer(LPCTSTR userName, LPCTSTR password, LPCTSTR ipAddr);
+	BSTR QueryUserCamera(void);
+	BSTR PlayRTV(LPCTSTR cameralName);
 };
 
