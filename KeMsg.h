@@ -54,14 +54,18 @@
 
 enum KEMSG_TYPE
 {
+	KEMSG_TYPE_VIDEOSERVER = 0x0C,
+	KEMSG_TYPE_AUDIOSTREAM = 0x38,
+	KEMSG_TYPE_VIDEOSTREAM = 0x39,
 	KEMSG_TYPE_ASKKEY = 0xD0,
 	KEMSG_TYPE_LOGIN = 0x80,
 	KEMSG_TYPE_AskTreeStruct = 0x81,
 	KEMSG_TYPE_HEARTBEAT=0x82,
 	KEMSG_TYPE_REALTIMEDATA = 0x83,
+	KEMSG_TYPE_PTZControl = 0x85,
 	KEMSG_TYPE_MalfunctionAlert = 0x8A,
 	KEMSG_TYPE_MEDIATRANS = 0x8F,
-	KEMSG_TYPE_MediaStream = 0x39,
+	
 };
 
 enum KEMSG_EVENT
@@ -69,6 +73,7 @@ enum KEMSG_EVENT
 	KEMSG_EVENT_ASKKEY = 0,
 	KEMSG_EVENT_LOGIN,
 	KEMSG_EVENT_REALTIMEDATA,
+
 	KEMSG_EVENT_MAX
 };
 
@@ -77,6 +82,12 @@ enum KEMSG_EVENT
 #define USERNAME_LEN 8
 #define PASSWORD_LEN 8
 #define  ENCRYPTED_DATA_LEN 16
+
+inline int MakeCameraID(int videoID,int channelNo)
+{
+	return (videoID<<8) + channelNo;
+}
+
 
 #pragma pack(1)
 
@@ -126,7 +137,7 @@ typedef struct _KEMsgXMLInfo
 
 typedef struct _KEMsgHeartBeat
 {
-	KEMsgHead head;
+	KEMsgHead head;//0x82
 	char status;
 }KEMsgHeartBeat,*PKEMsgHeartBeat;
 
@@ -135,7 +146,7 @@ typedef struct _KEMsgRealTimeDataReq
 	BYTE protocal;//0x83
 	BYTE msgType;
 	int msgLength;
-	int vedioID;//视频服务器id
+	int videoID;//视频服务器id
 	int clientID;
 	char channelNo;//通道号
 	char reqType;//0:请求,1:断开
@@ -156,7 +167,7 @@ typedef struct _KEMsgRealTimeDataResp
 	short dummy;
 }KEMsgRealTimeDataResp,*PKEMsgRealTimeDataResp;
 
-typedef struct _KEMediaTransReq
+typedef struct _KEMsgMediaTransReq
 {
 	KEMsgHead head;//0x8f
 	int videoID;
@@ -165,9 +176,9 @@ typedef struct _KEMediaTransReq
 	char listen;//监听=0请求   =1 停止
 	char talk;// 对讲=0请求   =1 停止
 	char devType;// 2：客户端   3：平台   5：录像服务器
-}KEMediaTransReq,*PKEMediaTransReq;
+}KEMsgMediaTransReq,*PKEMsgMediaTransReq;
 
-typedef struct _KEMediaTransResp
+typedef struct _KEMsgMediaTransResp
 {
 	KEMsgHead head;//0x8f
 	int videoID;
@@ -176,7 +187,7 @@ typedef struct _KEMediaTransResp
 	char listen;//监听=0请求   =1 停止
 	char talk;//, , 对讲=0请求   =1 停止
 	char respType;// 响应类型:0请求成功;1 失败;2视频服务器不在线;	3通道被禁用;4超出最大转发数;8每通道最多可发给8个客户端、一个录像和一个平台;6 最多可建立600个TCP连接	
-}KEMediaTransResp,*PKEMediaTransResp;
+}KEMsgMediaTransResp,*PKEMsgMediaTransResp;
 
 typedef struct _KEMalfunctionAlert
 {
@@ -197,9 +208,66 @@ typedef struct _KEMalfunctionAlert
 	char timeSpan[5];
 }KEMalfunctionAlert,*PKEMalfunctionAlert;
 
+typedef struct _KEVideoStreamHead
+{
+	BYTE protocal;
+	BYTE msgType;//0x39
+	int msgLength;
+	int videoID;
+	char channelNo;
+}KEVideoStreamHead,*PKEVideoStreamHead;
 
 
 
+typedef struct _KEVideoServerReq
+{
+	BYTE protocal;
+	BYTE msgType;//0x0c
+	int msgLength;
+	int videoID;
+	int clientID;
+	char channelNo;
+	char video;//视频=0请求   =1 停止
+	char listen;//监听=0请求   =1 停止
+	char talk;// 对讲=0请求   =1 停止
+	char protocalType;
+	int transSvrIp;
+}KEVideoServerReq,*PKEVideoServerReq;
+
+typedef struct _KEVideoServerResp
+{
+	BYTE protocal;
+	BYTE msgType;//0x0c
+	int msgLength;
+	int videoID;
+	int clientID;
+	char channelNo;
+	char respType;// ACK/NAK
+}KEVideoServerResp,*PKEVideoServerResp;
+
+
+typedef struct _KEPTZControlReq
+{
+	BYTE protocal;
+	BYTE msgType;//0x85
+	int msgLength;
+	int videoID;
+	int clientID;
+	char channelNo;
+	BYTE ctrlType;
+	BYTE speed;
+	BYTE data;
+}KEPTZControlReq,*PKEPTZControlReq;
+
+typedef struct _KEPTZControlResp
+{
+	BYTE protocal;
+	BYTE msgType;//0x85
+	int msgLength;
+	int videoID;
+	int clientID;
+	char respType;	
+}KEPTZControlResp,*PKEPTZControlResp;
 
 #pragma pack()
 

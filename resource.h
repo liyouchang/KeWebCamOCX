@@ -58,13 +58,17 @@
 #define ID_MENU_FAST                    32788
 #define ID_1_2                          32789
 #define ID_1_3                          32790
+#define ID_SELECTCAMERA_32791           32791
+#define ID_SELECTCAMERA_32792           32792
+#define ID_MENU_FULLSCREEN              32793
+#define ID_MENU_AllFullScreen           32794
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        209
-#define _APS_NEXT_COMMAND_VALUE         32791
+#define _APS_NEXT_COMMAND_VALUE         32795
 #define _APS_NEXT_CONTROL_VALUE         222
 #define _APS_NEXT_SYMED_VALUE           105
 #endif

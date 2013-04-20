@@ -20,7 +20,7 @@ unsigned int __stdcall SimpleThreadBase::ThreadProc( void* arg )
 	if ( !arg )
 		return -1;
 	SimpleThreadBase * ptr = static_cast<SimpleThreadBase*>(arg);
-
+	
 	ptr->Run();
 	ptr->flags &= ~SimpleThreadBase::fRUNNING;
 	return 0;
@@ -29,6 +29,7 @@ unsigned int __stdcall SimpleThreadBase::ThreadProc( void* arg )
 void SimpleThreadBase::Start()
 {
 	flags |= fRUNNING;
+	toStop = false;
 	_thread = reinterpret_cast<HANDLE>(
 		::_beginthreadex (0, 0, ThreadProc, this, 0, &thread_id));
 	if (! _thread)
@@ -47,12 +48,12 @@ void SimpleThreadBase::Join()
 void SimpleThreadBase::Stop( DWORD dwTimeout/* = INFINITE */)
 {
 	toStop = true;
-	if ( _thread != NULL )
+	if ( _thread != INVALID_HANDLE_VALUE )
 	{
 		if ( WaitForSingleObject(_thread, dwTimeout) == WAIT_TIMEOUT ) {
 			TerminateThread(_thread, 1);
 		}
 		CloseHandle(_thread);
-		_thread = NULL;
+		_thread = INVALID_HANDLE_VALUE;
 	}
 }

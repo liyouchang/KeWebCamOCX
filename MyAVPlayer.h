@@ -1,8 +1,8 @@
 #pragma once
 
 #include "AVPlay.h"
-
-
+#include <map>
+// #include <afxmt.h>
 //******************************请求数据状态*********************************
 #define STA_QUESTDATA_FREE                 0								//空闲状态
 #define STA_QUESTDATA_TOJR                 1								//向接入请求视频图像的IP状态
@@ -18,15 +18,22 @@ class CMyAVPlayer
 public:
 	CMyAVPlayer(void);
 	virtual ~CMyAVPlayer(void);
-	void SetPlayWnd(HWND hWnd);
-	int OpenStream(int videoID,int channelNo);
-	int InputStream(char * data,int dataLen);
+	void SetPlayWnd(HWND hWnd,bool toInit = false);
+	int OpenStream();
+	int InputStream(const BYTE * data,int dataLen);
+	int CloseStream();
 	void PlayFile(HWND hWnd);
+	bool IsPlaying();	
+	int CapPic(LPCTSTR pFileName);
+	int m_nCamNo;//拥有此播放器的Static
+	int m_videoID;
+	int m_channelNo;
 private:
 	long m_lPlayHandle;
 	long  m_lPause;
 	HWND m_hPlayWnd;
 	int m_PlayStatus;
-	int m_videoID;
-	int m_channelNo;
+	//CCriticalSection m_cs; // sinchronicity
+public:
+	static int StreamID;
 };

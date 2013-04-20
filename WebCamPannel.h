@@ -4,9 +4,9 @@
 #include "common.h"
 #include "OneCamera.h"
 #include "ClientDemon.h"
-#include "SinglePlayView.h"
-// CWebCamPannel 对话框
 
+// CWebCamPannel 对话框
+#include <map>
 #define DIVISION_MAX_CH16		4
 #define DIVISION_MAX_CH9		3
 #define DIVISION_MAX_CH8		3
@@ -26,12 +26,12 @@ class CWebCamPannel : public CDialog
 	DECLARE_DYNAMIC(CWebCamPannel)
 public:
 	int	FnDivision;	
-	int	m_nActiveCamera;
+	int	m_nActiveCamera;//当前选中的镜头
 	int	m_nToggledDivision;
 	int	m_nWatermark;
-	CxImage 	temp_image;
-	int	m_nSelectCamera;
-	CClientDemon	demon;
+	int m_nCameraNumber;
+	//CxImage 	temp_image;
+	//CClientDemon	demon;
 	int	ColCount;
 	int	RowCount;
 	BOOL	m_bDivision;
@@ -41,9 +41,8 @@ public:
 	int	m_nRotation_06;
 	int	m_nRotation_08;
 	int	m_nRotation_10;
-
+	
 	void SetPlayDivision(int nDiv);
-	void SendMsg(UINT nMajorType, UINT nSubType, UINT nMsgType, LPARAM lParam, UINT nSendFlag=0);
 	COLORREF GetCamFontColor();
 	void InvalidateAll();
 	CRect GetFullPaintRect();
@@ -52,6 +51,7 @@ public:
 	void DrawAllCameraImages(CDC *pDC=NULL);
 	void GetCameraRect(int nMode);
 	void DrawFrame(CDC *pDC);
+	void SetActiveCamera(int nCamNo);
 public:
 	CWebCamPannel(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~CWebCamPannel();
@@ -62,12 +62,16 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	int			m_nMaxChannel;
-	CMyAVPlayer	* GetOnePlayer(int videoID,int channelNo);
+	COneCamera 	* GetOnePlayer(int cameraID,int * isPlaying = NULL);
+	COneCamera * GetCamera(int cameraID);
 	//CSinglePlayView  m_playViewArray[CAM_MAX+1];
 	COneCamera		m_camarray[CAM_MAX+1];
-	CxImage			m_Imagearray[CAM_MAX+1];
+	//CxImage			m_Imagearray[CAM_MAX+1];
 	afx_msg void OnStnClickedCamera0();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnDestroy();
 	afx_msg void OnPaint();
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
+
 };

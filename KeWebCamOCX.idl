@@ -22,12 +22,15 @@ library KeWebCamOCXLib
 	dispinterface _DKeWebCamOCX
 	{
 		properties:
-		methods:
+			[id(9) , helpstring("属性 SnapFilePath")] BSTR SnapFilePath;
+	methods:
 			[id(1), helpstring("分屏方法")] void SetDivision(LONG nDivision);
-			[id(2), helpstring("方法KE_UserLoginServer")] LONG KE_UserLoginServer(BSTR userName, BSTR password, BSTR ipAddr);
 			[id(3), helpstring("获取用户摄像头")] BSTR QueryUserCamera(void);
-	
-			[id(4), helpstring("播放实时视频")] BSTR PlayRTV(BSTR cameralName);
+			[id(5), helpstring("方法StartRealTimeVideo")] BSTR StartRealTimeVideo(LONG videoID, LONG channelNo);
+			[id(6), helpstring("停止实时视频")] BSTR StopRealTimeVideo(LONG videoID, LONG channelNo);
+			[id(7), helpstring("云台控制方法")] BSTR ControlPTZ(LONG cameraID, BYTE PTZCmd, BYTE iSpeed, BYTE iData);
+			[id(8), helpstring("方法LoginServer")] BSTR LoginServer(BSTR userName, BSTR password, BSTR svrIpAddr);
+			[id(10), helpstring("拍快照")] BSTR TakeSnapshot(LONG nCameraID);
 	};
 
 	//  CKeWebCamOCXCtrl 的事件调度接口
@@ -40,6 +43,8 @@ library KeWebCamOCXLib
 			//  事件接口没有任何属性
 
 		methods:
+			[id(2)] void HeartBeatStop(BSTR reason);
+			[id(3)] void ReportCameraStatus(BSTR info);
 	};
 
 	//  CKeWebCamOCXCtrl 的类信息

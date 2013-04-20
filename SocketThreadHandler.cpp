@@ -3,7 +3,7 @@
 #include <atlbase.h>
 #include <strsafe.h>
 #include "SocketThreadHandler.h"
-
+#include <iostream>
 
 
 CSocketThreadHandler::CSocketThreadHandler(void)
@@ -27,11 +27,11 @@ void CSocketThreadHandler::OnDataReceived( CSocketHandle* pSH, const BYTE* pbDat
 {
 	ASSERT( pSH == m_SocketClient );
 	(pSH);
-	CString  strText;
-	USES_CONVERSION;
-	LPTSTR pszText = strText.GetBuffer(dwCount+1);
-	::StringCchCopyN(pszText, dwCount+1, A2CT(reinterpret_cast<LPCSTR>(pbData)), dwCount);
-	strText.ReleaseBuffer();
+	//CString  strText;
+	//USES_CONVERSION;
+	//LPTSTR pszText = strText.GetBuffer(dwCount+1);
+	//::StringCchCopyN(pszText, dwCount+1, A2CT(reinterpret_cast<LPCSTR>(pbData)), dwCount);
+	//strText.ReleaseBuffer();
 	//LOG_DEBUG( "Get"<< addr <<">>>>"<< strText.GetString());
 
 	if (!CheckMessage(pbData,dwCount))
@@ -39,6 +39,7 @@ void CSocketThreadHandler::OnDataReceived( CSocketHandle* pSH, const BYTE* pbDat
 		LOG_WARN( m_loacalAddr<< " received error message from " << addr);
 		return;
 	}
+
 	m_recvBuf.Write(pbData,dwCount);
 
 }
@@ -63,9 +64,11 @@ void CSocketThreadHandler::OnThreadBegin( CSocketHandle* pSH )
 
 bool CSocketThreadHandler::Init( const UINT nCnt )
 {
+
 	BOOL ret =  m_recvBuf.Init(nCnt);
 	if (ret == FALSE)
 	{
+
 		return false;
 	}
 	return  true;
@@ -73,45 +76,33 @@ bool CSocketThreadHandler::Init( const UINT nCnt )
 
 void CSocketThreadHandler::Run()
 {
-	std::vector<BYTE> msgRecv;
+
 	while (m_SocketClient->IsOpen() && !this->toStop)
 	{
-		if (m_recvBuf.GetCount() == 0)
+		if (m_recvBuf.GetCount() == 0 )
 		{
 			DWORD dw = m_recvBuf.WaitForNewData(10000);
 			if (dw ==WAIT_TIMEOUT )
 			{
-				LOG_WARN("WaitForSingleObject wait timeout");
+				//LOG_WARN("WaitForSingleObject wait timeout\n");
 				continue;
 			}
-		}
+		}		
 		
-		KEMsgHead head;
-		int headLen = sizeof(KEMsgHead);
-		int nRead = m_recvBuf.Read((BYTE*)&head,headLen);
-		if (nRead != headLen)
+		if (!GetMessageData())
 		{
-			LOG_ERROR("Read fifo buffer error!");
+			Sleep(10);
 			continue;
 		}
-		msgRecv.clear();
-		msgRecv.resize(head.msgLength,0);
-		memcpy(&msgRecv[0],&head,headLen);
-		
-		nRead = m_recvBuf.Read(&msgRecv[headLen],head.msgLength-headLen);
-		if (nRead != head.msgLength-headLen)
-		{
-			LOG_ERROR("Read fifo buffer error!");
-			continue;
-		}
-		
-		this->HandleMessage(&msgRecv[0]);
+		this->HandleMessage(&m_MsgRecv[0]);
+		m_MsgRecv.clear();
+
 	}
 }
 
 void CSocketThreadHandler::OnThreadExit( CSocketHandle* pSH )
 {
-	LOG_INFO("Connection "<<m_loacalAddr<<" thread exit");
+	//LOG_INFO("Connection "<<m_loacalAddr<<" thread exit");
 	this->Stop();
 	
 }
@@ -125,11 +116,11 @@ void CSocketThreadHandler::GetAddress( const SockAddrIn& addrIn, CString& rStrin
 
 bool CSocketThreadHandler::CheckMessage( const BYTE* data, DWORD dwCount )
 {
-	PKEMsgHead pHead = (PKEMsgHead)data;
-	if (pHead->msgLength != dwCount)
-	{
-		return false;
-	}
+// 	PKEMsgHead pHead = (PKEMsgHead)data;
+// 	if (pHead->msgLength != dwCount)
+// 	{
+// 		return false;
+// 	}
 
 	return true;
 }
@@ -150,7 +141,6 @@ DWORD CSocketThreadHandler::Write( const LPBYTE lpBuffer,DWORD dwCount )
 {
 	if ( m_SocketClient.IsOpen() )
 	{
-
 		if (m_nSockType == SOCK_TCP)
 		{
 			return m_SocketClient.Write(lpBuffer, dwCount, NULL);
@@ -167,6 +157,48 @@ DWORD CSocketThreadHandler::Write( const LPBYTE lpBuffer,DWORD dwCount )
 		return -1;
 	}
 }
+
+bool CSocketThreadHandler::GetMessageData()
+{
+	int nRead= 0;
+	int headLen = sizeof(KEMsgHead);
+	if (m_MsgRecv.size() == 0)//上一个消息已经读取完成
+	{
+		KEMsgHead head;
+		 nRead = m_recvBuf.Read((BYTE*)&head,headLen);
+		if (nRead != headLen)
+		{
+			return false;
+		}
+		if (head.protocal != PROTOCOL_HEAD)
+		{
+			LOG_ERROR("The message Protocal Head error, Clear the recv buffer!");
+			m_recvBuf.Drain(m_recvBuf.GetCount());
+			m_MsgRecv.clear();
+			return false;
+		}
+		m_MsgRecv.resize(head.msgLength,0);
+		memcpy(&m_MsgRecv[0],&head,headLen);
+		nRead = m_recvBuf.Read(&m_MsgRecv[headLen], head.msgLength-headLen);
+		if (nRead != head.msgLength-headLen)
+		{
+			return false;
+		}
+	}
+	else//上一个消息未完成读取
+	{
+		int waitRecv = m_MsgRecv.size() - headLen;
+		nRead = m_recvBuf.Read(&m_MsgRecv[headLen],waitRecv);
+		if (nRead != waitRecv)
+		{
+			//TRACE("Read fifo buffer error:1 ");
+			return false;
+		}
+	}
+	
+	return true;
+}
+
 
 std::ostream& operator<<( std::ostream& output,const SockAddrIn& obj )
 {

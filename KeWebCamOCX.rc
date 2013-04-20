@@ -59,8 +59,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 1,0,0,2
+ PRODUCTVERSION 1,0,0,2
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -77,12 +77,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Kaer"
             VALUE "FileDescription", "Kaer web camera activex"
-            VALUE "FileVersion", "1.0.0.1"
+            VALUE "FileVersion", "1.0.0.2"
             VALUE "InternalName", "KeWebCamOCX.ocx"
             VALUE "LegalCopyright", "(C)2013 Kaer。保留所有权利。"
             VALUE "OriginalFilename", "KeWebCamOCX.ocx"
             VALUE "ProductName", "KeWebCam"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "ProductVersion", "1.0.0.2"
         END
     END
     BLOCK "VarFileInfo"
@@ -134,8 +134,8 @@ BEGIN
     CONTROL         "",IDC_CAMERA15,"Static",SS_BLACKFRAME | SS_NOTIFY,209,168,52,40
 END
 
-IDD_DLG_PLAYCONTROL DIALOGEX 0, 0, 359, 77
-STYLE DS_SETFONT | DS_MODALFRAME | WS_CHILD | WS_CAPTION
+IDD_DLG_PLAYCONTROL DIALOGEX 0, 0, 360, 78
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Play Control"
 FONT 9, "宋体", 400, 0, 0x0
 BEGIN
@@ -178,7 +178,8 @@ BEGIN
 
     IDD_DLG_PLAYCONTROL, DIALOG
     BEGIN
-        RIGHTMARGIN, 185
+        RIGHTMARGIN, 186
+        BOTTOMMARGIN, 77
     END
 
     IDD_FORMVIEW_PLAY, DIALOG
@@ -206,20 +207,23 @@ IDR_MENU_CAMSELECT MENU
 BEGIN
     POPUP "Select Camera"
     BEGIN
+        MENUITEM "全屏",                          ID_MENU_FULLSCREEN
+        MENUITEM "多画面全屏",                       ID_MENU_AllFullScreen
+        MENUITEM SEPARATOR
+        MENUITEM "关闭",                          ID_MENU_RESET
+        MENUITEM SEPARATOR
+    END
+    POPUP "LoaclPlayer"
+    BEGIN
         MENUITEM "播放",                          ID_MENU_PLAY
         MENUITEM "快进",                          ID_MENU_FAST
         MENUITEM "慢放",                          ID_MENU_SLOW
-        MENUITEM SEPARATOR
-        MENUITEM "抓拍",                          ID_MENU_SAVEAS
-        MENUITEM SEPARATOR
-        MENUITEM "关闭",                          ID_MENU_RESET
-        MENUITEM "全部关闭",                        ID_MENU_RESET_ALL
-        MENUITEM SEPARATOR
-        MENUITEM "显示水印",                        ID_MENU_SHOW_WATERMARK
     END
-    POPUP "1"
+    POPUP "NoUse"
     BEGIN
-        MENUITEM "2",                           ID_1_2
+        MENUITEM "抓拍",                          ID_MENU_SAVEAS
+        MENUITEM "全部关闭",                        ID_MENU_RESET_ALL
+        MENUITEM "显示水印",                        ID_MENU_SHOW_WATERMARK
     END
 END
 

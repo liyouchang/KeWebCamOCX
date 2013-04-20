@@ -26,7 +26,7 @@ const int new_CIF_ID_16[16]  = { 0,  0,  2,  2,  4,  4,  6,  6,  8,  8, 10, 10, 
 #define DIV_DEFAULT_CH4			DIV_CH4
 #define DIV_DEFAULT_CH1			DIV_CH1
 
-#define INDEX_MAX				64000   //Local Play 矫 阿 庆歹 File Pointer    : 傈眉弥措650M/弥家 捞固瘤 荤捞令10K
+#define INDEX_MAX				64000   
 
 #define CAM_PER_DVR				16
 #define DVR_MAX					1
@@ -66,65 +66,90 @@ const int new_CIF_ID_16[16]  = { 0,  0,  2,  2,  4,  4,  6,  6,  8,  8, 10, 10, 
 #define	RECORD_PATH				"C:\\DVR\\"
 #define DIVLOGO					"res\\DivLogo.bmp"
 
-// Windows Version
-enum {
-	UNKNOWN_WIN_VERSION	= 0,
-	WIN32S,
-	WIN95,
-	WIN95OSR2,
-	WIN98,
-	WIN98SE,
-	WINNT,
-	WINME,
-	WIN2000,
-	WINXP,
-	WIN2003
+
+
+#define _NEW_SWAP(a, b)			 { (a)^=(b)^=(a)^=(b); }
+#define _SAFE_DELETE(p)			{ if(p != NULL)	delete p;  p = NULL; }
+#define _SAFE_FCLOSE(p)			{ if(p != NULL)	fclose(p); p = NULL; }
+#define _SAFE_CLOSEHANDLE(p)	{ if(p != NULL)	CloseHandle(p); p = NULL; }
+
+
+#define FLOAT_CAM_FONT_COLOR     RGB(0, 0, 0)//clWhite
+#define FLOAT_CAM_FRAME_COLOR    RGB(128, 128, 128)//clGray
+#define TOGGLED_FrameColor RGB(200, 200, 200)//clSilver
+#define clBlue	RGB(0, 0, 255)
+#define clBlack	RGB(20,20, 20)
+
+
+
+
+struct CamStatusReport
+{
+	int reportType;//1-选择镜头；2-视频停止
+	int cameraID;
+	int errorCode;
+
 };
 
-struct TCamStatus
-{
-    BOOL	bMotion;
-    BOOL	bAlarm;
-    BOOL	bVideoLoss;
-};
 
 
 enum KEERRORCODE
 {
 	KE_SUCCESS = 0,
+	KE_FAILED = 1,
+	KE_ERROR_PARAM,
 	KE_SOCKET_NOTOPEN,
 	KE_SOCKET_WRITEERROR,
 	KE_CONNECT_SERVER_ERROR,
 	KE_MSG_TIMEOUT,
 	KE_LOGIN_NAMEPWDERROR,
-	KE_LOGIN_OTHERERROR,
+	KE_LOGIN_AlreadyLogin,
+	KE_LOGIN_DBServerOff,
+	KE_RTV_BOTHOFFLINE,
+	KE_RTV_VIDEOSERVEROFFLINE ,
+	KE_RTV_CHANNELDISABLE,
+	KE_RTV_MAXTRANSNUM,
+	KE_RTV_MAXVIEWNUM,
+	KE_RTV_MAXTCPNUM,
+	KE_RTV_OpenStreamFailed,
+	KE_OTHERS
 };
 
+inline char * GetKEErrorDescriptA(int errorCode)
+{
+	switch(errorCode)
+	{
+	case KE_SUCCESS:											return "成功";
+	case KE_FAILED:												return "失败";
+	case KE_RTV_VIDEOSERVEROFFLINE:			return "视频服务器不在线";
+	case KE_RTV_CHANNELDISABLE:					return "通道被禁用";
+	case KE_SOCKET_NOTOPEN:							return "通讯未建立";
+	case KE_CONNECT_SERVER_ERROR:			return "连接服务器失败";
+	case KE_MSG_TIMEOUT:									return "消息超时";
+	case KE_RTV_BOTHOFFLINE:							return "转发服务器和视频服务器都不在线!";
+	case KE_RTV_MAXTRANSNUM:					return "超出最大转发数";
+	case KE_RTV_MAXVIEWNUM:						return "每通道最多可发给8个客户端、一个录像和一个平台";
+	case KE_RTV_MAXTCPNUM:							return "最多可建立600个TCP连接";
+	case KE_RTV_OpenStreamFailed:					return "播放器打开失败";
+	case KE_ERROR_PARAM:								return "参数错误";
+	case KE_LOGIN_AlreadyLogin:						return "已经登陆";
+	default:
+		return "其他错误";
+	}
+}
 inline CString GetKEErrorDescript(int errorCode)
 {
 	switch(errorCode)
 	{
-	//case KE_MSG_FAILED:return _T("服务器操作失败");
 	case KE_SUCCESS: return _T("成功");
 	case KE_SOCKET_NOTOPEN: return _T("通讯未建立");
 	case KE_CONNECT_SERVER_ERROR: return _T("连接服务器失败");
 	case KE_MSG_TIMEOUT: return _T("消息超时");
-	//case KE_READ_DATAERROR: return _T("读取消息错误");
-	//case KE_WRITE_ERROR: return _T("发送消息错误");
-	//case KE_PASSWORD_ERROR:return _T("密码不匹配");
+	case KE_RTV_BOTHOFFLINE: return _T("转发服务器和视频服务器都不在线！");
 	default:
 		return _T("其他错误");
 	}
 }
 
-/*
-#ifdef _DEBUG
-    inline void ASSERT(bool ok) {
-        if (!ok)
-            ShowMessage("Error!");
-    }
-#else
-    #define ASSERT
-#endif
-*/
+
 #endif 

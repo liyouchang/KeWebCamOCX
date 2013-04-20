@@ -213,6 +213,7 @@ void SocketClientImpl<T, tBufferSize>::Terminate(DWORD dwTimeout /*= INFINITE*/)
     if ( _thread != NULL )
     {
         if ( WaitForSingleObject(_thread, dwTimeout) == WAIT_TIMEOUT ) {
+			TRACE("Terminate wait timeout!");
             TerminateThread(_thread, 1);
         }
         CloseHandle(_thread);
@@ -227,7 +228,7 @@ DWORD WINAPI SocketClientImpl<T, tBufferSize>::SocketClientProc(thisClass* _this
     {
         _this->Run();
     }
-    return 0;
+    return 0; 
 }
 
 template <typename T, size_t tBufferSize>

@@ -135,11 +135,10 @@ BOOL CKeWebCamOCXApp::InitInstance()
 	{
 		//我的初始化
 		m_nMAXCHANNEL	= CAM_MAX;
-		m_bConnectOK	= FALSE;
 		m_nCurrentMappingCamera = 0;
 		//InitLogModule();
-		CSocketHandle::InitLibrary( MAKEWORD(2,2) );
-		m_cmdSocket.Init();
+		
+		g_cmdSocket = NULL;
 		g_PlayWnd = NULL;
 	}
 
@@ -152,28 +151,10 @@ BOOL CKeWebCamOCXApp::InitInstance()
 
 int CKeWebCamOCXApp::ExitInstance()
 {
-	// TODO: 在此添加您自己的模块终止代码。
+	//  在此添加您自己的模块终止代码。
+	
 	return COleControlModule::ExitInstance();
 }
-
-
-
-int CKeWebCamOCXApp::SetMediaSocket( int videoID,int channelNo,CMediaSocket * media)
-{
-	int nIndex = videoID<<2 + channelNo;
-	if (media != NULL)
-	{
-		g_mediaMap[nIndex] = media;
-	}
-	return nIndex;
-}
-
-CMediaSocket * CKeWebCamOCXApp::GetMediaSocket( int videoID,int channelNo )
-{
-	int nIndex = videoID<<2 + channelNo;
-	return g_mediaMap[nIndex];
-}
-
 
 
 // DllRegisterServer - 将项添加到系统注册表
@@ -205,9 +186,10 @@ STDAPI DllRegisterServer(void)
 	if (FAILED(hr))
 		return hr;
 
-	hr = RegisterCLSIDInCategory(CLSID_SafeItem, CATID_SafeForScripting);
-	if (FAILED(hr))
-		return hr;
+ 	hr = RegisterCLSIDInCategory(CLSID_SafeItem, CATID_SafeForScripting);
+ 	if (FAILED(hr))
+ 		return hr;
+
 
 	return NOERROR;
 }
@@ -222,13 +204,6 @@ STDAPI DllUnregisterServer(void)
 
 	AFX_MANAGE_STATE(_afxModuleAddrThis);
 
-	if (!AfxOleUnregisterTypeLib(_tlid, _wVerMajor, _wVerMinor))
-		return ResultFromScode(SELFREG_E_TYPELIB);
-
-	if (!COleObjectFactoryEx::UpdateRegistryAll(FALSE))
-		return ResultFromScode(SELFREG_E_CLASS);
-
-	// Remove entries from the registry.
 
 	hr=UnRegisterCLSIDInCategory(CLSID_SafeItem, 
 		CATID_SafeForInitializing);
@@ -239,6 +214,16 @@ STDAPI DllUnregisterServer(void)
 		CATID_SafeForScripting);
 	if (FAILED(hr))
 		return hr;
+
+
+	if (!AfxOleUnregisterTypeLib(_tlid, _wVerMajor, _wVerMinor))
+		return ResultFromScode(SELFREG_E_TYPELIB);
+
+	if (!COleObjectFactoryEx::UpdateRegistryAll(FALSE))
+		return ResultFromScode(SELFREG_E_CLASS);
+
+	// Remove entries from the registry.
+
 
 	return NOERROR;
 }

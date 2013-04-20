@@ -1,12 +1,17 @@
 #include "StdAfx.h"
 #include "MyAVPlayer.h"
-
+#include "CommonUtility/CommonFunctions.h"
 #pragma comment(lib, "AVPlay.lib")
 
 CMyAVPlayer::CMyAVPlayer(void)
 {
-	m_lPlayHandle = 0;
+	StreamID++;
+	m_lPlayHandle = StreamID;
 	m_lPause      = 1;
+	m_hPlayWnd = NULL;
+	int m_videoID = 0;
+	int m_channelNo =0 ;
+	
 	AV_Initial(0);
 
 }
@@ -45,38 +50,68 @@ void CMyAVPlayer::PlayFile(HWND hWnd)
 	}
 }
 
-int CMyAVPlayer::OpenStream( int videoID,int channelNo )
+int CMyAVPlayer::OpenStream()
 {
-	long iEncodeFlag = 1;
-
-	int iRet = AV_OpenStream(&m_lPlayHandle,&iEncodeFlag,0);
+	int iRet = AV_OpenStream_Ex(m_lPlayHandle);
 	if (iRet != 0)
 	{
-		TRACE("²¥·ÅÆ÷´ò¿ªÊ§°Ü videoID=%d,channelNo=%d,iRet=%d\n",videoID,channelNo,iRet);
+		TRACE("²¥·ÅÆ÷´ò¿ªÊ§°Ü iRet=%d\n",iRet);
 		m_PlayStatus = STA_QUESTDATA_FREE;
 		return iRet;
 	}
 	iRet = AV_Play(m_lPlayHandle,m_hPlayWnd);
 	if (iRet != 0 )
 	{
-		TRACE("²¥·ÅÆ÷²¥·ÅÊ§°Ü videoID=%d,channelNo=%d,iRet=%d\n",videoID,channelNo,iRet);
+		//TRACE("²¥·ÅÆ÷²¥·ÅÊ§°Ü videoID=%d,channelNo=%d,iRet=%d\n",videoID,channelNo,iRet);
 		m_PlayStatus = STA_QUESTDATA_FREE;
 		return iRet;
 	}
-	AV_SetPlayVideoInfo(m_lPlayHandle,videoID,channelNo);
-	m_videoID = videoID;
-	m_channelNo = channelNo;
-
+	m_PlayStatus = STA_PLAY;
+	//AV_SetPlayVideoInfo(m_lPlayHandle,m_videoID,m_channelNo);
 	return iRet;
 }
 
-void CMyAVPlayer::SetPlayWnd( HWND hWnd )
+void CMyAVPlayer::SetPlayWnd( HWND hWnd ,bool toInit)
 {
-	m_hPlayWnd = hWnd;
+	//CSingleLock lock(&m_cs, TRUE);
+	if (toInit )
+	{
+		m_hPlayWnd = hWnd;
+		AV_Initial(m_hPlayWnd);
+	}
+	else
+	{
+		m_hPlayWnd = hWnd;
+		AV_ReInitViewHandle(m_lPlayHandle,m_hPlayWnd);
+	}
 }
 
-int CMyAVPlayer::InputStream( char * data,int dataLen )
+int CMyAVPlayer::InputStream( const BYTE * data, int dataLen )
 {
-	AV_InputData(m_lPlayHandle,(long *)(data), dataLen);
+	//CSingleLock lock(&m_cs, TRUE);
+	AV_InputData(m_lPlayHandle,(long *)(data) , dataLen);
 	return 0;
 }
+
+bool CMyAVPlayer::IsPlaying()
+{
+	//CSingleLock lock(&m_cs, TRUE);
+	return (m_PlayStatus == STA_PLAY);
+}
+
+int CMyAVPlayer::CloseStream()
+{
+	//CSingleLock lock(&m_cs, TRUE);
+	int ret = AV_CloseStream_Ex(m_lPlayHandle);
+	m_PlayStatus = STA_QUESTDATA_FREE;
+
+	return ret;
+}
+
+int CMyAVPlayer::CapPic( LPCTSTR pFileName )
+{
+	std::string fileName = wstr_to_str(pFileName);
+	return AV_CapPic_Ex(m_lPlayHandle,fileName.c_str());
+}
+
+int CMyAVPlayer::StreamID = 0;

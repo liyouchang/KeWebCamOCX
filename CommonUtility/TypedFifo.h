@@ -33,6 +33,7 @@ public:
 	void Write(const T * pBuf, UINT nCnt);
 	void Drain(const UINT nCnt);
 	DWORD WaitForNewData(DWORD dwMilliseconds = INFINITE);
+	void CancelWaitNewData();//add by lht for limit wait time when stop thread using WaitForNewData
 	HANDLE GetNewDataEventHandle() const {return m_eNewData.m_hObject;}
 private:
 	int _Read(T * pBuf, UINT nCnt);
@@ -40,8 +41,18 @@ private:
 	void _Drain(const UINT nCnt);
 };
 
+
 //////////////////////////////////////////////////////////////////////////
 // CTypedFifo
+
+
+
+template <typename T>
+void CTypedFifo<T>::CancelWaitNewData()
+{
+	m_eNewData.SetEvent();
+}
+
 
 template <typename T> 
 CTypedFifo<T>::CTypedFifo(void)
@@ -61,6 +72,7 @@ CTypedFifo<T>::CTypedFifo( const UINT nCnt )
 template <typename T> 
 CTypedFifo<T>::~CTypedFifo(void)
 {
+	CancelWaitNewData();
 	Free();
 }
 
@@ -89,6 +101,7 @@ inline void CTypedFifo<T>::Free()
 		delete [] m_pBuf;
 
 	m_pBuf = NULL;
+
 }
 
 template <typename T>
@@ -174,7 +187,8 @@ void CTypedFifo<T>::Write(const T * pBuf, UINT nCnt)
 {
 	CSingleLock lock(&m_cs, TRUE);
 
-	const UINT nCurSize = _GetCount();
+	//const UINT nCurSize = _GetCount();
+	const UINT nCurSize = _GetCount() + nCnt;//do not write if not enough space to write -- lht
 	const UINT nMaxSize = m_pEnd - m_pBuf;
 	if (nCurSize >= nMaxSize ) // Do not allow new data if fifo is full
 		return;
@@ -182,16 +196,19 @@ void CTypedFifo<T>::Write(const T * pBuf, UINT nCnt)
 	{
 		const UINT nLen = min((UINT) (m_pEnd - m_pW), nCnt);
 
-		memcpy(m_pW, pBuf, nCnt*sizeof(T));
+		//memcpy(m_pW, pBuf, nCnt*sizeof(T));
+		memcpy(m_pW, pBuf, nLen*sizeof(T));//this should be nlen lht
 		m_pW += nLen;
 
 		if (m_pW >= m_pEnd)
+		{
+			//TRACE1("templately full %d!\n",nMaxSize);
 			m_pW = m_pBuf;
-
+		}
 		pBuf += nLen;
 		nCnt -= nLen;
 	} while (nCnt > 0);
-	Sleep(0);
+	//Sleep(0);
 	m_eNewData.PulseEvent();
 }
 

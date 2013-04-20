@@ -7,13 +7,17 @@
 #endif
 
 #include "resource.h"       // 主符号
-#include "WebCamPannel.h"
 #include "CmdSocket.h"
-#include "MediaSocket.h"
 #include <map>
 #include "CommonUtility/LogModule.h"
-
+#include "KeWebCamOCXCtrl.h"
+#include "CommonUtility/CommonFunctions.h"
 // CKeWebCamOCXApp : 有关实现的信息，请参阅 KeWebCamOCX.cpp。
+
+//user message define start lht message from 1029
+#define WM_HEARTBEATSTOP (WM_USER+1029)
+#define WM_RTVIDEOSTOP (WM_USER+1030)
+#define WM_CAMSTATUSREPORT (WM_USER + 1031)
 
 class CKeWebCamOCXApp : public COleControlModule
 {
@@ -26,14 +30,16 @@ public:
 	int			m_nMAXCHANNEL;
 	int			m_nCurrentMappingCamera;
 	BOOL		m_bOneChTransfer;
-	BOOL		m_bConnectOK;
 	CWebCamPannel	*g_PlayWnd;
-	std::map<int,CMediaSocket *> g_mediaMap;
-	int SetMediaSocket(int videoID,int channelNo,CMediaSocket * media);
-	CMediaSocket * GetMediaSocket(int videoID,int channelNo);
+	CCmdSocket *g_cmdSocket;
+	CKeWebCamOCXCtrl * g_pMainWnd;
+	//CString theLastError;
 	
-	CCmdSocket m_cmdSocket;
 };
+
+
+
+
 extern CKeWebCamOCXApp theApp;
 
 extern const GUID CDECL _tlid;

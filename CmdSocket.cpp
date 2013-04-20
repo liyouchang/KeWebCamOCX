@@ -3,16 +3,23 @@
 #include "CommonUtility/Md5A.h"
 #include "MediaSocket.h"
 #include "KeWebCamOCX.h"
+
+
 CCmdSocket::CCmdSocket(void)
 {
 	m_clientID = 0;
 	m_nSockType = SOCK_TCP;
-	m_HeartbeatTime = 10000;//10s 一次心跳
+	m_msgWaitTime = 10000;//10s 一个消息
 	m_serverPort = TEXT("22616");
+	//m_HeartbeatThread = new CHeartBeatThread;
 }
 
 CCmdSocket::~CCmdSocket(void)
 {
+	TRACE1("delete CCmdSocket time start %d\n",GetTickCount());
+	//delete m_HeartbeatThread;
+	CloseConnect();
+	TRACE1("delete CCmdSocket time end %d\n",GetTickCount());
 }
 
 
@@ -49,10 +56,12 @@ CCmdSocket::~CCmdSocket(void)
 	EncryptData(caUserName,caPwd,keyt,md5Data);
 	//发送登陆请求
 	ret = SendLoginMsg(caUserName,md5Data);
-
-	//开始心跳
-	StartHeartBeat();
-
+	if (ret == KE_SUCCESS)
+	{
+		//开始心跳
+		m_HeartbeatThread.Initialize(this,m_clientID);
+		m_HeartbeatThread.Start();
+	}
 	return ret;
  }
 
@@ -92,24 +101,24 @@ CCmdSocket::~CCmdSocket(void)
 	}
 
 	memcpy(keyt,(char *)respData[KEMSG_EVENT_ASKKEY],SECRETKEY_LEN);
-
 	delete (char *)respData[KEMSG_EVENT_ASKKEY];
-
 	return KE_SUCCESS;
  }
 
  bool CCmdSocket::Init()
  {
-	 const int nRecvBufSize = 0x40000;
+	 const int nRecvBufSize = 0x8000;
 	return __super::Init(nRecvBufSize);
  }
 
  void CCmdSocket::HandleMessage( const BYTE* msgData )
  {
 	PKEMsgHead pHead = (PKEMsgHead)msgData;
-
 	switch(pHead->msgType)
 	{
+	case  KEMSG_TYPE_HEARTBEAT:
+		RecvHeartBeat(msgData);
+		break;
 	case KEMSG_TYPE_ASKKEY:
 		AskKeyMsgResp(msgData);
 		break;
@@ -122,8 +131,11 @@ CCmdSocket::~CCmdSocket(void)
 	case KEMSG_TYPE_MalfunctionAlert:
 		RecvMalfunctionAlert(msgData);
 		break;
+	case  KEMSG_TYPE_PTZControl:
+		break;
 	default:
-		LOG_INFO("Receive unkown message: " <<pHead->msgType);
+		break;
+		//LOG_INFO("Receive unkown message: " <<pHead->msgType);
 		
 	}
  }
@@ -180,13 +192,14 @@ CCmdSocket::~CCmdSocket(void)
 		LOG_INFO("login success");
 		return KE_SUCCESS;
 	}
-	if (loginResult == 0x05)
+	LOG_WARN("login not success ,error number "<< loginResult);
+	switch(loginResult)
 	{
-		LOG_WARN("login username or password error!");
-		return KE_LOGIN_NAMEPWDERROR;
+	case 5:return KE_LOGIN_NAMEPWDERROR;
+	case 6:return KE_LOGIN_AlreadyLogin;
+	case 1: return KE_LOGIN_DBServerOff;
 	}
-	LOG_WARN("login notify unkown!");
-	return KE_LOGIN_OTHERERROR;
+	return KE_OTHERS;
  }
 
  void CCmdSocket::EncryptData( const char * userName,const char * pwd,const char * keyt,char * encryptedData )
@@ -236,7 +249,7 @@ CCmdSocket::~CCmdSocket(void)
 	 pReqMsg->msgLength = msgLen;
 	 pReqMsg->clientID = m_clientID;
 	 pReqMsg->channelNo = channelNo;
-	 pReqMsg->vedioID = vedioID;
+	 pReqMsg->videoID = vedioID;
 	 pReqMsg->reqType = reqType;
 	 pReqMsg->dataType = dataType;
 
@@ -245,8 +258,6 @@ CCmdSocket::~CCmdSocket(void)
 	 {
 		 return KE_SOCKET_WRITEERROR;
 	 }
-	
-
 	 return KE_SUCCESS;
  }
 
@@ -255,88 +266,148 @@ CCmdSocket::~CCmdSocket(void)
 	PKEMsgRealTimeDataResp pMsg = (PKEMsgRealTimeDataResp)msgData;
 	int videoID = pMsg->videoID;
 	int transIp = pMsg->transIP;
-	int vedioIp = pMsg->videoIP;
+	int videoSvrIp = pMsg->videoIP;
 	int port = pMsg->port;
 	int online = pMsg->online;
 	int channelNo = pMsg->channelNo;
-	if (online >2)
+	int cameraID = MakeCameraID(videoID,channelNo);
+
+	if (transIp==0 &&  videoSvrIp == 0)
 	{
-		LOG_INFO("连接转发服务器和视频服务器均不在线!");
+		LOG_INFO("All the vedio server is offline!");
+		
+		theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,KE_RTV_BOTHOFFLINE);
 		return;
 	}
-	if (online == 0 || online == 2)//连接转发服务器
-	{
-		CMediaSocket * media = new CMediaSocket;
-		media->Init();
 
-		if(!media->ConnectToServer(transIp,port))
+	COneCamera * tmpCamera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
+	CMediaSocket * media = tmpCamera->m_MediaSocket;//CMediaSocket::GetMediaSocket(videoID,channelNo,true);
+	if (media == NULL)
+	{
+		media = new CMediaSocket;
+		media->Init();
+		tmpCamera->m_MediaSocket = media;
+	}
+	int ret;
+	bool connected = false;
+	if (videoSvrIp != 0 )//连接视频服务器
+	{
+		if(!media->ConnectToServer(videoSvrIp,port))
 		{
-			LOG_ERROR("连接转发服务器失败!");
+			LOG_WARN("Connect video server failed!");
+		}
+		else
+		{
+			ret = media->ReqestVideoServer(m_clientID,videoID,channelNo,Media_Vedio);
+			if (ret != KE_SUCCESS)
+			{
+				theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,ret);
+			}
 			return;
 		}
-		media->ReqestMediaTrans(m_clientID,videoID,channelNo,Media_Vedio);
-		theApp.SetMediaSocket(videoID,channelNo,media);
 	}
-	else
+	if ( transIp != 0)//连接转发服务器
 	{
-		LOG_WARN("暂不支持从服务器获取!");
+		if(!media->ConnectToServer(transIp,22615))
+		{
+			LOG_WARN("Connect trans server failed!");
+		}
+		else
+		{
+			ret = media->ReqestMediaTrans(m_clientID,videoID,channelNo,Media_Vedio);
+			if (ret != KE_SUCCESS)
+			{
+				theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,ret);
+			}
+			return;
+		}
 	}
-
-
-
- }
-
- unsigned int __stdcall CCmdSocket::ThreadHeartBeat( void* arg )
- {
-	 if ( !arg )
-		 return -1;
-	 TRACE("Heartbeat start\n");
-	 CCmdSocket * ptr = static_cast<CCmdSocket*>(arg);
-	 ptr->heartBeatStart = true;
-	 ptr->m_heartCount = 0;
-	 while(ptr->m_SocketClient.IsOpen() )
-	 {
-		 if (ptr->m_heartCount > 3)
-		 {
-			 LOG_ERROR("心跳超时");
-			 //GetViewPointer()->PostMessage(WM_HEARTBEATSTOP);
-			 break;
-		 }
-		 KEMsgHeartBeat msg;
-		 msg.head.clientID = ptr->m_clientID;
-		 msg.head.msgLength = sizeof(KEMsgHeartBeat);
-		 msg.head.msgType = KEMSG_TYPE_HEARTBEAT;
-		 msg.head.protocal = PROTOCOL_HEAD;
-		 msg.status = 0;
-		 ptr->Write((BYTE *)&msg,msg.head.msgLength);
-		 ptr->m_heartCount++;
-		 Sleep(ptr->m_HeartbeatTime);
-	 }
-	 TRACE("Heartbeat stop\n");
-	 ptr->heartBeatStart = false;
-	 return 0;
- }
-
- void CCmdSocket::StartHeartBeat()
- {
-	 if (heartBeatStart)
-	 {
-		 //用户注销后心跳线程可能还没有退出
-		 return;
-	 }
-	 unsigned int heartbeatThreadId;
-	 heartbeatThread  = reinterpret_cast<HANDLE>(
-		 ::_beginthreadex (0, 0, ThreadHeartBeat, this, 0, &heartbeatThreadId));
-	 if (! heartbeatThread)
-	 {
-		 //AfxMessageBox("心跳线程创建失败");
-	 }
+	theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,KE_CONNECT_SERVER_ERROR);
+	
  }
 
  void CCmdSocket::RecvMalfunctionAlert( const BYTE *msgData )
  {
 	PKEMalfunctionAlert  pMsg = (PKEMalfunctionAlert)msgData;
-	LOG_DEBUG("Malfunction alert:"<<pMsg->alertType<<"-"<<pMsg->alertNo<<"; status="<<pMsg->status);
+	//LOG_DEBUG("Malfunction alert:"<<pMsg->alertType<<"-"<<pMsg->alertNo<<"; status="<<pMsg->status);
+ }
+
+ void CCmdSocket::RecvHeartBeat( const BYTE * msgData )
+ {
+	PKEMsgHeartBeat pMsg = (PKEMsgHeartBeat)msgData;
+	if (pMsg->status == 0x0d )
+	{
+		m_HeartbeatThread.ResetCount();
+	}
+ }
+
+ void CCmdSocket::Run()
+ {
+	 while (m_SocketClient->IsOpen() && !this->toStop)
+	 {
+		 //TRACE1("LOOP  time %d\n",GetTickCount());
+		 if (m_recvBuf.GetCount() == 0 )
+		 {
+			 DWORD dw = m_recvBuf.WaitForNewData(m_msgWaitTime);
+			 if (dw ==WAIT_TIMEOUT )
+			 {
+				 continue;
+			 }
+		 }		
+
+		 if (!GetMessageData())
+		 {
+			 Sleep(10);
+			 continue;
+		 }
+		 this->HandleMessage(&m_MsgRecv[0]);
+		 m_MsgRecv.clear();
+	 }
+ }
+
+ void CCmdSocket::CloseConnect()
+ {
+	 //取消读等待
+	m_HeartbeatThread.Stop();
+	m_recvBuf.CancelWaitNewData();
+	m_SocketClient.Terminate();
+	
+	
+	//清空读缓冲
+	m_recvBuf.Drain( m_recvBuf.GetCount() );
+ }
+
+ int CCmdSocket::SendPTZControlMsg( int cameraID,BYTE ctrlType,BYTE speed,BYTE data )
+ {
+	 if (cameraID <0 || ctrlType > 31 )
+	 {
+		 return KE_ERROR_PARAM;
+	 }
+	 if (!m_SocketClient.IsOpen())
+	 {
+		 return KE_SOCKET_NOTOPEN;
+	 }
+	 std::vector<BYTE> msgSend;
+	 int msgLen = sizeof(KEPTZControlReq);
+	 msgSend.resize(msgLen,0);
+	 PKEPTZControlReq pReqMsg;
+	 pReqMsg = (PKEPTZControlReq)&msgSend[0];
+	 pReqMsg->protocal = PROTOCOL_HEAD;
+	 pReqMsg->msgType = KEMSG_TYPE_PTZControl;
+	 pReqMsg->msgLength = msgLen;
+	 pReqMsg->clientID = m_clientID;
+	 pReqMsg->channelNo = cameraID & 0xFF;
+	 pReqMsg->videoID = cameraID >> 8;
+	 pReqMsg->ctrlType = ctrlType;
+	 pReqMsg->speed = speed;
+	 pReqMsg->data = data;
+
+	 int ret = this->Write(&msgSend[0],msgLen);
+	 if (ret != msgLen)
+	 {
+		 return KE_SOCKET_WRITEERROR;
+	 }
+	return KE_SUCCESS;
  }
 
 

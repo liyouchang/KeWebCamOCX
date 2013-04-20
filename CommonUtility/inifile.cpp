@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
-
+#include "CommonFunctions.h"
 // Only valid if C++
 #ifndef __cplusplus
 #error C++ compiler required.
@@ -36,22 +36,22 @@
 #define _CRLFW L"\n"
 #endif
 #endif
-
-// Convert wstring to string
-std::string wstr_to_str(const std::wstring& arg)
-{
-    std::string res( arg.length(), '\0' );
-    wcstombs( const_cast<char*>(res.data()) , arg.c_str(), arg.length());
-    return res;
-}
-
-// Convert string to wstring
-std::wstring str_to_wstr(const std::string& arg)
-{
-    std::wstring res(arg.length(), L'\0');
-    mbstowcs(const_cast<wchar_t*>(res.data()), arg.c_str(), arg.length());
-    return res;
-}
+// 
+// // Convert wstring to string
+// std::string wstr_to_str(const std::wstring& arg)
+// {
+//     std::string res( arg.length(), '\0' );
+//     wcstombs( const_cast<char*>(res.data()) , arg.c_str(), arg.length());
+//     return res;
+// }
+// 
+// // Convert string to wstring
+// std::wstring str_to_wstr(const std::string& arg)
+// {
+//     std::wstring res(arg.length(), L'\0');
+//     mbstowcs(const_cast<wchar_t*>(res.data()), arg.c_str(), arg.length());
+//     return res;
+// }
 
 // Helper Functions
 void RTrim(std::string &str, const std::string& chars = " \t")

@@ -7,15 +7,12 @@
 // OneCamera.h : header file
 //
 
-#include "../CxImage/ximage.h"
-#include "../CxImage/xfile.h"
+//#include "../CxImage/ximage.h"
+//#include "../CxImage/xfile.h"
 #include "MyAVPlayer.h"
-#include "OleDropTargetEx.h"
+#include "MediaSocket.h"
+//#include "OleDropTargetEx.h"
 
-#define FLOAT_CAM_FONT_COLOR     RGB(0, 0, 0)//clWhite
-#define FLOAT_CAM_FRAME_COLOR    RGB(128, 128, 128)//clGray
-#define clBlue	RGB(0, 0, 255)
-#define TOGGLED_FrameColor RGB(200, 200, 200)//clSilver
 
 typedef struct _cam_reference
 {
@@ -49,42 +46,39 @@ public:
 	CWebCamPannel*		m_pOwner;
 	CRect				m_defaultArea;
 	CPoint				m_DownPos;
-	CMyAVPlayer m_AVIPlayer;
+	CMyAVPlayer *m_AVIPlayer;
+	CMediaSocket * m_MediaSocket;
+// 	int m_videoID;
+// 	int m_channelNo;
+	int m_cameraID;
+	bool CheckMediaExist(int videoID,int channelNo);
+	void SetPlayIndex(int videoID,int channelNo);
 	
-	int videoID;
-	int channelNo;
-
+	int					m_nCamNo;//在父窗口中的镜头数组中的位置
 	BOOL				m_bPress;
 	int					m_nTag;
-    int					m_nCamNo;//在父窗口中的镜头数组中的位置
+	BOOL m_bDrag;
 	BOOL				m_bDrawable;	//是否显示 6, 8, 13 mode
+
 	BOOL				m_bActive;		
 	int					m_nRec_Type;	// CIF mode type
 	CString				m_strCaption;
 	CString				m_strDateTime;
     cam_reference		m_CamRef;
 	event_information	m_event;
-	int					m_nAviIndex;
-	BOOL				m_bMotion;
-	BOOL				m_bAlaram;
+
 	BOOL				m_bLoss;
 	BOOL				m_bFull;
-    BYTE				m_bEvent;
-    BOOL				m_bSaveToAVI;
 	BOOL m_bIsPlaying;
 
 	COneCamera();
-
-	void SetOwner(CWebCamPannel* pOwner) { m_pOwner = pOwner; };
-	virtual BOOL RegisterDrop();
-protected:
-	COleDropTargetEx m_dropEx;
-	//处理OnDropEx消息是必须的，否则OnDrop函数不会被执行
-	//当然也可以在OnDropEx函数中处理数据
-	virtual LRESULT OnDrop(WPARAM pDropInfoClass, LPARAM lParm);
-	virtual LRESULT OnDropEx(WPARAM pDropInfoClass, LPARAM lParm);
-	virtual LRESULT OnDragOver(WPARAM pDropInfoClass,LPARAM lParm);
-
+	void SetOwner(CWebCamPannel* pOwner);
+	void ExchangeAVIPlayer(CMyAVPlayer *otherPlayer);
+	void ExchangeCamera(COneCamera *camera);
+	void SwapVideo(COneCamera * camera);
+	bool IsPlaying();
+	void StopRTPlay(bool reUse = false);
+	int StartPlay();
 // Attributes
 public:
 
@@ -100,11 +94,12 @@ public:
 public:
 	void ResetAVI();
 	void __fastcall DrawCameraImage(CDC *pdc, CRect destFrame, CString caption, COLORREF FontColor, COLORREF FrameColor);
+	void DrawCameraBack(CDC *pDC, CRect destFrame, COLORREF rectColor, COLORREF FrameColor);
 	void InitCarmera();
 	void MoveWindows(CRect rect, BOOL Visible);
 	int GetCameraCanvasTextHeight();
 	virtual ~COneCamera();
-
+	
 	void LButtonDown(UINT nFlags, CPoint point);
 	void LButtonDblClk(UINT nFlags, CPoint point);
 
@@ -130,7 +125,16 @@ public:
 	afx_msg void OnMenuPlay();
 	afx_msg void OnMenuSlow();
 	afx_msg void OnMenuFast();
-	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+
+//	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
+
+public:
+	//static std::map<int,COneCamera*> g_CameraMap;
+
+	afx_msg void OnMenuFullscreen();
 };
 
 /////////////////////////////////////////////////////////////////////////////

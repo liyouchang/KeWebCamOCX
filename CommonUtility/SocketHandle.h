@@ -469,7 +469,7 @@ public:
      * @return true if successful
      */
     static bool GetLocalName(LPTSTR pszName, UINT nSize);
-
+	static bool GetLocalNameA(char * pszName, UINT nSize);
     /**
      * Get current (default) IP address for this machine
      * @param pszAddress Buffer to receive IP address (IPv4, IPv6 format)

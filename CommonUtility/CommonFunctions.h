@@ -10,6 +10,8 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
+#include <algorithm>
 using namespace std;
 
 int strtohex(const char *str, char *hex_buf);
@@ -21,10 +23,19 @@ string ConvertString(string str);
 int splitString(string text,vector<string> &strList,string sepChar);
 
 string GetCurrentPathA();
-
+wstring GetCurrentPathW();
 void SleepMillisecond(int msec);
 
+// Convert wstring to string
+std::string wstr_to_str(const std::wstring& arg);
+// Convert string to wstring
+std::wstring str_to_wstr(const std::string& arg);
 
+
+BOOL   FolderExist(CString strPath);
+BOOL CreateFolder(CString strPath);
+//创建多层目录
+BOOL CreateFolderEx(const CString& szPath);
 
 #endif
 

@@ -31,7 +31,7 @@ CWebCamPannel::CWebCamPannel(CWnd* pParent /*=NULL*/)
 	m_nRotation_10		= -6;
 	m_bDivision			= FALSE;
 	m_nMaxChannel = 16;
-	m_nActiveCamera =16;
+	m_nActiveCamera =0;
 }
 
 CWebCamPannel::~CWebCamPannel()
@@ -64,6 +64,8 @@ BEGIN_MESSAGE_MAP(CWebCamPannel, CDialog)
 	ON_STN_CLICKED(IDC_CAMERA0, &CWebCamPannel::OnStnClickedCamera0)
 	ON_WM_DESTROY()
 	ON_WM_PAINT()
+	ON_WM_LBUTTONDOWN()
+	ON_WM_SETCURSOR()
 END_MESSAGE_MAP()
 
 COLORREF CWebCamPannel::GetCamFontColor()
@@ -84,12 +86,6 @@ CRect CWebCamPannel::GetFullPaintRect()
 	return r;
 }
 
-void CWebCamPannel::SendMsg( UINT nMajorType, UINT nSubType, UINT nMsgType, LPARAM lParam, UINT nSendFlag/*=0*/ )
-{
-
-}
-
-
 // CWebCamPannel 消息处理程序
 
 void CWebCamPannel::OnStnClickedCamera0()
@@ -101,22 +97,17 @@ BOOL CWebCamPannel::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	HBITMAP		hBitmap;
-	CBitmap		bmpObj;
-
-	bmpObj.LoadBitmap(IDB_DIVLOGO);
-	hBitmap = (HBITMAP)bmpObj.m_hObject;
-
+	//HBITMAP		hBitmap;
+	//CBitmap		bmpObj;
+	//bmpObj.LoadBitmap(IDB_DIVLOGO);
+	//hBitmap = (HBITMAP)bmpObj.m_hObject;
 	//	temp_image->Load(IDB_DIVLOGO, CXIMAGE_FORMAT_BMP);
-	temp_image.CreateFromHBITMAP(hBitmap);
+	//temp_image.CreateFromHBITMAP(hBitmap);
 
 	for(int i = 0; i < CAM_MAX; i++)
 	{
 		m_camarray[i].SetOwner(this);
 		m_camarray[i].m_nCamNo		 = i;
-		m_camarray[i].m_bEvent		 = 0;
-		m_camarray[i].m_bSaveToAVI	 = FALSE;
-		//m_camarray[i].m_AVI			 = NULL;
 
 		if(i < theApp.m_nMAXCHANNEL)
 			m_camarray[i].m_strCaption.Format(_T("CamNo %02d "), i+1);
@@ -126,10 +117,10 @@ BOOL CWebCamPannel::OnInitDialog()
 		m_camarray[i].m_strDateTime.Empty();
 		m_camarray[i].m_bFull		= FALSE;
 		//		m_Imagearray[i].Load(DIVLOG, CXIMAGE_FORMAT_BMP);
-		m_Imagearray[i].Copy(temp_image);
-		m_camarray[i].RegisterDrop();
+		//m_Imagearray[i].Copy(temp_image);
+		
 	}
-//	SetPlayDivision(4);
+	SetPlayDivision(4);
 	m_nWatermark	= 0;
 
 
@@ -139,7 +130,10 @@ BOOL CWebCamPannel::OnInitDialog()
 
 void CWebCamPannel::OnDestroy()
 {
-
+	for(int i = 0; i < CAM_MAX; i++)
+	{
+			m_camarray[i].StopRTPlay(false);
+	}
 	CDialog::OnDestroy();
 }
 
@@ -148,7 +142,7 @@ void CWebCamPannel::GetCameraRect( int nMode )
 	CRect	rect;
 	int		CamID = 0;
 	int		nBottomMargin = 1;
-	int		nRightMargin  = 1;
+	int 		nRightMargin  = 1;
 	int nLeftMargin = 1;
 	int nTopMargin = 1;
 	int nSplitLineWidth = 1;
@@ -353,6 +347,8 @@ void CWebCamPannel::SetPlayDivision( int nDiv )
 		m_camarray[m_nActiveCamera].m_bFull		= TRUE;
 
 		break;
+	default:
+		return;
 	}
 
 	if (nRow >= 1 && nRow <= DIVISION_MAX_CH16)
@@ -397,10 +393,15 @@ void CWebCamPannel::SetPlayDivision( int nDiv )
 			m_camarray[i].Invalidate();
 		}
 	}
-	
+	if (nDiv != DIV_TOGGLED)
+	{
+		m_nCameraNumber = nDiv;
+	}
 	FnDivision	= nDiv;
 	m_bDivision	= TRUE;
 	DrawAllCameraImages();
+	//this->RedrawWindow();
+	//this->Invalidate();
 }
 
 void CWebCamPannel::DrawFrame(CDC *pDC)
@@ -429,7 +430,95 @@ void CWebCamPannel::DrawFrame(CDC *pDC)
 	}
 }
 
-CMyAVPlayer* CWebCamPannel::GetOnePlayer( int videoID,int channelNo )
+
+
+//************************************
+// Method:    GetOnePlayer
+// FullName:  CWebCamPannel::GetOnePlayer
+// Access:    public 
+// Returns:   CMyAVPlayer	*
+// Qualifier:
+// Parameter: int cameraID
+// Parameter: int * isPlaying
+//************************************
+COneCamera 	* CWebCamPannel::GetOnePlayer( int cameraID,int * isPlaying /*= NULL*/ )
 {
-	return &m_camarray[0].m_AVIPlayer;
+
+	int nIndex;
+	int nFind = 0;
+	for (nIndex=0;nIndex< m_nCameraNumber;nIndex++)
+	{
+		if (m_camarray[nIndex].m_cameraID == cameraID)
+		{
+			break;
+		}
+	}
+	if (nIndex < m_nCameraNumber)
+	{
+		SetActiveCamera(nIndex);
+		//m_nActiveCamera = nIndex;
+		nFind = 1;
+	}
+	if (isPlaying != NULL)
+	{
+		*isPlaying = nFind;
+	}
+	DrawAllCameraImages();
+	m_camarray[m_nActiveCamera].m_cameraID = cameraID;
+	return &m_camarray[m_nActiveCamera];
+
 }
+
+void CWebCamPannel::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	TRACE("mouse down\n");
+	CDialog::OnLButtonDown(nFlags, point);
+}
+
+BOOL CWebCamPannel::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	return TRUE;
+	return CDialog::OnSetCursor(pWnd, nHitTest, message);
+}
+
+void CWebCamPannel::SetActiveCamera( int nCamNo )
+{
+	if (m_nActiveCamera != nCamNo)
+	{
+		m_nActiveCamera = nCamNo;
+		CamStatusReport report;
+		report.cameraID = m_camarray[nCamNo].m_cameraID;
+		report.reportType = 1;
+		theApp.g_pMainWnd->SendMessage(WM_CAMSTATUSREPORT,0,(LPARAM)&report);
+	}
+}
+
+COneCamera * CWebCamPannel::GetCamera( int cameraID )
+{
+	if (cameraID == 0)
+	{
+		return &m_camarray[m_nActiveCamera];
+	}
+	int nIndex;
+	for (nIndex=0;nIndex< m_nCameraNumber;nIndex++)
+	{
+		if (m_camarray[nIndex].m_cameraID == cameraID)
+		{
+			break;
+		}
+	}
+	if (nIndex < m_nCameraNumber)
+	{
+		return &m_camarray[nIndex];
+	}
+	return NULL;
+}
+
+// void CWebCamPannel::SetPlayerMap( int nIndex,int nNumber )
+// {
+// 	playerMap[nIndex] = nNumber;
+// }
+
+

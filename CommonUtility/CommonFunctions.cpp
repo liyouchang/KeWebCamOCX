@@ -1,10 +1,7 @@
 
 #include "stdafx.h"
 #include "CommonFunctions.h"
-#include <iostream>
 
-
-#include <algorithm>
 #include <stdio.h>
 
 /**********************************************************************************************************************
@@ -132,73 +129,6 @@ string ConvertString(string str)
 {
 	string retStr;
 	string tmp;
-/*	for (unsigned int i = 0; i < str.length(); i++)
-	{
-		if (str[i] != '\\')
-			retStr.append(str[i]);
-		else
-		{
-			tmp = str[i];
-			if (++i == str.length())
-			{
-				retStr.append(tmp);
-				return retStr;
-			}
-
-			tmp.append(str[i]);
-			switch (str[i])
-			{
-			case '\\':
-				retStr.append('\\');
-				break;
-			case 'x':
-			case 'X':
-			{
-				int value = 0;
-				if (++i == str.length())
-				{
-					retStr.append(tmp);
-					return retStr;
-				}
-				tmp.append(str[i]);
-				if ((str[i] >= '0' && str[i] <= '9')
-						|| (str[i] >= 'A' && str[i] <= 'F')
-						|| (str[i] >= 'a' && str[i] <= 'f'))
-				{
-					value = ascii_to_hex(str[i]) << 4;
-				}
-				else
-				{
-					retStr.append(tmp);
-					break;
-				}
-				if (++i == str.length())
-				{
-					retStr.append(tmp);
-					return retStr;
-				}
-				tmp.append(str[i]);
-				if ((str[i] >= '0' && str[i] <= '9')
-						|| (str[i] >= 'A' && str[i] <= 'F')
-						|| (str[i] >= 'a' && str[i] <= 'f'))
-				{
-					value += ascii_to_hex(str[i]);
-				}
-				else
-				{
-					retStr.append(tmp);
-					break;
-				}
-				retStr.append(value);
-				break;
-			}
-			default:
-				retStr.append(tmp);
-				break;
-			}
-
-		}
-	}*/
 	return retStr;
 }
 
@@ -232,3 +162,97 @@ int splitString( string text,vector<string> &strList,string sepChar )
 	strList.push_back(tmp);
 	return strList.size();
 }
+
+std::string wstr_to_str( const std::wstring& arg )
+{
+	DWORD dwNum = WideCharToMultiByte(CP_OEMCP,NULL,arg.c_str(),-1,NULL,0,NULL,FALSE);
+	std::string res( dwNum, '\0' );
+	WideCharToMultiByte (CP_OEMCP,NULL,arg.c_str(),-1,const_cast<char*>(res.data()),dwNum,NULL,FALSE);
+	//wcstombs( const_cast<char*>(res.data()) , arg.c_str(), arg.length());
+	return res;
+}
+
+std::wstring str_to_wstr( const std::string& arg )
+{
+	DWORD  dwMinSize = MultiByteToWideChar (CP_ACP, 0, arg.c_str(), -1, NULL, 0);
+	std::wstring res(dwMinSize, L'\0');
+	MultiByteToWideChar (CP_ACP, 0, arg.c_str(), -1, const_cast<wchar_t*>(res.data()), dwMinSize);  
+	return res;
+}
+
+std::wstring GetCurrentPathW()
+{
+	wstring retPath= L"./";
+#ifdef WIN32
+	wchar_t filePath[MAX_PATH];
+	HMODULE hModule= NULL;
+	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,(PCTSTR)GetCurrentPathW,&hModule);
+	GetModuleFileNameW(hModule, filePath, MAX_PATH);
+	//	PathRemoveFileSpec(filePath);
+	retPath = filePath;
+	int len = retPath.rfind(L"\\");
+	retPath = retPath.substr(0,len+1);
+#else
+	retPath = "./";
+#endif
+
+	return retPath;
+}
+
+BOOL FolderExist( CString strPath )
+{
+	WIN32_FIND_DATA   wfd;
+	BOOL rValue = FALSE;
+	HANDLE hFind = FindFirstFile(strPath, &wfd);
+	if ((hFind != INVALID_HANDLE_VALUE) && (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+	{
+		rValue = TRUE;   
+	}
+	FindClose(hFind);
+	return rValue;
+}
+
+BOOL CreateFolder(CString strPath)
+{
+	SECURITY_ATTRIBUTES attrib;
+	attrib.bInheritHandle = FALSE;
+	attrib.lpSecurityDescriptor = NULL;
+	attrib.nLength =sizeof(SECURITY_ATTRIBUTES);
+	//上面定义的属性可以省略。 直接return ::CreateDirectory( path, NULL); 即可
+	return ::CreateDirectory( strPath, &attrib);
+} 
+
+BOOL CreateFolderEx( const CString& szPath )
+{
+	CString strDir(szPath);//存放要创建的目录字符串
+	//确保以'\'结尾以创建最后一个目录
+	if (strDir.GetAt(strDir.GetLength()-1)!=_T('\\'))
+	{
+		strDir.AppendChar(_T('\\'));
+	}
+	std::vector<CString> vPath;//存放每一层目录字符串
+	CString strTemp;//一个临时变量,存放目录字符串
+	BOOL bSuccess = FALSE;//成功标志
+	//遍历要创建的字符串
+	for (int i=0;i<strDir.GetLength();++i)
+	{
+		if (strDir.GetAt(i) != _T('\\')) 
+		{//如果当前字符不是'\\'
+			strTemp.AppendChar(strDir.GetAt(i));
+		}
+		else 
+		{//如果当前字符是'\\'
+			vPath.push_back(strTemp);//将当前层的字符串添加到数组中
+			strTemp.AppendChar(_T('\\'));
+		}
+	}
+	//遍历存放目录的数组,创建每层目录
+	std::vector<CString>::const_iterator vIter;
+	for (vIter = vPath.begin(); vIter != vPath.end(); vIter++) 
+	{
+		//如果CreateDirectory执行成功,返回true,否则返回false
+		bSuccess = CreateDirectory(*vIter, NULL) ;
+	}
+	return bSuccess;
+}
+

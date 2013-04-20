@@ -37,9 +37,3 @@
 #include <afxdhtml.h>
 #include <afxwin.h>
 
-
-
-#define _NEW_SWAP(a, b)			 { (a)^=(b)^=(a)^=(b); }
-#define _SAFE_DELETE(p)			{ if(p != NULL)	delete p;  p = NULL; }
-#define _SAFE_FCLOSE(p)			{ if(p != NULL)	fclose(p); p = NULL; }
-#define _SAFE_CLOSEHANDLE(p)	{ if(p != NULL)	CloseHandle(p); p = NULL; }

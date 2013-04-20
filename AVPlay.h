@@ -7,7 +7,6 @@
 #endif
 
 #define WM_FILEEND			(WM_USER + 112)		//文件播放完毕消息
-//#define Play_Buffer_SIZE	0x200000
 #define Play_Buffer_SIZE	0x300000
 
 #pragma   pack(1) 
@@ -69,6 +68,8 @@ extern "C" AVPLAY_API HRESULT AV_CloseStream(long hHandle ,bool bCallBack);
 
 extern "C" AVPLAY_API HRESULT AV_CloseFile(long hHandle, bool bCallBack);
 
+extern "C" AVPLAY_API HRESULT AV_CutVdo(long hHandle, long lCut);
+
 extern "C" AVPLAY_API HRESULT AV_RefreshSurface(long hHandle);
 
 extern "C" AVPLAY_API HRESULT AV_RefreshByWnd(long lPlayWnd);
@@ -96,6 +97,8 @@ extern "C" AVPLAY_API HRESULT AV_QueryFunction(LPCTSTR sFunctionName, long * lCa
 extern "C" AVPLAY_API HRESULT AV_SetFileEndMsgWnd(long hHandle, long hWnd, long lMsg);
 
 extern "C" AVPLAY_API HRESULT AV_CapPic(long hHandle, LPCTSTR sFileName);
+
+extern "C" AVPLAY_API HRESULT AV_CapPic_Ex(long hHandle, const char *sFileName);
 
 extern "C" AVPLAY_API HRESULT AV_SetVolume(long hHandle, long lVolume);
 

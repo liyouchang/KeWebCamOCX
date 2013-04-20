@@ -13,6 +13,7 @@ const int SOCK_TCP  = SOCK_STREAM-1;
 const int SOCK_UDP  = SOCK_DGRAM-1;
 
 
+
 class CSocketThreadHandler :
 	public ISocketClientHandler,public SimpleThreadBase
 {
@@ -27,28 +28,31 @@ public:
 
 	virtual bool Init(const UINT nCnt );
 	DWORD Write(const LPBYTE lpBuffer,DWORD dwCount);
-
+	
 	bool IsConnect();
-	void CloseConnect();
+	virtual void CloseConnect();
 	// SocketClient Interface handler
 	virtual void OnThreadBegin(CSocketHandle* pSH);
 	virtual void OnThreadExit(CSocketHandle* pSH);
 	virtual void OnDataReceived(CSocketHandle* pSH, const BYTE* pbData, DWORD dwCount, const SockAddrIn& addr);
 	virtual void OnConnectionDropped(CSocketHandle* pSH){};
 	virtual void OnConnectionError(CSocketHandle* pSH, DWORD dwError){};
+
+public:
 	static void GetAddress(const SockAddrIn& addrIn, CString& rString) ;
-protected:
+
 	
+protected:
+	virtual bool GetMessageData();
 	virtual bool CheckMessage(const BYTE* data, DWORD dwCount);
 	virtual void HandleMessage(const BYTE* msgData){};
-	//std::vector<BYTE> msgRecv;
+	std::vector<BYTE> m_MsgRecv;//读取消息临时缓冲区
 	//std::vector<BYTE> msgSend;
 	CSocketClient m_SocketClient;
 	SockAddrIn m_loacalAddr;
 	CByteFifo m_recvBuf;
 	int m_recvBufSize;
-
-	CString m_serverPort;//服务器port 22616
+	CString m_serverPort; //服务器 port 22616
 	CString m_serverIP;
 	int m_nSockType;
 	//数据处理函数

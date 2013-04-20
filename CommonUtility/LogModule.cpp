@@ -7,7 +7,7 @@
 #include "inifile.h"
 
 
-
+#ifndef _NOLOG
 log4cplus::tstring GetCurrentPath()
 {
 	tstring retPath= _T("./");
@@ -24,10 +24,11 @@ log4cplus::tstring GetCurrentPath()
 
 	return retPath;
 }
+#endif
 
 void InitLogModule()
 {
-
+#ifndef _NOLOG
 	log4cplus::tstring iniFile =GetCurrentPath() + _T("log.ini");
 	CIniFile ini;
 
@@ -37,7 +38,7 @@ void InitLogModule()
 		TRACE(_T("Load config file error"));
 		return;
 	}
-#ifndef _NOLOG
+
 	log4cplus::tstring logFileName = ini.GetKeyValue(_T("log"),_T("logFileName"),_T("log.log"));
 	logFileName = GetCurrentPath() + logFileName;
 	log4cplus::tstring sLogLevel = ini.GetKeyValue(_T("log"),_T("logLevel"),_T("OFF_LOG_LEVEL"));

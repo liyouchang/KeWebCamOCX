@@ -570,7 +570,7 @@ DWORD CSocketHandle::Read(LPBYTE lpBuffer, DWORD dwSize, LPSOCKADDR lpAddrIn,
     }
     if ( res == SOCKET_ERROR )
     {
-        SetLastError( WSAGetLastError() );
+        //SetLastError( WSAGetLastError() );
     }
     dwBytesRead = (DWORD)((res >= 0)?(res) : (-1));
 
@@ -874,7 +874,7 @@ bool CSocketHandle::FormatIP(LPTSTR pszIPAddr, UINT nSize, const SockAddrIn& add
         if (inet_ntop(addrIn.ss_family, addr, szIPAddr, MAX_PATH) != NULL)
         {
 #ifdef _UNICODE
-            return (0 != MultiByteToWideChar(CP_UTF8, 0, szIPAddr, -1, pszIPAddr, nSize ));
+            return (0 != MultiByteToWideChar(CP_ACP, 0, szIPAddr, -1, pszIPAddr, nSize ));
 #else
             ::StringCbCopyA(pszIPAddr, nSize, szIPAddr);
             return true;
@@ -898,7 +898,7 @@ USHORT CSocketHandle::GetPortNumber( LPCTSTR pszServiceName )
     else {
 #ifdef _UNICODE
         char pstrService[HOSTNAME_SIZE] = { 0 };
-        WideCharToMultiByte(CP_UTF8, 0, pszServiceName, -1, pstrService, sizeof(pstrService), NULL, NULL );
+        WideCharToMultiByte(CP_ACP, 0, pszServiceName, -1, pstrService, sizeof(pstrService), NULL, NULL );
 #else
         LPCTSTR pstrService = pszServiceName;
 #endif
@@ -927,7 +927,7 @@ ULONG CSocketHandle::GetIPAddress( LPCTSTR pszHostName )
 
 #ifdef _UNICODE
     char pstrHost[HOSTNAME_SIZE] = { 0 };
-    WideCharToMultiByte(CP_UTF8, 0, pszHostName, -1, pstrHost, sizeof(pstrHost), NULL, NULL );
+    WideCharToMultiByte(CP_ACP, 0, pszHostName, -1, pstrHost, sizeof(pstrHost), NULL, NULL );
 #else
     LPCTSTR pstrHost = pszHostName;
 #endif
@@ -973,7 +973,7 @@ bool CSocketHandle::GetLocalName(LPTSTR pszName, UINT nSize)
 
             // Unicode conversion
 #ifdef _UNICODE
-            return (0 != MultiByteToWideChar(CP_UTF8, 0, szHost, -1, pszName, nSize ));
+            return (0 != MultiByteToWideChar(CP_ACP, 0, szHost, -1, pszName, nSize ));
 #else
             ::StringCbCopyA(pszName, nSize, szHost);
             return true;
@@ -1003,7 +1003,7 @@ bool CSocketHandle::GetLocalAddress(LPTSTR pszAddress, UINT nSize, int nFamily /
 
 #ifdef _UNICODE
             char pstrHost[HOSTNAME_SIZE] = { 0 };
-            WideCharToMultiByte(CP_UTF8, 0, szHost, -1, pstrHost, sizeof(pstrHost), NULL, NULL );
+            WideCharToMultiByte(CP_ACP, 0, szHost, -1, pstrHost, sizeof(pstrHost), NULL, NULL );
 #else
             LPCTSTR pstrHost = szHost;
 #endif
@@ -1021,7 +1021,7 @@ bool CSocketHandle::GetLocalAddress(LPTSTR pszAddress, UINT nSize, int nFamily /
             {
                 // Unicode conversion
 #ifdef _UNICODE
-                return (0 != MultiByteToWideChar(CP_UTF8, 0, szAddress, -1, pszAddress, nSize ));
+                return (0 != MultiByteToWideChar(CP_ACP, 0, szAddress, -1, pszAddress, nSize ));
 #else
                 ::StringCbCopyA(pszAddress, nSize, szAddress);
                 return true;
@@ -1062,9 +1062,9 @@ bool CSocketHandle::GetAddressInfo(LPCTSTR pszHostName, LPCTSTR pszServiceName,
 
 #ifdef _UNICODE
     char pstrHost[HOSTNAME_SIZE] = { 0 };
-    WideCharToMultiByte(CP_UTF8, 0, pszHostName, -1, pstrHost, sizeof(pstrHost), NULL, NULL );
+    WideCharToMultiByte(CP_ACP, 0, pszHostName, -1, pstrHost, sizeof(pstrHost), NULL, NULL );
     char pstrService[HOSTNAME_SIZE] = { 0 };
-    WideCharToMultiByte(CP_UTF8, 0, pszServiceName, -1, pstrService, sizeof(pstrService), NULL, NULL );
+    WideCharToMultiByte(CP_ACP, 0, pszServiceName, -1, pstrService, sizeof(pstrService), NULL, NULL );
 #else
     LPCTSTR pstrHost = pszHostName;
     LPCTSTR pstrService = pszServiceName;
@@ -1079,6 +1079,41 @@ bool CSocketHandle::GetAddressInfo(LPCTSTR pszHostName, LPCTSTR pszServiceName,
     }
     SetLastError( WSAGetLastError() );
     return false;
+}
+
+bool CSocketHandle::GetLocalNameA( char * pszName, UINT nSize )
+{
+	if (pszName != NULL && nSize > 0)
+	{
+		char szHost[HOSTNAME_SIZE] = { 0 };
+
+		// get host name, if fail, SetLastError is set
+		if (SOCKET_ERROR != gethostname(szHost, sizeof(szHost)))
+		{
+			struct hostent* hp;
+			hp = gethostbyname(szHost);
+			if (hp != NULL) {
+				::StringCbCopyA(szHost, HOSTNAME_SIZE, hp->h_name);
+			}
+
+			// check if user provide enough buffer
+			size_t cbLength = 0;
+			::StringCbLengthA(szHost, HOSTNAME_SIZE, &cbLength);
+			if ( cbLength > nSize )
+			{
+				SetLastError(ERROR_INSUFFICIENT_BUFFER);
+				return false;
+			}
+
+			::StringCbCopyA(pszName, nSize, szHost);
+			return true;
+		}
+		else
+			SetLastError( WSAGetLastError() );
+	}
+	else
+		SetLastError(ERROR_INVALID_PARAMETER);
+	return false;
 }
 
 

@@ -49,7 +49,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="CommonUtility\include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;LOG4CPLUS_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -72,7 +72,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="../bin/cximagecrtdu.lib ../bin/AVPlay.lib ../bin/log4cplusUD.lib"
+				AdditionalDependencies="../bin/AVPlay.lib ../bin/log4cplusUSD.lib"
 				OutputFile="$(OutDir)\$(ProjectName)D.ocx"
 				LinkIncremental="2"
 				ModuleDefinitionFile=".\KeWebCamOCX.def"
@@ -109,7 +109,7 @@
 			OutputDirectory="../bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="2"
+			UseOfMFC="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -138,9 +138,9 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="CommonUtility\include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;LOG4CPLUS_STATIC"
 				MinimalRebuild="false"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -161,7 +161,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="../bin/cximagecrtu.lib ../bin/AVPlay.lib ../bin/log4cplusU.lib"
+				AdditionalDependencies="../bin/AVPlay.lib ../bin/log4cplusUS.lib"
 				OutputFile="$(OutDir)\$(ProjectName).ocx"
 				LinkIncremental="1"
 				ModuleDefinitionFile=".\KeWebCamOCX.def"
@@ -169,6 +169,94 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="正在复制运行库许可证"
+				CommandLine="copy &quot;KeWebCamOCX.lic&quot; &quot;$(OutDir)&quot;"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug_Unicode|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			UseOfMFC="1"
+			UseOfATL="0"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="_DEBUG"
+				MkTypLibCompatible="false"
+				TypeLibraryName="$(IntDir)/KeWebCamOCX.tlb"
+				HeaderFileName="$(ProjectName)idl.h"
+				ValidateParameters="true"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="CommonUtility\include"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_DEBUG"
+				Culture="2052"
+				AdditionalIncludeDirectories="$(IntDir)"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				RegisterOutput="true"
+				AdditionalDependencies="../bin/cximagecrtdu.lib ../bin/AVPlay.lib ../bin/log4cplusUD.lib"
+				OutputFile="$(OutDir)\$(ProjectName)UD.ocx"
+				LinkIncremental="2"
+				ModuleDefinitionFile=".\KeWebCamOCX.def"
+				GenerateDebugInformation="true"
+				SubSystem="2"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -205,10 +293,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\ClientDemon.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\KeWebCamOCX.cpp"
 				>
 			</File>
@@ -233,6 +317,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PopupPannel.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -251,6 +339,14 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_Unicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
@@ -258,10 +354,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\ClientDemon.h"
-				>
-			</File>
 			<File
 				RelativePath=".\command.h"
 				>
@@ -288,6 +380,10 @@
 			</File>
 			<File
 				RelativePath=".\OleDropTargetEx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PopupPannel.h"
 				>
 			</File>
 			<File
@@ -326,38 +422,6 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="Communication"
-			>
-			<File
-				RelativePath=".\CmdSocket.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\CmdSocket.h"
-				>
-			</File>
-			<File
-				RelativePath=".\KeMsg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MediaSocket.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MediaSocket.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SocketThreadHandler.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SocketThreadHandler.h"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="Play"
 			>
 			<File
@@ -386,14 +450,6 @@
 			</File>
 			<File
 				RelativePath=".\OneCamera.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SinglePlayView.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SinglePlayView.h"
 				>
 			</File>
 			<File
@@ -458,6 +514,10 @@
 			</File>
 			<File
 				RelativePath=".\CommonUtility\SocketHandle.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CommonUtility\TConvert.h"
 				>
 			</File>
 			<File
@@ -526,6 +586,46 @@
 			</File>
 			<File
 				RelativePath=".\include\json\writer.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Communication"
+			>
+			<File
+				RelativePath=".\CmdSocket.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CmdSocket.h"
+				>
+			</File>
+			<File
+				RelativePath=".\HeartBeatThread.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\HeartBeatThread.h"
+				>
+			</File>
+			<File
+				RelativePath=".\KeMsg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MediaSocket.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MediaSocket.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SocketThreadHandler.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SocketThreadHandler.h"
 				>
 			</File>
 		</Filter>
