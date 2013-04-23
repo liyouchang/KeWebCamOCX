@@ -15,6 +15,7 @@ public:
 	enum { IDD = IDD_DLG_PLAYCONTROL };
 	CRect m_FullScreenRect;
 	CWebCamPannel m_pannel;
+	CWebCamPannel *m_pToFullPannel;
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö
 

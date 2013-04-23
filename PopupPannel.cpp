@@ -5,7 +5,6 @@
 #include "KeWebCamOCX.h"
 #include "PopupPannel.h"
 
-
 // CPopupPannel 对话框
 
 IMPLEMENT_DYNAMIC(CPopupPannel, CDialog)
@@ -38,20 +37,21 @@ BOOL CPopupPannel::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  在此添加额外的初始化
+	//  在此添加额外的初始化
 	 		//获取屏幕的分辨率   
 	int nFullWidth=GetSystemMetrics(SM_CXSCREEN);     
 	int nFullHeight=GetSystemMetrics(SM_CYSCREEN);
-	 
-	 		//将除控制条外的客户区全屏显示到从(0,0)到(nFullWidth, nFullHeight)区域, 
-	 		//将(0,0)和(nFullWidth, nFullHeight)两个点外扩充原窗口和除控制条之外的
-			//客户区位置间的差值, 就得到全屏显示的窗口位置    
 	m_FullScreenRect.left=0;
 	m_FullScreenRect.top=0;
 	m_FullScreenRect.right=nFullWidth;
 	m_FullScreenRect.bottom=nFullHeight;
+	TRACE1("Pannel create start %d\n",GetTickCount());
 	m_pannel.Create(IDD_DIALOG_PANNEL,this);
+	TRACE1("Pannel create end %d\n",GetTickCount());
  	MoveWindow(m_FullScreenRect,TRUE);
+
+	m_pannel.CopyPannel(m_pToFullPannel);
+TRACE1("Initialize end %d\n",GetTickCount());
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
 }
@@ -68,4 +68,8 @@ void CPopupPannel::OnPaint()
 	CPaintDC dc(this); // device context for painting
 	// TODO: 在此处添加消息处理程序代码
 	// 不为绘图消息调用 CDialog::OnPaint()
+
+	CRect rcClient;
+	GetClientRect(rcClient);
+	m_pannel.MoveWindow(rcClient);
 }

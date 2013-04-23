@@ -28,6 +28,7 @@ public:
 	int m_nCamNo;//拥有此播放器的Static
 	int m_videoID;
 	int m_channelNo;
+	static int InitPlayer();
 private:
 	long m_lPlayHandle;
 	long  m_lPause;

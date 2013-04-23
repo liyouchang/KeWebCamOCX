@@ -44,6 +44,7 @@ protected:
 // 调度和事件 ID
 public:
 	enum {
+		eventidTreeStructNotify = 4L,
 		dispidTakeSnapshot = 10L,
 		eventidReportCameraStatus = 3L,
 		dispidSnapFilePath = 9,
@@ -65,8 +66,7 @@ protected:
 public:
 	afx_msg void OnDestroy();
 public:
-	void ShowCamPannel(BOOL bFull = FALSE);
-	BOOL m_bFullScreen;
+
 	
 	HWND m_OldWndParent;
 	CRect m_rcRect;
@@ -76,6 +76,8 @@ protected:
 	LRESULT OnRTVideoStop(WPARAM wParam, LPARAM lParam);
 	LRESULT OnHeartbeatStop(WPARAM wParam, LPARAM lParam);
 	LRESULT OnCamStatusReport(WPARAM wParam, LPARAM lParam);
+	LRESULT OnTreeStructNotify(WPARAM wParam, LPARAM lParam);
+	
 	void HeartBeatStop(LPCTSTR reason)
 	{
 		FireEvent(eventidHeartBeatStop, EVENT_PARAM(VTS_BSTR), reason);
@@ -91,5 +93,10 @@ protected:
 	}
 	BSTR TakeSnapshot(LONG nCameraID);
 	
+
+	void TreeStructNotify(LPCTSTR jsonInfo)
+	{
+		FireEvent(eventidTreeStructNotify, EVENT_PARAM(VTS_BSTR), jsonInfo);
+	}
 };
 

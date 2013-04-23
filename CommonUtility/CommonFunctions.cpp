@@ -106,9 +106,9 @@ char ascii_to_hex(char data)
 	return 0xff;
 }
 
-string GetCurrentPathA()
+std::string GetCurrentPathA()
 {
-	string retPath= "./";
+	std::string retPath= "./";
 #ifdef WIN32
 	char filePath[MAX_PATH];
 	HMODULE hModule= NULL;
@@ -125,10 +125,10 @@ string GetCurrentPathA()
 	return retPath;
 }
 
-string ConvertString(string str)
+std::string ConvertString(std::string str)
 {
-	string retStr;
-	string tmp;
+	std::string retStr;
+	std::string tmp;
 	return retStr;
 }
 
@@ -144,12 +144,12 @@ void SleepMillisecond(int msec)
 #endif
 }
 
-int splitString( string text,vector<string> &strList,string sepChar )
+int splitString( std::string text,std::vector<std::string> &strList,std::string sepChar )
 {
 	if (text.empty())
 		return 0;
 	int posStart = 0;
-	string tmp;
+	std::string tmp;
 	int posFind = text.find(sepChar);
 	while (posFind != -1)
 	{
@@ -163,26 +163,26 @@ int splitString( string text,vector<string> &strList,string sepChar )
 	return strList.size();
 }
 
-std::string wstr_to_str( const std::wstring& arg )
-{
-	DWORD dwNum = WideCharToMultiByte(CP_OEMCP,NULL,arg.c_str(),-1,NULL,0,NULL,FALSE);
-	std::string res( dwNum, '\0' );
-	WideCharToMultiByte (CP_OEMCP,NULL,arg.c_str(),-1,const_cast<char*>(res.data()),dwNum,NULL,FALSE);
-	//wcstombs( const_cast<char*>(res.data()) , arg.c_str(), arg.length());
-	return res;
-}
-
-std::wstring str_to_wstr( const std::string& arg )
-{
-	DWORD  dwMinSize = MultiByteToWideChar (CP_ACP, 0, arg.c_str(), -1, NULL, 0);
-	std::wstring res(dwMinSize, L'\0');
-	MultiByteToWideChar (CP_ACP, 0, arg.c_str(), -1, const_cast<wchar_t*>(res.data()), dwMinSize);  
-	return res;
-}
+// std::string wstr_to_str( const std::wstring& arg )
+// {
+// 	DWORD dwNum = WideCharToMultiByte(CP_OEMCP,NULL,arg.c_str(),-1,NULL,0,NULL,FALSE);
+// 	std::string res( dwNum, '\0' );
+// 	WideCharToMultiByte (CP_OEMCP,NULL,arg.c_str(),-1,const_cast<char*>(res.data()),dwNum,NULL,FALSE);
+// 	//wcstombs( const_cast<char*>(res.data()) , arg.c_str(), arg.length());
+// 	return res;
+// }
+// 
+// std::wstring str_to_wstr( const std::string& arg )
+// {
+// 	DWORD  dwMinSize = MultiByteToWideChar (CP_ACP, 0, arg.c_str(), -1, NULL, 0);
+// 	std::wstring res(dwMinSize, L'\0');
+// 	MultiByteToWideChar (CP_ACP, 0, arg.c_str(), -1, const_cast<wchar_t*>(res.data()), dwMinSize);  
+// 	return res;
+// }
 
 std::wstring GetCurrentPathW()
 {
-	wstring retPath= L"./";
+	std::wstring retPath= L"./";
 #ifdef WIN32
 	wchar_t filePath[MAX_PATH];
 	HMODULE hModule= NULL;

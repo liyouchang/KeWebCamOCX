@@ -45,6 +45,7 @@ library KeWebCamOCXLib
 		methods:
 			[id(2)] void HeartBeatStop(BSTR reason);
 			[id(3)] void ReportCameraStatus(BSTR info);
+			[id(4)] void TreeStructNotify(BSTR jsonInfo);
 	};
 
 	//  CKeWebCamOCXCtrl 的类信息

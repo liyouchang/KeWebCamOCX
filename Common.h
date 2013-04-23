@@ -30,7 +30,7 @@ const int new_CIF_ID_16[16]  = { 0,  0,  2,  2,  4,  4,  6,  6,  8,  8, 10, 10, 
 
 #define CAM_PER_DVR				16
 #define DVR_MAX					1
-#define CAM_MAX					16
+
 
 #define	DF						40
 #define HEADER_SIZE				16
@@ -66,6 +66,8 @@ const int new_CIF_ID_16[16]  = { 0,  0,  2,  2,  4,  4,  6,  6,  8,  8, 10, 10, 
 #define	RECORD_PATH				"C:\\DVR\\"
 #define DIVLOGO					"res\\DivLogo.bmp"
 
+//lht useful
+#define CAM_MAX					16
 
 
 #define _NEW_SWAP(a, b)			 { (a)^=(b)^=(a)^=(b); }
@@ -80,6 +82,33 @@ const int new_CIF_ID_16[16]  = { 0,  0,  2,  2,  4,  4,  6,  6,  8,  8, 10, 10, 
 #define clBlue	RGB(0, 0, 255)
 #define clBlack	RGB(20,20, 20)
 
+enum CamStatusReportType
+{
+	CamStatusReportType_SelectCam = 1,
+	CamStatusReportType_StopVideo = 2,
+};
+
+typedef struct tagCHNODE
+{
+	char OperType;							//0添加普通节点, 1删除节点,2修改普通节点, 3添加权限节点，4修改权限节点
+	char bNodeType;							//0：工程；1:组；2：有线终端；3：通道；4：输入报警；5：解码器
+	std::string NodeName;							//节点名称
+	std::string DeviceMobileNo;                  //无线设备的卡号
+	std::string HardVer;                     //终端节点类型
+	std::string strMac;                             //设备标识码
+	std::string pInstallPlace;
+	int ParentNodeID;						//父结点ID
+	int NodeID;								//节点ID
+	int iPriP;                              //播放权限
+	int iPriR;                              //本地录像权限
+	int iPriY;                              //云台控制权限
+	int iPriV;                              //调节视频参数权限
+	int iPriB;                              //回放权限
+	int iPriAlertLog;						//报警日志的权限
+	int AlarmFlag;							//1:自动,2:紧急;3:手动
+	int iVdoPort;							//视频服务器端口号
+	int iChlID[16];                         //最多绑定16个通道
+}CHNODE;
 
 
 
@@ -112,6 +141,7 @@ enum KEERRORCODE
 	KE_RTV_MAXVIEWNUM,
 	KE_RTV_MAXTCPNUM,
 	KE_RTV_OpenStreamFailed,
+	KE_XML_Receiving,
 	KE_OTHERS
 };
 
@@ -133,6 +163,7 @@ inline char * GetKEErrorDescriptA(int errorCode)
 	case KE_RTV_OpenStreamFailed:					return "播放器打开失败";
 	case KE_ERROR_PARAM:								return "参数错误";
 	case KE_LOGIN_AlreadyLogin:						return "已经登陆";
+	case KE_XML_Receiving:								return "正在接收树形结构";
 	default:
 		return "其他错误";
 	}

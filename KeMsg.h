@@ -269,6 +269,27 @@ typedef struct _KEPTZControlResp
 	char respType;	
 }KEPTZControlResp,*PKEPTZControlResp;
 
+
+enum KEMSG_ASKTREE_DATATYPE
+{
+	KEMSG_ASKTREE_DATATYPE_AllRootNodes = 32,
+};
+//请求树形结构，数据头
+typedef struct _KEAskTreeMsg
+{
+	BYTE protocal;
+	BYTE msgType;//0x81
+	int msgLength;
+	int clientID;
+	int dataSvr; //无用
+	short dataType;//32-请求所有树形节点
+	short packageNo;
+	short packageTotal;
+
+}KEAskTreeMsg,*PKEAskTreeMsg;
+
+
+
 #pragma pack()
 
 

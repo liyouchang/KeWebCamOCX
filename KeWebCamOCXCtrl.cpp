@@ -6,6 +6,7 @@
 #include "KeWebCamOCXPropPage.h"
 #include <json/json.h>
 #include "PopupPannel.h"
+#include "CommonUtility/tstdlibs.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -25,6 +26,7 @@ BEGIN_MESSAGE_MAP(CKeWebCamOCXCtrl, COleControl)
 	ON_MESSAGE(WM_RTVIDEOSTOP, &CKeWebCamOCXCtrl::OnRTVideoStop)
 	ON_MESSAGE(WM_CAMSTATUSREPORT, &CKeWebCamOCXCtrl::OnCamStatusReport)
 	ON_MESSAGE(WM_HEARTBEATSTOP, &CKeWebCamOCXCtrl::OnHeartbeatStop)
+	ON_MESSAGE(WM_TREESTRUCTNOTIFY, &CKeWebCamOCXCtrl::OnTreeStructNotify)
 END_MESSAGE_MAP()
 
 
@@ -49,6 +51,7 @@ END_DISPATCH_MAP()
 BEGIN_EVENT_MAP(CKeWebCamOCXCtrl, COleControl)
 	EVENT_CUSTOM_ID("HeartBeatStop", eventidHeartBeatStop, HeartBeatStop, VTS_BSTR)
 	EVENT_CUSTOM_ID("ReportCameraStatus", eventidReportCameraStatus, ReportCameraStatus, VTS_BSTR)
+	EVENT_CUSTOM_ID("TreeStructNotify", eventidTreeStructNotify, TreeStructNotify, VTS_BSTR)
 END_EVENT_MAP()
 
 
@@ -167,7 +170,6 @@ CKeWebCamOCXCtrl::CKeWebCamOCXCtrl()
 {
 	InitializeIIDs(&IID_DKeWebCamOCX, &IID_DKeWebCamOCXEvents);
 	// TODO: 在此初始化控件的实例数据。
-	m_bFullScreen = FALSE;
 	
 }
 
@@ -193,16 +195,8 @@ void CKeWebCamOCXCtrl::OnDraw(
 	// TODO: 用您自己的绘图代码替换下面的代码。
 	//pdc->FillRect(rcBounds, CBrush::FromHandle((HBRUSH)GetStockObject(WHITE_BRUSH)));
 	//pdc->Ellipse(rcBounds);
-	if (!m_bFullScreen)
-	{
-		m_pannel.MoveWindow(rcBounds,TRUE);
-	}
-	else
-	{
-		//m_pannel.MoveWindow(m_FullScreenRect,TRUE);
-	}
-	
-	
+
+	m_pannel.MoveWindow(rcBounds,TRUE);
 
 }
 
@@ -243,6 +237,7 @@ int CKeWebCamOCXCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_pannel.Create(IDD_DIALOG_PANNEL,this);
 	theApp.g_PlayWnd = &m_pannel;
 	CSocketHandle::InitLibrary( MAKEWORD(2,2) );
+	CMyAVPlayer::InitPlayer();
 	theApp.g_cmdSocket = new CCmdSocket;
 	theApp.g_cmdSocket->Init();
 
@@ -359,7 +354,7 @@ void CKeWebCamOCXCtrl::OnSetClientSite()
 LRESULT CKeWebCamOCXCtrl::OnRTVideoStop( WPARAM wParam, LPARAM lParam )
 {
 	int cameraID = (int)wParam;
-	COneCamera * camera = m_pannel.GetOnePlayer(cameraID);
+	COneCamera * camera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
 	camera->StopRTPlay();
 	int errorCode = (int)lParam;
 
@@ -369,11 +364,11 @@ LRESULT CKeWebCamOCXCtrl::OnRTVideoStop( WPARAM wParam, LPARAM lParam )
 	root["retValue"] = errorCode;
 	root["retDes"] = GetKEErrorDescriptA(errorCode);
 	std::string out = root.toStyledString();
-	std::wstring wout = str_to_wstr(out);
+	tstd::tstring tout = str_to_tstr(out);
 	//CString	strResult = 
 	
 	//触发事件
-	ReportCameraStatus(wout.c_str());
+	ReportCameraStatus(tout.c_str());
 	//FireRTVideoStop(strResult);
 	return 0;
 }
@@ -460,10 +455,10 @@ LRESULT CKeWebCamOCXCtrl::OnCamStatusReport( WPARAM wParam, LPARAM lParam )
 	root["retDes"] = GetKEErrorDescriptA(report->errorCode);
 
 	std::string out = root.toStyledString();
-	std::wstring wout = str_to_wstr(out);
+	tstd::tstring tout = str_to_tstr(out);
 
 	//触发事件
-	ReportCameraStatus(wout.c_str());
+	ReportCameraStatus(tout.c_str());
 	return 0;
 }
 
@@ -511,48 +506,28 @@ BSTR CKeWebCamOCXCtrl::TakeSnapshot(LONG nCameraID)
 	Json::Value root;
 	root["retValue"] = ret;
 	root["retDes"] = GetKEErrorDescriptA(ret);
-    root["filePath"] = wstr_to_str(fullPath.GetString());
+	root["filePath"] = tstr_to_str(fullPath.GetString());
 	std::string out = root.toStyledString();
 	strResult = out.c_str();
 
 	return strResult.AllocSysString();
 }
 
-void CKeWebCamOCXCtrl::ShowCamPannel( BOOL bFull /*= FALSE*/ )
+LRESULT CKeWebCamOCXCtrl::OnTreeStructNotify( WPARAM wParam, LPARAM lParam )
 {
-	CRect rect;
-	if (!bFull)
+	int noteType = wParam;
+	if(noteType == KEMSG_ASKTREE_DATATYPE_AllRootNodes)
 	{
-		GetClientRect(rect);
-		GetWindowRect(rect);
-	} 
-	else
-	{
-		m_bFullScreen=TRUE;   //设置全屏显示标志为TRUE
-		//CPopupPannel dlg;
-		//m_pannel.SetParent(&dlg);
-		//dlg.DoModal();
+		const char * xmlInfo = (char *)lParam;
+		Json::Value root;
+		root["OperType"] = KEMSG_ASKTREE_DATATYPE_AllRootNodes;
+		root["XMLInfo"] = xmlInfo;
 
-		//m_pannel.MoveWindow(0,0,100,100,TRUE);
-		//m_pannel.SetParent(this);
-// 		GetClientRect(m_rcRect);
-// 		GetWindowPlacement(&m_OldWndPlacement);     
-// 	
-// 		//m_OldWndParent = ::GetParent(m_hWnd);
-// 		//::SetParent(m_pannel.m_hWnd,::GetDesktopWindow() );
-// 	
+		std::string out = root.toStyledString();
+		tstd::tstring tout = str_to_tstr(out);
 
-		//进入全屏显示状态   
-//  		WINDOWPLACEMENT wndpl;
-// 		ZeroMemory(&wndpl, sizeof(WINDOWPLACEMENT));
-//  		wndpl.length=sizeof(WINDOWPLACEMENT);     
-//  		wndpl.flags=0;     
-//  		wndpl.showCmd=SW_SHOWNORMAL;     
-//  		wndpl.rcNormalPosition=m_FullScreenRect;     
-// 		SetWindowPlacement(&wndpl);
-		//::SetForegroundWindow(::GetDesktopWindow());
-		//m_pannel.SetForegroundWindow();
- 		
- 		//::SetForegroundWindow(m_hWnd);
+		//触发事件
+		TreeStructNotify(tout.c_str());
 	}
+	return 0;
 }

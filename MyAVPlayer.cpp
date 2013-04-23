@@ -12,13 +12,13 @@ CMyAVPlayer::CMyAVPlayer(void)
 	int m_videoID = 0;
 	int m_channelNo =0 ;
 	
-	AV_Initial(0);
+	//AV_Initial(0);
 
 }
 
 CMyAVPlayer::~CMyAVPlayer(void)
 {
-	AV_Free();
+	//AV_Free();
 }
 
 void CMyAVPlayer::PlayFile(HWND hWnd)
@@ -73,17 +73,8 @@ int CMyAVPlayer::OpenStream()
 
 void CMyAVPlayer::SetPlayWnd( HWND hWnd ,bool toInit)
 {
-	//CSingleLock lock(&m_cs, TRUE);
-	if (toInit )
-	{
-		m_hPlayWnd = hWnd;
-		AV_Initial(m_hPlayWnd);
-	}
-	else
-	{
 		m_hPlayWnd = hWnd;
 		AV_ReInitViewHandle(m_lPlayHandle,m_hPlayWnd);
-	}
 }
 
 int CMyAVPlayer::InputStream( const BYTE * data, int dataLen )
@@ -110,8 +101,13 @@ int CMyAVPlayer::CloseStream()
 
 int CMyAVPlayer::CapPic( LPCTSTR pFileName )
 {
-	std::string fileName = wstr_to_str(pFileName);
+	std::string fileName = tstr_to_str(pFileName);
 	return AV_CapPic_Ex(m_lPlayHandle,fileName.c_str());
+}
+
+int CMyAVPlayer::InitPlayer()
+{
+	return AV_Initial(0);
 }
 
 int CMyAVPlayer::StreamID = 0;

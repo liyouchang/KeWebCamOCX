@@ -69,8 +69,9 @@ namespace
 
 	tstring str_to_tstr(const std::string& arg)
 	{
-		tstring res(arg.length(), L'\0');
-		mbstowcs(const_cast<wchar_t*>(res.data()), arg.c_str(), arg.length());
+		DWORD  dwMinSize = MultiByteToWideChar (CP_ACP, 0, arg.c_str(), -1, NULL, 0);
+		tstring res(dwMinSize, L'\0');
+		MultiByteToWideChar (CP_ACP, 0, arg.c_str(), -1, const_cast<wchar_t*>(res.data()), dwMinSize);  
 		return res;
 	}
 
@@ -81,8 +82,9 @@ namespace
 
 	std::string tstr_to_str(const tstring& arg)
 	{
-		std::string res(arg.length(), '\0');
-		wcstombs(const_cast<char*>(res.data()), arg.c_str(), arg.length());
+		DWORD dwNum = WideCharToMultiByte(CP_OEMCP,NULL,arg.c_str(),-1,NULL,0,NULL,FALSE);
+		std::string res( dwNum, '\0' );
+		WideCharToMultiByte (CP_OEMCP,NULL,arg.c_str(),-1,const_cast<char*>(res.data()),dwNum,NULL,FALSE);
 		return res;
 	}
 }

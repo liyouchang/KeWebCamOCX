@@ -53,24 +53,20 @@ public:
 	int m_cameraID;
 	bool CheckMediaExist(int videoID,int channelNo);
 	void SetPlayIndex(int videoID,int channelNo);
-	
 	int					m_nCamNo;//在父窗口中的镜头数组中的位置
 	BOOL				m_bPress;
 	int					m_nTag;
 	BOOL m_bDrag;
 	BOOL				m_bDrawable;	//是否显示 6, 8, 13 mode
-
 	BOOL				m_bActive;		
 	int					m_nRec_Type;	// CIF mode type
 	CString				m_strCaption;
 	CString				m_strDateTime;
     cam_reference		m_CamRef;
 	event_information	m_event;
-
 	BOOL				m_bLoss;
 	BOOL				m_bFull;
 	BOOL m_bIsPlaying;
-
 	COneCamera();
 	void SetOwner(CWebCamPannel* pOwner);
 	void ExchangeAVIPlayer(CMyAVPlayer *otherPlayer);
@@ -99,10 +95,8 @@ public:
 	void MoveWindows(CRect rect, BOOL Visible);
 	int GetCameraCanvasTextHeight();
 	virtual ~COneCamera();
-	
-	void LButtonDown(UINT nFlags, CPoint point);
-	void LButtonDblClk(UINT nFlags, CPoint point);
 
+	void LButtonDblClk(UINT nFlags, CPoint point);
 	// Generated message map functions
 protected:
 	//{{AFX_MSG(COneCamera)
@@ -114,9 +108,7 @@ protected:
 	afx_msg void OnMenuSaveall();
 	afx_msg void OnMenuResetChannel();
 	afx_msg void OnMenuResetAll();
-
 	afx_msg void OnMenuShowWatermark();
-
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()
@@ -135,6 +127,8 @@ public:
 	//static std::map<int,COneCamera*> g_CameraMap;
 
 	afx_msg void OnMenuFullscreen();
+	afx_msg void OnMenuAllfullscreen();
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
 
 /////////////////////////////////////////////////////////////////////////////

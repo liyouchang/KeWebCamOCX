@@ -39,9 +39,9 @@ COneCamera::COneCamera()
 	m_CamRef.Contrast	= 128;
 	m_CamRef.Saturation	= 128;
 	
-	m_event.bAlarm		= FALSE;
-	m_event.bLoss		= FALSE;
-	m_event.bMotion		= FALSE;
+	m_event.bAlarm = FALSE;
+	m_event.bLoss	= FALSE;
+	m_event.bMotion = FALSE;
 	m_bIsPlaying = FALSE;
 	m_MediaSocket = NULL;
 	//InitCarmera();
@@ -91,6 +91,7 @@ BEGIN_MESSAGE_MAP(COneCamera, CStatic)
 	ON_WM_MOUSEMOVE()
 	ON_WM_SETCURSOR()
 	ON_COMMAND(ID_MENU_FULLSCREEN, &COneCamera::OnMenuFullscreen)
+	ON_COMMAND(ID_MENU_AllFullScreen, &COneCamera::OnMenuAllfullscreen)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -130,25 +131,13 @@ void COneCamera::OnPaint()
 	// Do not call CStatic::OnPaint() for painting messages
 }
 
-void COneCamera::LButtonDown(UINT nFlags, CPoint point) 
-{
-	m_DownPos = point;
 
-	if( m_pOwner->m_nActiveCamera != m_nCamNo )
-	{
-		m_pOwner->SetActiveCamera(m_nCamNo);
-		//m_pOwner->DrawAllCameraImages();
-		m_pOwner->InvalidateAll();
-	}
-	
-}
 
 void COneCamera::LButtonDblClk(UINT nFlags, CPoint point)
 {
 	CRect	rect = m_pOwner->GetFullPaintRect();
 	int		dx	 = rect.Width()  / 4;
 	int		dy	 = rect.Height() / 4;
-
 	if(m_pOwner->m_nActiveCamera == m_nCamNo)
 	{
 		if( m_pOwner->FnDivision == DIV_TOGGLED)
@@ -161,8 +150,8 @@ void COneCamera::LButtonDblClk(UINT nFlags, CPoint point)
 				case DIV_CH6:		nRotation = m_pOwner->m_nRotation_06;		break;
 				case DIV_CH8:		nRotation = m_pOwner->m_nRotation_08;		break;
 				case DIV_CH9:		nRotation = m_pOwner->m_nRotation_09;		break;
-				case DIV_CH10:		nRotation = m_pOwner->m_nRotation_10;		break;
-				default :			nRotation = -1;
+				case DIV_CH10:	nRotation = m_pOwner->m_nRotation_10;		break;
+				default :		nRotation = -1;
 			}
 			m_pOwner->SetPlayDivision(m_pOwner->m_nToggledDivision);
 			TRACE("m_nActiveCamera %d\n", m_pOwner->m_nActiveCamera);
@@ -172,12 +161,8 @@ void COneCamera::LButtonDblClk(UINT nFlags, CPoint point)
 		{
 			if(m_pOwner->FnDivision == DIV_CH1)
 				return;
-
 			int	mapped_camno = m_nCamNo;//m_nCamNo;
-
-
 			//m_pOwner->DrawAllCameraImages(DIV_CH1);
-
 			// daeny2@ Channel ID Mapping
 			if(theApp.m_nMAXCHANNEL == DIV_DEFAULT_CH9)
 			{
@@ -196,19 +181,15 @@ void COneCamera::LButtonDblClk(UINT nFlags, CPoint point)
 				if((mapped_camno % 2) != 0)
 					mapped_camno--;
 			}
-
 			theApp.m_nCurrentMappingCamera = mapped_camno;
 			TRACE("MAP CH-%d\n", mapped_camno);
 			long	value = MAKELONG(full_screen_on, mapped_camno);
-
 			CRect r;
 			r = m_pOwner->GetFullPaintRect();
 			//m_pOwner->m_nActiveCamera = m_nCamNo;
 			m_pOwner->m_camarray[m_nCamNo].MoveWindows(r, TRUE);
-
 			m_pOwner->m_nToggledDivision = m_pOwner->FnDivision;
 			m_pOwner->SetPlayDivision(DIV_TOGGLED);
-
 			TRACE("LButtonDblClk m_nCamNo = %d\n", m_nCamNo);
 			TRACE("m_nActiveCamera %d\n", m_pOwner->m_nActiveCamera);
 			TRACE("DIV_TOGGLED else = %d\n", m_pOwner->m_nToggledDivision);
@@ -218,48 +199,21 @@ void COneCamera::LButtonDblClk(UINT nFlags, CPoint point)
 
 void COneCamera::OnLButtonDown(UINT nFlags, CPoint point) 
 {
-	LButtonDown(nFlags, point);
-
+	if( m_pOwner->m_nActiveCamera != m_nCamNo )
+	{
+		m_pOwner->SetActiveCamera(m_nCamNo);
+		//m_pOwner->DrawAllCameraImages();
+		m_pOwner->InvalidateAll();
+	}
 	CStatic::OnLButtonDown(nFlags, point);
 	m_bDrag = FALSE;
 	Sleep(200);
-	MSG msg;
-	::PeekMessage(
-		&msg,
-		GetSafeHwnd(),
-		WM_LBUTTONUP,
-		WM_LBUTTONUP,
-		PM_NOREMOVE
-		);
-	//随意点击而已,返回
-	if( msg.message==WM_LBUTTONUP )
+	if (m_pOwner->PeekLButtonUpMsg())
+	{
 		return;
+	}
 	m_bDrag = TRUE;
 	::SetCursor(::LoadCursor(NULL,IDC_SIZEALL));
-// 	bool bLoop = true;
-// 	while (bLoop)
-// 	{
-// 		MSG msg;
-// 		VERIFY(::GetMessage(&msg, NULL, 0, 0));
-// 
-// 		//if (CWnd::GetCapture() != this->m_pOwner)
-// 		//	break;
-// 		switch (msg.message)
-// 		{
-// 			// handle movement/accept messages
-// 		case WM_LBUTTONUP:
-// 			bLoop = false;
-// 			DispatchMessage(&msg);
-// 			break;
-// 		case WM_MOUSEMOVE:
-// 			break;
-// 		default:
-// 			DispatchMessage(&msg);
-// 			break;
-// 		}
-		//Sleep(10);
-//	}
-	
 }
 
 
@@ -352,6 +306,14 @@ void COneCamera::MoveWindows(CRect rect, BOOL Visible)
 
 void COneCamera::OnRButtonDown(UINT nFlags, CPoint point) 
 {
+
+	if( m_pOwner->m_nActiveCamera != m_nCamNo )
+	{
+		m_pOwner->SetActiveCamera(m_nCamNo);
+		//m_pOwner->DrawAllCameraImages();
+		m_pOwner->InvalidateAll();
+	}
+
 	CURSORINFO ci;
 	CString ciInfo;
 	ci.cbSize = sizeof(CURSORINFO);
@@ -360,7 +322,17 @@ void COneCamera::OnRButtonDown(UINT nFlags, CPoint point)
 	int x = rect.TopLeft().x + point.x;
 	int y = rect.TopLeft().y + point.y;
 	TRACE(TEXT("menu x= %d, y=%d\n"), x, y);
+	
+	if (m_pOwner->m_bFullScreen)
+	{
+		menu.GetSubMenu(0)->DeleteMenu(ID_MENU_AllFullScreen,MF_BYCOMMAND );
+	}
+	if(!IsPlaying())
+	{
+		menu.GetSubMenu(0)->EnableMenuItem(ID_MENU_RESET,MF_BYCOMMAND|MF_GRAYED);  
+	}
 	menu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
+
 	CStatic::OnRButtonDown(nFlags, point);
 	
 }
@@ -528,25 +500,12 @@ void COneCamera::OnLButtonUp(UINT nFlags, CPoint point)
  		COneCamera * tmpCam = &m_pOwner->m_camarray[m_pOwner->m_nActiveCamera];
 		if (tmpCam->m_bDrag)
 		{
-			int tmpID = tmpCam->m_cameraID;
-			tmpCam->m_cameraID = this->m_cameraID;
-			this->m_cameraID = tmpID;
-
-			CMyAVPlayer * pOtherPlayer =  tmpCam->m_AVIPlayer;
-			tmpCam->ExchangeAVIPlayer(m_AVIPlayer);
-			this->ExchangeAVIPlayer(pOtherPlayer);
-
-			CMediaSocket * tmpMedia = tmpCam->m_MediaSocket;
-			tmpCam->m_MediaSocket = this->m_MediaSocket;
-			this->m_MediaSocket = tmpMedia;
-
+			SwapVideo(tmpCam);
 			m_pOwner->SetActiveCamera(m_nCamNo);
 			m_pOwner->InvalidateAll();
 		}
-	
 	}
 	::SetCursor(::LoadCursor(NULL,IDC_ARROW));
-	
 	CStatic::OnLButtonUp(nFlags, point);
 }
 
@@ -655,10 +614,37 @@ void COneCamera::DrawCameraBack( CDC *pDC, CRect destFrame, COLORREF rectColor, 
 
 void COneCamera::OnMenuFullscreen()
 {
-	theApp.g_pMainWnd->ShowCamPannel(TRUE);
+
+	m_pOwner->ShowFullScreen();
 }
 
 void COneCamera::SwapVideo( COneCamera * camera )
 {
+		int tmpID = camera->m_cameraID;
+		camera->m_cameraID = this->m_cameraID;
+		this->m_cameraID = tmpID;
+
+		CMyAVPlayer * pOtherPlayer =  camera->m_AVIPlayer;
+		camera->ExchangeAVIPlayer(m_AVIPlayer);
+		this->ExchangeAVIPlayer(pOtherPlayer);
+
+		CMediaSocket * tmpMedia = camera->m_MediaSocket;
+		camera->m_MediaSocket = this->m_MediaSocket;
+		this->m_MediaSocket = tmpMedia;
+}
+
+void COneCamera::OnMenuAllfullscreen()
+{
+	m_pOwner->ShowFullScreen();
+}
+
+BOOL COneCamera::PreTranslateMessage(MSG* pMsg)
+{
+	// TODO: 在此添加专用代码和/或调用基类
+// 	if (pMsg->message == WM_LBUTTONUP)
+// 	{
+// 		
+// 	}
 	
+	return CStatic::PreTranslateMessage(pMsg);
 }

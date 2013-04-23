@@ -24,14 +24,18 @@
 class CWebCamPannel : public CDialog
 {
 	DECLARE_DYNAMIC(CWebCamPannel)
-public:
-	int	FnDivision;	
-	int	m_nActiveCamera;//当前选中的镜头
-	int	m_nToggledDivision;
-	int	m_nWatermark;
+public://重要的属性，需要被复制
+	int FnDivision;	
+	int m_nActiveCamera;//当前选中的镜头
+	BOOL m_bFullScreen;
+	int m_nToggledDivision;
 	int m_nCameraNumber;
+public:
+	int m_DragCam;
+	int m_nWatermark;
+
 	//CxImage 	temp_image;
-	//CClientDemon	demon;
+	//CClientDemon demon;
 	int	ColCount;
 	int	RowCount;
 	BOOL	m_bDivision;
@@ -41,13 +45,15 @@ public:
 	int	m_nRotation_06;
 	int	m_nRotation_08;
 	int	m_nRotation_10;
-	
+	void ShowFullScreen();
+	void CopyPannel( CWebCamPannel * pannel);
 	void SetPlayDivision(int nDiv);
 	COLORREF GetCamFontColor();
 	void InvalidateAll();
 	CRect GetFullPaintRect();
 	int m_nFullPaintHeight;
 	int m_nFullPaintWidth;
+	bool PeekLButtonUpMsg();
 	void DrawAllCameraImages(CDC *pDC=NULL);
 	void GetCameraRect(int nMode);
 	void DrawFrame(CDC *pDC);
@@ -62,7 +68,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	int			m_nMaxChannel;
-	COneCamera 	* GetOnePlayer(int cameraID,int * isPlaying = NULL);
+	COneCamera * GetOnePlayer(int cameraID,int * isPlaying = NULL);
 	COneCamera * GetCamera(int cameraID);
 	//CSinglePlayView  m_playViewArray[CAM_MAX+1];
 	COneCamera		m_camarray[CAM_MAX+1];
@@ -74,4 +80,5 @@ public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
 
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 };

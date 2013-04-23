@@ -489,6 +489,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CommonUtility\Markup.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CommonUtility\Markup.h"
+				>
+			</File>
+			<File
 				RelativePath=".\CommonUtility\Md5A.cpp"
 				>
 			</File>
@@ -518,6 +526,10 @@
 			</File>
 			<File
 				RelativePath=".\CommonUtility\TConvert.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CommonUtility\tstdlibs.h"
 				>
 			</File>
 			<File

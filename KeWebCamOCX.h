@@ -18,6 +18,7 @@
 #define WM_HEARTBEATSTOP (WM_USER+1029)
 #define WM_RTVIDEOSTOP (WM_USER+1030)
 #define WM_CAMSTATUSREPORT (WM_USER + 1031)
+#define WM_TREESTRUCTNOTIFY (WM_USER + 1032)
 
 class CKeWebCamOCXApp : public COleControlModule
 {

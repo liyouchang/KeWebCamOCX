@@ -134,9 +134,8 @@ BEGIN
     CONTROL         "",IDC_CAMERA15,"Static",SS_BLACKFRAME | SS_NOTIFY,209,168,52,40
 END
 
-IDD_DLG_PLAYCONTROL DIALOGEX 0, 0, 360, 78
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Play Control"
+IDD_DLG_PLAYCONTROL DIALOGEX 0, 0, 360, 164
+STYLE DS_SETFONT | WS_POPUP
 FONT 9, "宋体", 400, 0, 0x0
 BEGIN
 END
@@ -179,7 +178,7 @@ BEGIN
     IDD_DLG_PLAYCONTROL, DIALOG
     BEGIN
         RIGHTMARGIN, 186
-        BOTTOMMARGIN, 77
+        BOTTOMMARGIN, 163
     END
 
     IDD_FORMVIEW_PLAY, DIALOG
@@ -207,11 +206,9 @@ IDR_MENU_CAMSELECT MENU
 BEGIN
     POPUP "Select Camera"
     BEGIN
-        MENUITEM "全屏",                          ID_MENU_FULLSCREEN
         MENUITEM "多画面全屏",                       ID_MENU_AllFullScreen
         MENUITEM SEPARATOR
-        MENUITEM "关闭",                          ID_MENU_RESET
-        MENUITEM SEPARATOR
+        MENUITEM "关闭视频",                        ID_MENU_RESET
     END
     POPUP "LoaclPlayer"
     BEGIN
@@ -224,6 +221,7 @@ BEGIN
         MENUITEM "抓拍",                          ID_MENU_SAVEAS
         MENUITEM "全部关闭",                        ID_MENU_RESET_ALL
         MENUITEM "显示水印",                        ID_MENU_SHOW_WATERMARK
+        MENUITEM "全屏",                          ID_MENU_FULLSCREEN
     END
 END
 

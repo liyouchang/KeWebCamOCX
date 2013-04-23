@@ -12,24 +12,25 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
-using namespace std;
+#include "tstdlibs.h"
+using namespace tstd;
 
 int strtohex(const char *str, char *hex_buf);
 char ascii_to_hex(char data);
-string ConvertString(string str);
+std::string ConvertString(std::string str);
 
 //string stringAddOne(string num);
 //string stringMinusOne(string num);
-int splitString(string text,vector<string> &strList,string sepChar);
+int splitString(std::string text,std::vector<std::string> &strList,std::string sepChar);
 
-string GetCurrentPathA();
-wstring GetCurrentPathW();
+std::string GetCurrentPathA();
+std::wstring GetCurrentPathW();
 void SleepMillisecond(int msec);
 
 // Convert wstring to string
-std::string wstr_to_str(const std::wstring& arg);
+//std::string wstr_to_str(const std::wstring& arg);
 // Convert string to wstring
-std::wstring str_to_wstr(const std::string& arg);
+//std::wstring str_to_wstr(const std::string& arg);
 
 
 BOOL   FolderExist(CString strPath);
