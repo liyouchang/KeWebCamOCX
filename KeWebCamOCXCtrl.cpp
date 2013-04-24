@@ -170,7 +170,7 @@ CKeWebCamOCXCtrl::CKeWebCamOCXCtrl()
 {
 	InitializeIIDs(&IID_DKeWebCamOCX, &IID_DKeWebCamOCXEvents);
 	// TODO: 在此初始化控件的实例数据。
-	
+	TRACE("CKeWebCamOCXCtrl::CKeWebCamOCXCtrl()\n");
 }
 
 
@@ -180,6 +180,7 @@ CKeWebCamOCXCtrl::CKeWebCamOCXCtrl()
 CKeWebCamOCXCtrl::~CKeWebCamOCXCtrl()
 {
 	// TODO: 在此清理控件的实例数据。
+	TRACE("CKeWebCamOCXCtrl::~CKeWebCamOCXCtrl()\n");
 }
 
 
@@ -232,6 +233,8 @@ int CKeWebCamOCXCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (COleControl::OnCreate(lpCreateStruct) == -1)
 		return -1;
+	TRACE("CKeWebCamOCXCtrl::OnCreate()\n");
+
 	theApp.g_pMainWnd = this;
 	InitLogModule();
 	m_pannel.Create(IDD_DIALOG_PANNEL,this);
@@ -336,12 +339,15 @@ BSTR CKeWebCamOCXCtrl::StopRealTimeVideo(LONG videoID, LONG channelNo)
 void CKeWebCamOCXCtrl::OnDestroy()
 {
 	COleControl::OnDestroy();
-
+	TRACE("CKeWebCamOCXCtrl::OnDestroy()\n");
 	//  在此处添加消息处理程序代码
 	if (theApp.g_cmdSocket != NULL)
 	{
 		delete theApp.g_cmdSocket;
 	}
+	
+	m_pannel.StopAllRTPlay();
+	
 }
 
 void CKeWebCamOCXCtrl::OnSetClientSite()
@@ -518,16 +524,24 @@ LRESULT CKeWebCamOCXCtrl::OnTreeStructNotify( WPARAM wParam, LPARAM lParam )
 	int noteType = wParam;
 	if(noteType == KEMSG_ASKTREE_DATATYPE_AllRootNodes)
 	{
-		const char * xmlInfo = (char *)lParam;
-		Json::Value root;
-		root["OperType"] = KEMSG_ASKTREE_DATATYPE_AllRootNodes;
-		root["XMLInfo"] = xmlInfo;
 
-		std::string out = root.toStyledString();
-		tstd::tstring tout = str_to_tstr(out);
-
-		//触发事件
-		TreeStructNotify(tout.c_str());
+		std::vector<CHNODE> * nodes  = (std::vector<CHNODE> *)lParam;
+		std::vector<CHNODE>::iterator nodeIter = nodes->begin();
+		for (;nodeIter != nodes->end();nodeIter++)
+		{
+			CHNODE aNode =*nodeIter ;
+			Json::Value root;
+			root["OperType"] = KEMSG_ASKTREE_DATATYPE_AllRootNodes;
+			root["NodeType"] = aNode.NodeType;
+			root["NodeName"] = tstr_to_str(aNode.NodeName);
+			root["NodeID"] = aNode.NodeID;
+			root["ParentNodeID"]= aNode.ParentNodeID;
+			root["onLine"] = aNode.onLine;
+			std::string out = root.toStyledString();
+			tstd::tstring tout = str_to_tstr(out);
+			//触发事件
+			TreeStructNotify(tout.c_str());
+		}
 	}
 	return 0;
 }

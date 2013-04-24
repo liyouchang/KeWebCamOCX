@@ -53,7 +53,7 @@ COneCamera::COneCamera()
 
 COneCamera::~COneCamera()
 {
-	TRACE("~COneCamera[%d]\n", m_nCamNo);
+	//TRACE("~COneCamera[%d]\n", m_nCamNo);
 	if (m_MediaSocket != NULL)
 	{
 		m_MediaSocket->CloseConnect();

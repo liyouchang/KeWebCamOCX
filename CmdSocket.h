@@ -3,6 +3,7 @@
 #include <afxmt.h>
 #include "SocketThreadHandler.h"
 #include "HeartBeatThread.h"
+#include "CommonUtility/Markup.h"
 
 class CCmdSocket :public CSocketThreadHandler
 {
@@ -20,23 +21,29 @@ public:
 	int SendPTZControlMsg(int cameraID,BYTE ctrlType,BYTE speed,BYTE data);
 	int SendAskTreeMsg(int dataType,char * data,int dataLen);
 	int AskAllRootNodes(short packageNo = 0);
+	
+
 protected:
 	virtual void HandleMessage(const BYTE* msgData);
 	virtual void Run();
-
+	
 	void AskKeyMsgResp(const BYTE* msgData);
 	void LoginMsgResp(const BYTE* msgData);
 	void RecvRealTimeMedia(const BYTE* msgData);
 	void RecvMalfunctionAlert(const BYTE *msgData);
 	void RecvHeartBeat(const BYTE * msgData);
 	void RecvAskTreeMsg(const BYTE * msgData);
+	void RecvVideoSvrOnline(const BYTE * msgData);
 	//heartbeat
 	CHeartBeatThread  m_HeartbeatThread;
 
 protected:
+	static unsigned int __stdcall XMLInfoThreadProc(void* arg);
+
 	int AskKeyt(char * keyt);
 	int SendLoginMsg(const char * userName, const char *encryptData);
-
+	void DoXmlToMap(CMarkup &xml);
+	int SendVideoSvrOnline();
 private:
 	int m_msgWaitTime;
 	int m_clientID;
@@ -45,7 +52,14 @@ private:
 
 	std::string AllNotesInfo;
 	short currentPackage;
-	short totalPackage;
+	short totalPackageRecv;
+
+	std::vector<CHNODE> upperNodes;
+	std::vector<CHNODE> videoSvrNodes;
+	std::vector<CHNODE> tmpVideoSvrNodes;
+
+	std::vector<CHNODE> channelNodes;
 private:
 	void EncryptData(const char * userName, const char * pwd, const char * keyt, char * encryptedData);
+	int FindChNodeByID(const std::vector<CHNODE> & nodes,int nID);
 };

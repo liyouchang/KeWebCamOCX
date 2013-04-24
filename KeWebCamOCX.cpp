@@ -137,7 +137,7 @@ BOOL CKeWebCamOCXApp::InitInstance()
 		m_nMAXCHANNEL	= CAM_MAX;
 		m_nCurrentMappingCamera = 0;
 		//InitLogModule();
-		
+		TRACE("CKeWebCamOCXApp::InitInstance()\n");
 		g_cmdSocket = NULL;
 		g_PlayWnd = NULL;
 	}
@@ -152,7 +152,7 @@ BOOL CKeWebCamOCXApp::InitInstance()
 int CKeWebCamOCXApp::ExitInstance()
 {
 	//  在此添加您自己的模块终止代码。
-	
+	TRACE("CKeWebCamOCXApp::ExitInstance()\n");
 	return COleControlModule::ExitInstance();
 }
 

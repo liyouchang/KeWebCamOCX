@@ -115,10 +115,7 @@ BOOL CWebCamPannel::OnInitDialog()
 
 void CWebCamPannel::OnDestroy()
 {
-	for(int i = 0; i < CAM_MAX; i++)
-	{
-			//m_camarray[i].StopRTPlay(false);
-	}
+
 	CDialog::OnDestroy();
 }
 
@@ -528,4 +525,12 @@ bool CWebCamPannel::PeekLButtonUpMsg()
 	}
 	return false;
 	
+}
+
+void CWebCamPannel::StopAllRTPlay()
+{
+	for(int i = 0; i < CAM_MAX; i++)
+	{
+		m_camarray[i].StopRTPlay(false);
+	}
 }

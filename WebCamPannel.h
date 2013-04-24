@@ -58,6 +58,7 @@ public:
 	void GetCameraRect(int nMode);
 	void DrawFrame(CDC *pDC);
 	void SetActiveCamera(int nCamNo);
+	void StopAllRTPlay();
 public:
 	CWebCamPannel(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~CWebCamPannel();

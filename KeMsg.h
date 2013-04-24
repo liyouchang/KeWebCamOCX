@@ -64,6 +64,7 @@ enum KEMSG_TYPE
 	KEMSG_TYPE_REALTIMEDATA = 0x83,
 	KEMSG_TYPE_PTZControl = 0x85,
 	KEMSG_TYPE_MalfunctionAlert = 0x8A,
+	KEMSG_TYPE_VideoSvrOnline = 0x8B,//13.	请求视频服务器的状态
 	KEMSG_TYPE_MEDIATRANS = 0x8F,
 	
 };
@@ -73,7 +74,7 @@ enum KEMSG_EVENT
 	KEMSG_EVENT_ASKKEY = 0,
 	KEMSG_EVENT_LOGIN,
 	KEMSG_EVENT_REALTIMEDATA,
-
+	KEMSG_EVENT_VideoSvrOnline,
 	KEMSG_EVENT_MAX
 };
 
@@ -273,6 +274,7 @@ typedef struct _KEPTZControlResp
 enum KEMSG_ASKTREE_DATATYPE
 {
 	KEMSG_ASKTREE_DATATYPE_AllRootNodes = 32,
+	KEMSG_ASKTREE_DATATYPE_ErrorOccured
 };
 //请求树形结构，数据头
 typedef struct _KEAskTreeMsg

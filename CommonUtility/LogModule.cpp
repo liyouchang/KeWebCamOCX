@@ -10,7 +10,7 @@
 #ifndef _NOLOG
 log4cplus::tstring GetCurrentPath()
 {
-	tstring retPath= _T("./");
+	log4cplus::tstring retPath= _T("./");
 #ifdef WIN32
 	TCHAR filePath[MAX_PATH];
 	HMODULE hModule= NULL;
@@ -28,6 +28,11 @@ log4cplus::tstring GetCurrentPath()
 
 void InitLogModule()
 {
+	static int isInitail = 0;
+	if (isInitail == 0) 
+		isInitail = 1;
+	else
+		return;
 #ifndef _NOLOG
 	log4cplus::tstring iniFile =GetCurrentPath() + _T("log.ini");
 	CIniFile ini;
@@ -44,19 +49,19 @@ void InitLogModule()
 	log4cplus::tstring sLogLevel = ini.GetKeyValue(_T("log"),_T("logLevel"),_T("OFF_LOG_LEVEL"));
 
 
-	log4cplus::LogLevel level = getLogLevelManager().fromString(sLogLevel);
-	Logger::getRoot().setLogLevel(level);
+	log4cplus::LogLevel level = log4cplus::getLogLevelManager().fromString(sLogLevel);
+	log4cplus::Logger::getRoot().setLogLevel(level);
 
 	//int maxBackupIndex = 2;
 	//long maxFileSize = 10*1024*1024;
-	if(level  != NOT_SET_LOG_LEVEL)
+	if(level  != log4cplus::NOT_SET_LOG_LEVEL)
 	{
-		SharedAppenderPtr append_1(new RollingFileAppender(logFileName));
+		log4cplus::SharedAppenderPtr append_1(new log4cplus::RollingFileAppender(logFileName));
 		//SharedAppenderPtr append_1(new FileAppender(logFileName));
 		append_1->setName(LOG4CPLUS_TEXT("myAppender"));
 		log4cplus::tstring pattern = LOG4CPLUS_TEXT("%D{%m/%d/%y %H:%M:%S,%Q} [%t] %-5p - %m [%l]%n");
-		append_1->setLayout( std::auto_ptr<Layout>(new PatternLayout(pattern)));
-		Logger::getRoot().addAppender(append_1);
+		append_1->setLayout( std::auto_ptr<log4cplus::Layout>(new log4cplus::PatternLayout(pattern)));
+		log4cplus::Logger::getRoot().addAppender(append_1);
 	}
 
 #endif

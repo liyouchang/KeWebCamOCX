@@ -42,7 +42,7 @@ void CHeartBeatThread::Run()
 		DWORD dw = WaitForSingleObject(m_HeartbeatWaitEvent.m_hObject,m_HeartbeatTime);
 		if (dw == WAIT_TIMEOUT)
 		{
-			TRACE1("Wait heart beat %d!\n",m_heartCount);
+			//TRACE1("Wait heart beat %d!\n",m_heartCount);
 			continue;
 		}
 		else

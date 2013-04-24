@@ -1,6 +1,9 @@
 #ifndef ___COMMON_H___
 #define ___COMMON_H___
 
+
+#include "CommonUtility/tstdlibs.h"
+
 const int new_MappiingID[16] = { 0,  8,  1,  9,  2, 10,  3, 11,  4, 12,  5, 13,  6, 14,  7, 15 };
 const int new_ChannelID[16]  = { 0,  2,  4,  6,  8, 10, 12, 14,  1,  3,  5,  7,  9, 11, 13, 15 };
 const int new_CIF_ID_08[16]  = { 0,  8,  0,  8,  2, 10,  2, 10,  4, 12,  4, 12,  6, 14,  6, 14 };
@@ -90,24 +93,14 @@ enum CamStatusReportType
 
 typedef struct tagCHNODE
 {
-	char OperType;							//0添加普通节点, 1删除节点,2修改普通节点, 3添加权限节点，4修改权限节点
-	char bNodeType;							//0：工程；1:组；2：有线终端；3：通道；4：输入报警；5：解码器
-	std::string NodeName;							//节点名称
-	std::string DeviceMobileNo;                  //无线设备的卡号
-	std::string HardVer;                     //终端节点类型
-	std::string strMac;                             //设备标识码
-	std::string pInstallPlace;
+	int NodeType;							//0：工程；1:组；2：有线终端；3：通道；4：输入报警；5：解码器
+	tstd::tstring NodeName;							//节点名称
+	tstd::tstring HardVer;                     //终端节点类型
+	tstd::tstring strMac;                             //设备标识码
+	tstd::tstring pInstallPlace;
 	int ParentNodeID;						//父结点ID
 	int NodeID;								//节点ID
-	int iPriP;                              //播放权限
-	int iPriR;                              //本地录像权限
-	int iPriY;                              //云台控制权限
-	int iPriV;                              //调节视频参数权限
-	int iPriB;                              //回放权限
-	int iPriAlertLog;						//报警日志的权限
-	int AlarmFlag;							//1:自动,2:紧急;3:手动
-	int iVdoPort;							//视频服务器端口号
-	int iChlID[16];                         //最多绑定16个通道
+	int onLine;
 }CHNODE;
 
 

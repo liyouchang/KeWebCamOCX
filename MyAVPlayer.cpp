@@ -107,6 +107,11 @@ int CMyAVPlayer::CapPic( LPCTSTR pFileName )
 
 int CMyAVPlayer::InitPlayer()
 {
+	static int isInitail = 0;
+	if (isInitail == 0) 
+		isInitail = 1;
+	else
+		return 0;
 	return AV_Initial(0);
 }
 
