@@ -48,6 +48,7 @@ void CSocketThreadHandler::OnDataReceived( CSocketHandle* pSH, const BYTE* pbDat
 
 void CSocketThreadHandler::OnThreadBegin( CSocketHandle* pSH )
 {
+	LOG_INFO("Connection "<<m_loacalAddr<<" thread start");
 	try
 	{
 		this->Start();
@@ -68,7 +69,6 @@ bool CSocketThreadHandler::Init( const UINT nCnt )
 	BOOL ret =  m_recvBuf.Init(nCnt);
 	if (ret == FALSE)
 	{
-
 		return false;
 	}
 	return  true;
@@ -98,11 +98,12 @@ void CSocketThreadHandler::Run()
 		m_MsgRecv.clear();
 
 	}
+
 }
 
 void CSocketThreadHandler::OnThreadExit( CSocketHandle* pSH )
 {
-	//LOG_INFO("Connection "<<m_loacalAddr<<" thread exit");
+	LOG_INFO("Connection "<<m_loacalAddr<<" thread exit");
 	this->Stop();
 	
 }
@@ -165,7 +166,7 @@ bool CSocketThreadHandler::GetMessageData()
 	if (m_MsgRecv.size() == 0)//上一个消息已经读取完成
 	{
 		KEMsgHead head;
-		 nRead = m_recvBuf.Read((BYTE*)&head,headLen);
+		nRead = m_recvBuf.Read( (BYTE*)&head , headLen );
 		if (nRead != headLen)
 		{
 			return false;
@@ -179,10 +180,13 @@ bool CSocketThreadHandler::GetMessageData()
 		}
 		m_MsgRecv.resize(head.msgLength,0);
 		memcpy(&m_MsgRecv[0],&head,headLen);
-		nRead = m_recvBuf.Read(&m_MsgRecv[headLen], head.msgLength-headLen);
-		if (nRead != head.msgLength-headLen)
+		if (head.msgLength-headLen != 0)//防止 headLen 越界
 		{
-			return false;
+			nRead = m_recvBuf.Read(&m_MsgRecv[headLen], head.msgLength-headLen);
+			if (nRead != head.msgLength-headLen)
+			{
+				return false;
+			}
 		}
 	}
 	else//上一个消息未完成读取
@@ -197,6 +201,54 @@ bool CSocketThreadHandler::GetMessageData()
 	}
 	
 	return true;
+}
+
+int CSocketThreadHandler::WaitRecvMsg( int msgType , int timeout /*= MSG_WAIT_TIMEOUT*/,void ** respPtr /*= NULL*/ )
+{
+	TRACE2("WaitMsg %d start at %d\n",msgType,GetTickCount());
+	msgEventMap[msgType].ResetMsgEvent(msgType);
+	DWORD dw = msgEventMap[msgType].WaitMsgEvent(timeout);
+	if (dw == WAIT_TIMEOUT)
+	{
+		LOG_ERROR("Wait msg event time out, msgType = "<< msgType);
+		return KE_MSG_TIMEOUT;
+	}
+	TRACE2("WaitMsg %d success at %d\n",msgType,GetTickCount());
+	if (respPtr != NULL)
+	{
+		*respPtr = msgEventMap[msgType].respPtr;
+	}
+	return msgEventMap[msgType].respData;
+}
+
+void CSocketThreadHandler::SetRecvMsg( int msgType,int respData,void * respPtr )
+{
+ 	Sleep(10);
+	msgEventMap[msgType].respData = respData;
+	msgEventMap[msgType].respPtr = respPtr;
+ 	msgEventMap[msgType].SetMsgEvent();
+	TRACE2("SetRecvMsg %d success at %d\n",msgType,GetTickCount());
+}
+//返回消息响应数据
+int CSocketThreadHandler::GetRecvMsgData( int msgType ,void ** respPtr /*= NULL*/ )
+{
+	if (respPtr != NULL)
+	{
+		*respPtr = msgEventMap[msgType].respPtr;
+	}
+ 	return msgEventMap[msgType].respData;
+}
+
+void CSocketThreadHandler::OnConnectionDropped( CSocketHandle* pSH )
+{
+	TRACE("OnConnectionDropped-------\n");
+	pSH->Close();
+}
+
+void CSocketThreadHandler::OnConnectionError( CSocketHandle* pSH, DWORD dwError )
+{
+	TRACE("OnConnectionError-------\n");
+	pSH->Close();
 }
 
 
@@ -214,4 +266,49 @@ std::wostream& operator<<( std::wostream& output,const  SockAddrIn& obj )
 	CSocketThreadHandler::GetAddress(obj,info);
 	output<<info.GetString();
 	return output;
+}
+
+RecvMsgEvent::RecvMsgEvent()
+{
+	TRACE("RecvMsgEvent construct\n");
+	msgType = 0;
+	pEvent = NULL;
+	respPtr = NULL;
+}
+
+
+RecvMsgEvent::~RecvMsgEvent()
+{
+	TRACE1("~RecvMsgEvent %d\n",msgType);
+	if (respPtr != NULL)
+	{
+		delete respPtr;
+		respPtr = NULL;
+	}
+	if (pEvent != NULL)
+	{
+		delete pEvent;
+		pEvent = NULL;
+	}
+}
+
+void RecvMsgEvent::ResetMsgEvent( int msgType /*= 0*/ )
+{
+	this->msgType = msgType;
+	if (pEvent ==NULL)
+	{
+		TRACE1("Init event %d",msgType);
+		pEvent = new CEvent();
+	}
+	pEvent->ResetEvent();
+	if (respPtr != NULL)
+	{
+		delete respPtr;
+		respPtr = NULL;
+	}
+}
+
+DWORD RecvMsgEvent::WaitMsgEvent( int timeout )
+{
+	return	WaitForSingleObject(pEvent->m_hObject,timeout);
 }

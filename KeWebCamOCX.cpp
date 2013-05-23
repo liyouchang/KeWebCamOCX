@@ -49,7 +49,7 @@ HRESULT CreateComponentCategory(CATID catid, WCHAR *catDescription)
 	// number of characters that may be read into catDescription.
 	// There must be room for a NULL-terminator. The third parameter
 	// contains the number of characters excluding the NULL-terminator.
-	hr = StringCchLength(catDescription, STRSAFE_MAX_CCH, &len);
+	hr = StringCchLengthW(catDescription, STRSAFE_MAX_CCH, &len);
 	if (SUCCEEDED(hr))
 	{
 		if (len>127)
@@ -63,7 +63,7 @@ HRESULT CreateComponentCategory(CATID catid, WCHAR *catDescription)
 	}
 	// The second parameter of StringCchCopy is 128 because you need 
 	// room for a NULL-terminator.
-	hr = StringCchCopy(catinfo.szDescription, len + 1, catDescription);
+	hr = StringCchCopyW(catinfo.szDescription, len + 1, catDescription);
 	// Make sure the description is null terminated.
 	catinfo.szDescription[len + 1] = '\0';
 
@@ -72,7 +72,6 @@ HRESULT CreateComponentCategory(CATID catid, WCHAR *catDescription)
 
 	return hr;
 }
-
 // HRESULT RegisterCLSIDInCategory -
 //      Register your component categories information
 
@@ -135,10 +134,10 @@ BOOL CKeWebCamOCXApp::InitInstance()
 	{
 		//我的初始化
 		m_nMAXCHANNEL	= CAM_MAX;
-		m_nCurrentMappingCamera = 0;
-		//InitLogModule();
-		TRACE("CKeWebCamOCXApp::InitInstance()\n");
-		g_cmdSocket = NULL;
+		
+		//_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+		//TRACE("CKeWebCamOCXApp::InitInstance()\n");
+		g_cmd = NULL;
 		g_PlayWnd = NULL;
 	}
 
@@ -152,7 +151,8 @@ BOOL CKeWebCamOCXApp::InitInstance()
 int CKeWebCamOCXApp::ExitInstance()
 {
 	//  在此添加您自己的模块终止代码。
-	TRACE("CKeWebCamOCXApp::ExitInstance()\n");
+	//TRACE("CKeWebCamOCXApp::ExitInstance()\n");
+	//_CrtDumpMemoryLeaks();
 	return COleControlModule::ExitInstance();
 }
 

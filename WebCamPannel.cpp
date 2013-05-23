@@ -6,7 +6,6 @@
 #include "WebCamPannel.h"
 #include "Common.h"
 #include "memdc.h"
-#include "command.h"
 #include "PopupPannel.h"
 #define NORMAL_FontColor	RGB(255, 255, 255)	// White
 #define TOGGLED_FontColor	RGB(255, 255, 25)	// White Gray
@@ -22,21 +21,21 @@ IMPLEMENT_DYNAMIC(CWebCamPannel, CDialog)
 CWebCamPannel::CWebCamPannel(CWnd* pParent /*=NULL*/)
 	: CDialog(CWebCamPannel::IDD, pParent)
 {
-	m_nWatermark		= FALSE;
 	m_nRotation_01		= -1;
 	m_nRotation_04		= -4;
 	m_nRotation_09		= -7;
 	m_nRotation_06		= -5;
 	m_nRotation_08		= -8;
 	m_nRotation_10		= -6;
-	m_bDivision			= FALSE;
 	m_bFullScreen = FALSE;
-	m_nMaxChannel = 16;
 	m_nActiveCamera =0;
+	m_brBkgnd.CreateSolidBrush(clBlack);
+	LOG_DEBUG("CWebCamPannel::CWebCamPannel()");
 }
 
 CWebCamPannel::~CWebCamPannel()
 {
+	LOG_DEBUG("~CWebCamPannel()");
 }
 
 void CWebCamPannel::DoDataExchange(CDataExchange* pDX)
@@ -65,21 +64,25 @@ BEGIN_MESSAGE_MAP(CWebCamPannel, CDialog)
 	ON_STN_CLICKED(IDC_CAMERA0, &CWebCamPannel::OnStnClickedCamera0)
 	ON_WM_DESTROY()
 	ON_WM_PAINT()
-	ON_WM_LBUTTONDOWN()
+
 	ON_WM_SETCURSOR()
 	ON_WM_LBUTTONUP()
+
+ON_WM_CTLCOLOR()
+ON_WM_MOUSEMOVE()
 END_MESSAGE_MAP()
 
 COLORREF CWebCamPannel::GetCamFontColor()
 {
-	return DIV_TOGGLED == FnDivision ? TOGGLED_FontColor : NORMAL_FontColor;
+	return DIV_TOGGLED == m_FnDivision ? TOGGLED_FontColor : NORMAL_FontColor;
 }
 
 void CWebCamPannel::InvalidateAll()
 {
 	for(int i=0; i < CAM_MAX; i++)
 		m_camarray[i].Invalidate();
-	DrawAllCameraImages();
+	//DrawCameraFrame();
+	this->Invalidate();
 }
 
 CRect CWebCamPannel::GetFullPaintRect()
@@ -98,17 +101,14 @@ void CWebCamPannel::OnStnClickedCamera0()
 BOOL CWebCamPannel::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	TRACE1("Pannel OnInitDialog start %d\n",GetTickCount());
 	for(int i = 0; i < CAM_MAX; i++)
 	{
-		m_camarray[i].SetOwner(this);
 		m_camarray[i].m_nCamNo		 = i;
-		m_camarray[i].m_strDateTime.Empty();
+		m_camarray[i].SetOwner(this);
 		m_camarray[i].m_bFull = FALSE;
 	}
 	SetPlayDivision(4);
-	m_nWatermark	= 0;
-	TRACE1("Pannel OnInitDialog end %d\n",GetTickCount());
+	LOG_DEBUG("Pannel OnInitDialog end " << GetTickCount());
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
 }
@@ -119,8 +119,13 @@ void CWebCamPannel::OnDestroy()
 	CDialog::OnDestroy();
 }
 
-void CWebCamPannel::GetCameraRect( int nMode )
+void CWebCamPannel::MoveCameraRect( int nMode )
 {
+	//LOG_DEBUG("GetCameraRect Row="<< RowCount<<" Col="<<ColCount);
+	if (nMode == 0)
+	{
+		nMode = m_FnDivision;
+	}
 	CRect	rect;
 	int CamID = 0;
 	int nBottomMargin = 1;
@@ -128,12 +133,20 @@ void CWebCamPannel::GetCameraRect( int nMode )
 	int nLeftMargin = 1;
 	int nTopMargin = 1;
 	int nSplitLineWidth = 1;
+	if (nMode == DIV_PLAYER)
+	{
+		 nBottomMargin = 0;
+		 nRightMargin  = 0;
+		 nLeftMargin = 0;
+		 nTopMargin = 0;
+	}
 	int dx, dy;
 	GetClientRect(rect);
 	dx = (rect.Width()  - nLeftMargin - nRightMargin)  / RowCount;
 	dy = (rect.Height() - nTopMargin - nBottomMargin) / ColCount;
 	m_nFullPaintWidth  = rect.Height() -nLeftMargin - nBottomMargin;
 	m_nFullPaintHeight = rect.Width()  -nTopMargin - nRightMargin;
+	
 	for(int y = 0; y < RowCount; ++y)
 	{
 		for(int x = 0; x < ColCount; ++x)
@@ -192,23 +205,23 @@ void CWebCamPannel::GetCameraRect( int nMode )
 			{
 				if( m_camarray[m_nActiveCamera].m_bDrawable )
 				{
-					m_camarray[m_nActiveCamera].MoveWindows(showRect, m_camarray[m_nActiveCamera].m_bDrawable);
+					m_camarray[m_nActiveCamera].MoveWindow(showRect, m_camarray[m_nActiveCamera].m_bDrawable);
 				}
 			}
 			else
 			{
 				if( m_camarray[x + y*RowCount].m_bDrawable )
 				{
-					m_camarray[x + y*RowCount].MoveWindows(showRect, m_camarray[x + y*RowCount].m_bDrawable);
+					m_camarray[x + y*RowCount].MoveWindow(showRect, m_camarray[x + y*RowCount].m_bDrawable);
 				}
 			}
 		}
 	}
 }
 
-void CWebCamPannel::DrawAllCameraImages( CDC *pDC)
+void CWebCamPannel::DrawCameraFrame( CDC *pDC)
 {
-	GetCameraRect(FnDivision);
+	//MoveCameraRect();
 	if (pDC == NULL)
 	{
 		CClientDC dc(this);
@@ -224,144 +237,41 @@ void CWebCamPannel::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
 
-	CRect rcClient;
-	GetClientRect(rcClient);
-	CBrush m_brush(NORMAL_FrameColor);
-	dc.FillRect(rcClient,&m_brush);
-	// TODO: 在此处添加消息处理程序代码
+	// 在此处添加消息处理程序代码
 	// 不为绘图消息调用 CDialog::OnPaint()
-	DrawAllCameraImages(&dc);
-	
+	MoveCameraRect();
+	DrawCameraFrame(&dc);
 	CDialog::OnPaint();
 }
 
 void CWebCamPannel::SetPlayDivision( int nDiv )
 {
-	int	nRow	= -1;
-	int	nCamNo	= 0;
-	int	nVirtualDisp	= 0;
-	int	i;
-	int	mod_chid = 0;
-	long value	= MAKELONG(full_screen_on, 0);
-
-	for(i = 0; i < CAM_MAX; i++)
+	if (nDiv != DIV_CH1 && nDiv != DIV_CH4 && nDiv != DIV_CH6 &&
+		nDiv != DIV_CH8 && nDiv != DIV_TOGGLED && nDiv != DIV_PLAYER)
 	{
-		m_camarray[i].m_bDrawable	 = FALSE;
-		m_camarray[i].m_bFull	 = FALSE;
-	}
-	switch(nDiv)
-	{
-	case DIV_CH1:
-		nRow = 1;	
-		m_camarray[0].m_bDrawable = TRUE;
-		break;
-	case DIV_CH4:
-		nRow = 2;
-		for(i = 0; i < DIV_CH4; i++)
-			m_camarray[i].m_bDrawable = TRUE;
-		break;
-	case DIV_CH6:
-		nRow = 3;
-		m_camarray[0].m_bDrawable = TRUE;
-		m_camarray[2].m_bDrawable = TRUE;
-		for(i = 5; i < 9; i++)
-			m_camarray[i].m_bDrawable = TRUE;
-		break;
-
-	case DIV_CH8:
-		nRow = 4;
-		m_camarray[0].m_bDrawable  = TRUE;
-		m_camarray[3].m_bDrawable  = TRUE;
-		m_camarray[7].m_bDrawable  = TRUE;
-		m_camarray[11].m_bDrawable = TRUE;
-		for(i = 12; i < IMAGE_MAX_CH16; i++)
-			m_camarray[i].m_bDrawable = TRUE;
-		break;
-	case DIV_CH9:
-		nRow = 3;
-		for(i = 0; i < DIV_CH9; i++)
-			m_camarray[i].m_bDrawable = TRUE;
-		break;
-
-	case DIV_CH10:
-		nRow = 4;
-		m_camarray[0].m_bDrawable = TRUE;
-		m_camarray[2].m_bDrawable = TRUE;
-		for(i = 8; i < DIV_CH16; i++)
-			m_camarray[i].m_bDrawable = TRUE;
-		break;
-	case DIV_CH13:  
-		nRow = 4;
-		nVirtualDisp = 1;
-		for(i = 0; i < IMAGE_MAX_CH16; i++)
-			m_camarray[i].m_bDrawable = TRUE;
-		m_camarray[6].m_bDrawable = FALSE;
-		m_camarray[9].m_bDrawable = FALSE;
-		m_camarray[10].m_bDrawable = FALSE;
-		break;
-	case DIV_CH16: 
-		nRow = 4;
-		for(i = 0; i < DIV_CH16; i++)
-			m_camarray[i].m_bDrawable = TRUE;
-		break;
-	case DIV_TOGGLED:
-		nRow = 1;
-		TRACE("m_nActiveCamera = %d\n", m_nActiveCamera);
-		m_camarray[m_nActiveCamera].m_bDrawable = TRUE;
-		m_camarray[m_nActiveCamera].m_bFull = TRUE;
-		break;
-	default:
+		LOG_WARN("Not supported division function --"<<nDiv);
 		return;
 	}
-	if (nRow >= 1 && nRow <= DIVISION_MAX_CH16)
+	TRACE1("SetPlayDivision start %d\n",GetTickCount());
+	m_FnDivision	= nDiv;
+	if (m_FnDivision == DIV_PLAYER)
 	{
-		RowCount = nRow;
-		ColCount = nRow;
-	}
-	/* resize static windows */
-	if(nDiv == DIV_CH13)
-	{
-		for(i=0; i < CAM_PER_DVR; ++i)
-		{
-			if(i == 5)
-			{
-				m_camarray[i].ShowWindow(SW_SHOW);
-				m_camarray[i].Invalidate();
-				continue;
-			}
-			if(m_camarray[i].m_bDrawable)
-			{
-				m_camarray[i].ShowWindow(SW_SHOW);
-			}
-			else
-				m_camarray[i].ShowWindow(SW_HIDE);
-			m_camarray[i].Invalidate();
-		}
+		SetCamDrawable(1);
+		
 	}
 	else
 	{
-		for(i=0; i < CAM_PER_DVR; ++i)
+		SetCamDrawable();
+		if (nDiv != DIV_TOGGLED)
 		{
-			if(m_camarray[i].m_bDrawable)
-			{
-				m_camarray[i].ShowWindow(SW_SHOW);
-			}
-			else
-			{
-				m_camarray[i].ShowWindow(SW_HIDE);
-			}
-			m_camarray[i].Invalidate();
+			MoveCameraPlay();
 		}
+
+		MoveCameraRect();
+		DrawCameraFrame();
 	}
-	if (nDiv != DIV_TOGGLED)
-	{
-		m_nCameraNumber = nDiv;
-	}
-	FnDivision	= nDiv;
-	m_bDivision	= TRUE;
-	DrawAllCameraImages();
-	//this->RedrawWindow();
-	//this->Invalidate();
+	this->Invalidate();
+	TRACE1("SetPlayDivision end %d\n",GetTickCount());
 }
 
 void CWebCamPannel::DrawFrame(CDC *pDC)
@@ -369,7 +279,6 @@ void CWebCamPannel::DrawFrame(CDC *pDC)
 	CRect	rect;
 	CBrush	brush;
 	brush.CreateSolidBrush(TOGGLED_FrameColor);
-	
 	for(int i = 0; i < CAM_MAX; i++)
 	{
 		if (m_camarray[i].m_bDrawable)
@@ -405,38 +314,31 @@ COneCamera 	* CWebCamPannel::GetOnePlayer( int cameraID,int * isPlaying /*= NULL
 {
 	int nIndex;
 	int nFind = 0;
-	for (nIndex=0;nIndex< m_nCameraNumber;nIndex++)
+	for (nIndex=0;nIndex< CAM_MAX;nIndex++)
 	{
 		if (m_camarray[nIndex].m_cameraID == cameraID)
 		{
 			break;
 		}
 	}
-	if (nIndex < m_nCameraNumber)
+	if (nIndex < CAM_MAX)
 	{
 		SetActiveCamera(nIndex);
-		//m_nActiveCamera = nIndex;
 		nFind = 1;
 	}
 	if (isPlaying != NULL)
 	{
 		*isPlaying = nFind;
 	}
-	DrawAllCameraImages();
+	//DrawAllCameraImages();
 	m_camarray[m_nActiveCamera].m_cameraID = cameraID;
 	return &m_camarray[m_nActiveCamera];
 }
 
-void CWebCamPannel::OnLButtonDown(UINT nFlags, CPoint point)
-{
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
-	TRACE("mouse down\n");
-	CDialog::OnLButtonDown(nFlags, point);
-}
 
 BOOL CWebCamPannel::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 {
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	// 直接返回以保持设置的鼠标样式
 	return TRUE;
 	return CDialog::OnSetCursor(pWnd, nHitTest, message);
 }
@@ -449,10 +351,11 @@ void CWebCamPannel::SetActiveCamera( int nCamNo )
 		CamStatusReport report;
 		report.cameraID = m_camarray[nCamNo].m_cameraID;
 		report.reportType = 1;
+		DrawCameraFrame();
 		theApp.g_pMainWnd->SendMessage(WM_CAMSTATUSREPORT,0,(LPARAM)&report);
 	}
 }
-
+//返回拥有cameraID的镜头，若cameraID为0，则返回当前选中的镜头
 COneCamera * CWebCamPannel::GetCamera( int cameraID )
 {
 	if (cameraID == 0)
@@ -460,14 +363,14 @@ COneCamera * CWebCamPannel::GetCamera( int cameraID )
 		return &m_camarray[m_nActiveCamera];
 	}
 	int nIndex;
-	for (nIndex=0;nIndex< m_nCameraNumber;nIndex++)
+	for (nIndex=0;nIndex< CAM_MAX;nIndex++)
 	{
 		if (m_camarray[nIndex].m_cameraID == cameraID)
 		{
 			break;
 		}
 	}
-	if (nIndex < m_nCameraNumber)
+	if (nIndex < CAM_MAX)
 	{
 		return &m_camarray[nIndex];
 	}
@@ -476,7 +379,7 @@ COneCamera * CWebCamPannel::GetCamera( int cameraID )
 
 void CWebCamPannel::CopyPannel( CWebCamPannel * pannel )
 {
-	this->SetPlayDivision(pannel->FnDivision);
+	this->SetPlayDivision(pannel->m_FnDivision);
 	this->m_nActiveCamera = pannel->m_nActiveCamera;
 	this->m_bFullScreen = pannel->m_bFullScreen;
 	for(int i = 0; i < CAM_MAX; i++)
@@ -498,29 +401,20 @@ void CWebCamPannel::ShowFullScreen()
 
 }
 
-// void CWebCamPannel::SetPlayerMap( int nIndex,int nNumber )
-// {
-// 	playerMap[nIndex] = nNumber;
-// }
-
-
-
 void CWebCamPannel::OnLButtonUp(UINT nFlags, CPoint point)
 {
-	//  在此添加消息处理程序代码和/或调用默认值
-	TRACE("up\n");
+	::SetCursor(::LoadCursor(NULL,IDC_ARROW));
 	CDialog::OnLButtonUp(nFlags, point);
 }
-
+//截取所有Camera控件的WM_LBUTTONUP消息
 bool CWebCamPannel::PeekLButtonUpMsg()
 {
-
 	MSG msg;
 	for(int i = 0; i < CAM_MAX; i++)
 	{
 		::PeekMessage(&msg,m_camarray[i].GetSafeHwnd(),WM_LBUTTONUP,WM_LBUTTONUP,PM_NOREMOVE);
 		//随意点击而已,返回
-		if( msg.message==WM_LBUTTONUP )
+		if( msg.message == WM_LBUTTONUP )
 			return true;
 	}
 	return false;
@@ -533,4 +427,150 @@ void CWebCamPannel::StopAllRTPlay()
 	{
 		m_camarray[i].StopRTPlay(false);
 	}
+}
+
+void CWebCamPannel::MoveCameraPlay()
+{
+	for(int i = 0; i < CAM_MAX; i++)
+	{
+		if (!m_camarray[i].m_bDrawable && m_camarray[i].IsPlaying())
+		{
+			for(int j = 0; j < CAM_MAX; j++)
+			{
+				if (m_camarray[j].m_bDrawable && !m_camarray[j].IsPlaying())
+				{
+					m_camarray[j].SwapVideo(&m_camarray[i]);
+					break;
+				}
+			}
+		}
+		
+	}
+}
+
+void CWebCamPannel::SetCamDrawable( int nDiv /*= 0*/ )
+{
+	if (nDiv == 0)
+	{
+		nDiv = m_FnDivision;
+	}
+	int	nRow	= 0;
+	int	nCamNo	= 0;
+	int	nVirtualDisp	= 0;
+	int	mod_chid = 0;
+
+	for(int i = 0; i < CAM_MAX; i++)
+	{
+		m_camarray[i].m_bDrawable	 = FALSE;
+		m_camarray[i].m_bFull	 = FALSE;
+	}
+	switch(nDiv)
+	{
+	case DIV_CH1:
+		nRow = 1;	
+		m_camarray[0].m_bDrawable = TRUE;
+		break;
+	case DIV_CH4:
+		nRow = 2;
+		for(int i = 0; i < DIV_CH4; i++)
+			m_camarray[i].m_bDrawable = TRUE;
+		break;
+	case DIV_CH6:
+		nRow = 3;
+		m_camarray[0].m_bDrawable = TRUE;
+		m_camarray[2].m_bDrawable = TRUE;
+		for(int i = 5; i < 9; i++)
+			m_camarray[i].m_bDrawable = TRUE;
+		break;
+
+	case DIV_CH8:
+		nRow = 4;
+		m_camarray[0].m_bDrawable  = TRUE;
+		m_camarray[3].m_bDrawable  = TRUE;
+		m_camarray[7].m_bDrawable  = TRUE;
+		m_camarray[11].m_bDrawable = TRUE;
+		for(int i = 12; i < IMAGE_MAX_CH16; i++)
+			m_camarray[i].m_bDrawable = TRUE;
+		break;
+	case DIV_CH9:
+		nRow = 3;
+		for(int i = 0; i < DIV_CH9; i++)
+			m_camarray[i].m_bDrawable = TRUE;
+		break;
+
+	case DIV_CH10:
+		nRow = 4;
+		m_camarray[0].m_bDrawable = TRUE;
+		m_camarray[2].m_bDrawable = TRUE;
+		for(int i = 8; i < DIV_CH16; i++)
+			m_camarray[i].m_bDrawable = TRUE;
+		break;
+	case DIV_CH13:  
+		nRow = 4;
+		nVirtualDisp = 1;
+		for(int i = 0; i < IMAGE_MAX_CH16; i++)
+			m_camarray[i].m_bDrawable = TRUE;
+		m_camarray[6].m_bDrawable = FALSE;
+		m_camarray[9].m_bDrawable = FALSE;
+		m_camarray[10].m_bDrawable = FALSE;
+		break;
+	case DIV_CH16: 
+		nRow = 4;
+		for(int i = 0; i < DIV_CH16; i++)
+			m_camarray[i].m_bDrawable = TRUE;
+		break;
+	case DIV_TOGGLED:
+		nRow = 1;
+		m_camarray[m_nActiveCamera].m_bDrawable = TRUE;
+		m_camarray[m_nActiveCamera].m_bFull = TRUE;
+		break;
+	default:
+		
+		return;
+	}
+
+	if (nRow >= 1 && nRow <= DIVISION_MAX_CH16)
+	{
+		RowCount = nRow;
+		ColCount = nRow;
+	}
+
+	for(int i=0; i < CAM_MAX; ++i)
+	{
+		if(m_camarray[i].m_bDrawable)
+		{
+			m_camarray[i].ShowWindow(SW_SHOW);
+		}
+		else
+		{
+			m_camarray[i].ShowWindow(SW_HIDE);
+		}
+	}
+
+	//设置选中镜头，选中镜头有可能不在显示镜头中
+	if (m_camarray[m_nActiveCamera].m_bDrawable == FALSE)
+	{
+		SetActiveCamera(0);	
+	}
+
+}
+
+
+
+HBRUSH CWebCamPannel::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	// TODO:  在此更改 DC 的任何属性
+	
+	// 设置背景色，和Camera的背景色一致，以防止闪屏
+	hbr = (HBRUSH)m_brBkgnd.GetSafeHandle();
+	return hbr;
+}
+
+void CWebCamPannel::OnMouseMove(UINT nFlags, CPoint point)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	
+	CDialog::OnMouseMove(nFlags, point);
 }

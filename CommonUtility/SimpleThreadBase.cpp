@@ -47,6 +47,10 @@ void SimpleThreadBase::Join()
 
 void SimpleThreadBase::Stop( DWORD dwTimeout/* = INFINITE */)
 {
+	if (!isRunning())
+	{
+		return;
+	}
 	toStop = true;
 	if ( _thread != INVALID_HANDLE_VALUE )
 	{

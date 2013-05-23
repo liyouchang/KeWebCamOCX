@@ -23,14 +23,24 @@ library KeWebCamOCXLib
 	{
 		properties:
 			[id(9) , helpstring("属性 SnapFilePath")] BSTR SnapFilePath;
+			[id(15) , helpstring("属性 RecordFilePath")] BSTR RecordFilePath;
 	methods:
 			[id(1), helpstring("分屏方法")] void SetDivision(LONG nDivision);
 			[id(3), helpstring("获取用户摄像头")] BSTR QueryUserCamera(void);
-			[id(5), helpstring("方法StartRealTimeVideo")] BSTR StartRealTimeVideo(LONG videoID, LONG channelNo);
-			[id(6), helpstring("停止实时视频")] BSTR StopRealTimeVideo(LONG videoID, LONG channelNo);
+			[id(5), helpstring("方法StartRealTimeVideo")] BSTR StartRealTimeVideo(LONG nCameraID);
+			[id(6), helpstring("停止实时视频")] BSTR StopRealTimeVideo(LONG nCameraID);
 			[id(7), helpstring("云台控制方法")] BSTR ControlPTZ(LONG cameraID, BYTE PTZCmd, BYTE iSpeed, BYTE iData);
 			[id(8), helpstring("方法LoginServer")] BSTR LoginServer(BSTR userName, BSTR password, BSTR svrIpAddr);
 			[id(10), helpstring("拍快照")] BSTR TakeSnapshot(LONG nCameraID);
+			[id(11), helpstring("开启音频")] BSTR StartRealTimeAudio(LONG cameraID);
+			[id(12), helpstring("方法StopRealTimeAudio")] BSTR StopRealTimeAudio(LONG cameraID);
+			[id(13), helpstring("方法StartAudioTalk")] BSTR StartAudioTalk(LONG cameraID);
+			[id(14), helpstring("方法StopAudioTalk")] BSTR StopAudioTalk(LONG cameraID);
+			[id(16), helpstring("方法StartRecord")] BSTR StartRecord(LONG cameraID);
+			[id(17), helpstring("方法StopRecord")] BSTR StopRecord(LONG cameraID);
+			[id(18), helpstring("方法InitailCtrl")] BSTR InitailCtrl(LONG platform);
+			[id(19), helpstring("方法ConnectServer")] BSTR ConnectServer(BSTR svrAddr, LONG svrPort, LONG clientID);
+			[id(20), helpstring("方法QueryRecordFileList")] BSTR QueryRecordFileList(LONG cameraID, LONG startTime, LONG endTime, LONG fileType);
 	};
 
 	//  CKeWebCamOCXCtrl 的事件调度接口

@@ -422,10 +422,19 @@ bool CSocketHandle::CreateSocket(LPCTSTR pszHostName, LPCTSTR pszServiceName,
             }
 #endif
         }
-
         // Associate a local address with the socket
         SockAddrIn sockAddr;
-        sockAddr.CreateFrom(pszHostName, pszServiceName, nFamily);
+		//use INADDR_ANY replace  by lht
+		if (pszHostName == NULL)
+		{
+			sockAddr.CreateFrom(INADDR_ANY,0,nFamily);
+		}
+		else
+		{
+			sockAddr.CreateFrom(pszHostName, pszServiceName, nFamily);
+		}
+
+        //sockAddr.CreateFrom(pszHostName, pszServiceName, nFamily);
 
         if ( SOCKET_ERROR == bind(sock, sockAddr, (int)sockAddr.Size()))
         {
@@ -452,6 +461,48 @@ bool CSocketHandle::CreateSocket(LPCTSTR pszHostName, LPCTSTR pszServiceName,
     return (INVALID_SOCKET != sock);
 }
 
+
+bool ConnectSelect(SOCKET sockfd, SockAddrIn sockAddr,int timeout)
+{
+	
+
+	unsigned long ul = 1;
+	ioctlsocket(sockfd, FIONBIO, &ul); //设置为非阻塞模式 
+	bool ret = false;
+	int error = -1;
+	int len = sizeof(int);
+	fd_set set;
+
+	if( SOCKET_ERROR == connect( sockfd, sockAddr, (int)sockAddr.Size()))
+	{
+		timeval tm;
+		tm.tv_sec  = timeout;
+		tm.tv_usec = 0;
+		FD_ZERO(&set);
+		FD_SET(sockfd, &set);
+		if( select(sockfd+1, NULL, &set, NULL, &tm) > 0)
+		{
+			getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (char *)&error, /*(socklen_t *)*/&len);
+			if(error == 0) 
+				ret = true;
+			else 
+				ret = false;
+		} 
+		else 
+			ret = false;
+	}
+	else 
+	{
+		ret = true;
+	}
+	ul = 0;
+	ioctlsocket(sockfd, FIONBIO, &ul); //设置为阻塞模式
+
+	return ret;
+
+
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // ConnectTo
 bool CSocketHandle::ConnectTo(LPCTSTR pszHostName, LPCTSTR pszRemote,
@@ -475,12 +526,26 @@ bool CSocketHandle::ConnectTo(LPCTSTR pszHostName, LPCTSTR pszRemote,
     {
         // Associate a local address with the socket but let provider assign a port number
         SockAddrIn sockAddr;
-        if (false == sockAddr.CreateFrom(pszHostName, TEXT("0"), nFamily))
-        {
-            SetLastError( WSAGetLastError() );
-            closesocket( sock );
-            return false;
-        }
+//         if (false == sockAddr.CreateFrom(pszHostName, TEXT("0"), nFamily))
+//         {
+//             SetLastError( WSAGetLastError() );
+//             closesocket( sock );
+//             return false;
+//         }
+		//use INADDR_ANY replace  by lht
+		if (pszHostName == NULL)
+		{
+			sockAddr.CreateFrom(INADDR_ANY,0,nFamily);
+		}
+		else
+		{
+			if (false == sockAddr.CreateFrom(pszHostName, TEXT("0"), nFamily))
+			{
+			             SetLastError( WSAGetLastError() );
+			             closesocket( sock );
+			             return false;
+			}
+		}
 
         if ( SOCKET_ERROR == bind(sock, sockAddr, (int)sockAddr.Size()))
         {
@@ -506,12 +571,23 @@ bool CSocketHandle::ConnectTo(LPCTSTR pszHostName, LPCTSTR pszRemote,
         sockAddr.CreateFrom( pszRemote, pszServiceName, nFamily );
 
         // try to connect - if fail, server not ready
-        if (SOCKET_ERROR == connect( sock, sockAddr, (int)sockAddr.Size()))
-        {
-            SetLastError( WSAGetLastError() );
-            closesocket( sock );
-            return false;
-        }
+//         if (SOCKET_ERROR == connect( sock, sockAddr, (int)sockAddr.Size()))
+//         {
+//             SetLastError( WSAGetLastError() );
+//             closesocket( sock );
+//             return false;
+//         }
+
+	//socket select by lht
+		if (!ConnectSelect(sock,sockAddr,1))
+		{
+			SetLastError( WSAGetLastError() );
+			closesocket( sock );
+			return false;
+		}
+		
+	
+
 
         // Success, now we may save this socket
         m_hSocket = sock;

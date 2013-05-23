@@ -7,21 +7,26 @@
 
 CCmdSocket::CCmdSocket(void)
 {
+	LOG_DEBUG("CCmdSocket::CCmdSocket()" );
 	m_clientID = 0;
 	m_nSockType = SOCK_TCP;
 	m_msgWaitTime = 10000;//10s 一个消息
 	m_serverPort = TEXT("22616");
-	currentPackage = 0;
-	totalPackageRecv = 0;
+// 	currentPackage = 0;
+// 	totalPackageRecv = 0;
 	//m_HeartbeatThread = new CHeartBeatThread;
+	
 }
 
 CCmdSocket::~CCmdSocket(void)
 {
-	TRACE1("delete CCmdSocket time start %d\n",GetTickCount());
-	//delete m_HeartbeatThread;
+	
+	//delete m_HeartbeatThrea
+	m_xmlInfoThread.Stop();
+	m_HeartbeatThread.Stop();
 	CloseConnect();
-	TRACE1("delete CCmdSocket time end %d\n",GetTickCount());
+	
+	LOG_DEBUG("delete CCmdSocket time end " );
 }
 
 
@@ -40,11 +45,15 @@ CCmdSocket::~CCmdSocket(void)
 
  int CCmdSocket::LoginServer( CString userName,CString pwd )
  {
-	char caUserName[USERNAME_LEN];
-	char caPwd[PASSWORD_LEN];
-	
+	 char caUserName[USERNAME_LEN] = {0};
+	 char caPwd[PASSWORD_LEN] = {0};
+#ifdef UNICODE
 	WideCharToMultiByte(CP_ACP,0,userName,-1,caUserName,USERNAME_LEN,NULL,NULL);
 	WideCharToMultiByte(CP_ACP,0,pwd,-1,caPwd,PASSWORD_LEN,NULL,NULL);
+#else
+	strncpy(caUserName,userName.GetString(),min(USERNAME_LEN,userName.GetLength()));
+	strncpy(caPwd,pwd.GetString(),min(PASSWORD_LEN,pwd.GetLength()));
+#endif
 
 	//请求密钥
 	char keyt[SECRETKEY_LEN];
@@ -89,29 +98,31 @@ CCmdSocket::~CCmdSocket(void)
 
 	PMsgSecretKeyReq pReqMsg;
 	pReqMsg = (PMsgSecretKeyReq)&msgSend[0];
-
 	pReqMsg->head.protocal = PROTOCOL_HEAD;
 	pReqMsg->head.msgType = KEMSG_TYPE_ASKKEY;
 	pReqMsg->head.msgLength = msgLen;
 	pReqMsg->head.clientID = 0;
 
-	m_SocketClient.Write(&msgSend[0],msgLen);
-		
-	DWORD dw = WaitForSingleObject(keEvent[KEMSG_EVENT_ASKKEY].m_hObject,MSG_WAIT_TIMEOUT);
-	if (dw == WAIT_TIMEOUT)
+	int ret = this->Write(&msgSend[0],msgLen);
+	if (ret != msgLen)
 	{
-		LOG_ERROR("Wait secret key response time out");
+		return KE_SOCKET_WRITEERROR;
+	}
+	ret = WaitRecvMsg(KEMSG_TYPE_ASKKEY);
+	if (ret != KE_SUCCESS)
+	{
 		return KE_MSG_TIMEOUT;
 	}
-
-	memcpy(keyt,(char *)respData[KEMSG_EVENT_ASKKEY],SECRETKEY_LEN);
-	delete (char *)respData[KEMSG_EVENT_ASKKEY];
+	void * keyPtr = NULL;
+	GetRecvMsgData(KEMSG_TYPE_ASKKEY,&keyPtr);
+	memcpy(keyt,(char *)keyPtr,SECRETKEY_LEN);
 	return KE_SUCCESS;
  }
 
  bool CCmdSocket::Init()
  {
-	 const int nRecvBufSize = 0x8000;
+	 LOG_DEBUG("Init CCmdSocket");
+	 const int nRecvBufSize = 0x2000;
 	return __super::Init(nRecvBufSize);
  }
 
@@ -156,8 +167,7 @@ CCmdSocket::~CCmdSocket(void)
 	PMsgSecretKeyResp pMsg = (PMsgSecretKeyResp)msgData;
 	BYTE *secretKey= new BYTE[SECRETKEY_LEN];	//从服务器获取的密钥
 	memcpy(secretKey,pMsg->keyt,SECRETKEY_LEN);
-	respData[KEMSG_EVENT_ASKKEY] = (int)secretKey;
-	keEvent[KEMSG_EVENT_ASKKEY].PulseEvent();
+	SetRecvMsg(pMsg->head.msgType,0,secretKey);
  }
 
  void CCmdSocket::LoginMsgResp( const BYTE* msgData )
@@ -165,9 +175,8 @@ CCmdSocket::~CCmdSocket(void)
 	LOG_DEBUG("Receive login response");
 	PKEMsgUserLoginResp pMsg = (PKEMsgUserLoginResp)msgData;
 	m_clientID = pMsg->head.clientID;
-	respData[KEMSG_EVENT_LOGIN] = pMsg->respData;
-	Sleep(0);
-	keEvent[KEMSG_EVENT_LOGIN].PulseEvent();
+	SetRecvMsg(pMsg->head.msgType,pMsg->respData);
+
  }
 
  int CCmdSocket::SendLoginMsg( const char * userName,const char *encryptData )
@@ -188,15 +197,17 @@ CCmdSocket::~CCmdSocket(void)
 	memcpy(pReqMsg->userName,userName,min(strlen(userName),USERNAME_LEN));
 	memcpy(pReqMsg->encreptData,encryptData,ENCRYPTED_DATA_LEN);
 	LOG_DEBUG("send login message");
-	Write(&msgSend[0],msgLen);
-
-	DWORD dw = WaitForSingleObject(keEvent[KEMSG_EVENT_LOGIN].m_hObject,MSG_WAIT_TIMEOUT);
-	if (dw == WAIT_TIMEOUT)
+	int ret = Write(&msgSend[0],msgLen);
+	if (ret != msgLen)
 	{
-		LOG_ERROR("Wait login response time out");
+		return KE_SOCKET_WRITEERROR;
+	}
+	ret = WaitRecvMsg(pReqMsg->head.msgType);
+	if (ret != KE_SUCCESS)
+	{
 		return KE_MSG_TIMEOUT;
 	}
-	int loginResult = respData[KEMSG_EVENT_LOGIN];
+	int loginResult = GetRecvMsgData(pReqMsg->head.msgType);
 	if (loginResult== 0x0d || loginResult == 0x06)
 	{
 		LOG_INFO("login success");
@@ -294,7 +305,8 @@ CCmdSocket::~CCmdSocket(void)
 		theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,KE_RTV_BOTHOFFLINE);
 		return;
 	}
-
+	int mediaSvrType;
+	
 	COneCamera * tmpCamera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
 	CMediaSocket * media = tmpCamera->m_MediaSocket;//CMediaSocket::GetMediaSocket(videoID,channelNo,true);
 	if (media == NULL)
@@ -305,15 +317,16 @@ CCmdSocket::~CCmdSocket(void)
 	}
 	int ret;
 	bool connected = false;
+
 	if (videoSvrIp != 0 )//连接视频服务器
 	{
-		if(!media->ConnectToServer(videoSvrIp,port))
+		if(!media->ConnectToServer(videoSvrIp,port,1,m_clientID))
 		{
 			LOG_WARN("Connect video server failed!");
 		}
 		else
 		{
-			ret = media->ReqestVideoServer(m_clientID,videoID,channelNo,Media_Vedio);
+			ret = media->ReqestMediaData(cameraID,Media_Vedio);
 			if (ret != KE_SUCCESS)
 			{
 				theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,ret);
@@ -323,13 +336,13 @@ CCmdSocket::~CCmdSocket(void)
 	}
 	if ( transIp != 0)//连接转发服务器
 	{
-		if(!media->ConnectToServer(transIp,22615))
+		if(!media->ConnectToServer(transIp,22615,2,m_clientID))
 		{
 			LOG_WARN("Connect trans server failed!");
 		}
 		else
 		{
-			ret = media->ReqestMediaTrans(m_clientID,videoID,channelNo,Media_Vedio);
+			ret = media->ReqestMediaData(cameraID,Media_Vedio);
 			if (ret != KE_SUCCESS)
 			{
 				theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,ret);
@@ -337,6 +350,7 @@ CCmdSocket::~CCmdSocket(void)
 			return;
 		}
 	}
+
 	theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,KE_CONNECT_SERVER_ERROR);
 	
  }
@@ -369,7 +383,6 @@ CCmdSocket::~CCmdSocket(void)
 				 continue;
 			 }
 		 }		
-
 		 if (!GetMessageData())
 		 {
 			 Sleep(10);
@@ -452,6 +465,7 @@ CCmdSocket::~CCmdSocket(void)
 	 return KE_SUCCESS;
  }
 
+
  void CCmdSocket::RecvAskTreeMsg( const BYTE * msgData )
  {
 	PKEAskTreeMsg pMsg = (PKEAskTreeMsg)msgData;
@@ -461,20 +475,21 @@ CCmdSocket::~CCmdSocket(void)
 		{
 			char * xmlInfoPtr = (char *)msgData + sizeof(KEAskTreeMsg);
 			int xmlInfoLen = pMsg->msgLength - sizeof(KEAskTreeMsg);
-			AllNotesInfo.insert(AllNotesInfo.length(),xmlInfoPtr,xmlInfoLen);
+			m_xmlInfoThread.AllNotesInfo.insert(m_xmlInfoThread.AllNotesInfo.length(),xmlInfoPtr,xmlInfoLen);
 
-			currentPackage = pMsg->packageNo+1;
-			totalPackageRecv = pMsg->packageTotal;
-			if (currentPackage < totalPackageRecv)
+			m_xmlInfoThread.currentPackage = pMsg->packageNo+1;
+			int packageTotal = pMsg->packageTotal;
+			if (m_xmlInfoThread.currentPackage < packageTotal)
 			{
-				LOG_DEBUG("ask another xml package :" << currentPackage);
-				AskAllRootNodes(currentPackage);
+				//LOG_DEBUG("ask another xml package :" << m_xmlInfoThread.currentPackage);
+				AskAllRootNodes(m_xmlInfoThread.currentPackage);
 			}
 			else
 			{
 				LOG_DEBUG("Receive XML data finished !");
-				::_beginthreadex (0, 0, XMLInfoThreadProc, this, 0,NULL);
-				
+				//::_beginthreadex (0, 0, XMLInfoThreadProc, this, 0,NULL);
+				m_xmlInfoThread.Initialize(this,m_clientID);
+				m_xmlInfoThread.Start();
 			}
 		}
 
@@ -485,142 +500,8 @@ CCmdSocket::~CCmdSocket(void)
 
  int CCmdSocket::AskAllRootNodes( short packageNo )
  {
-// 	 if (currentPackage +1 < totalPackageRecv)
-// 	 {
-// 		 LOG_WARN("Device XML info receiving! currentPackege-"<<currentPackage<<"; totalPackage-"<<totalPackageRecv);
-// 		 return KE_XML_Receiving;
-// 	 }
-// 	 AllNotesInfo.clear();
-	 short pNo = packageNo;
-
+	 short pNo = packageNo;	
 	return SendAskTreeMsg(KEMSG_ASKTREE_DATATYPE_AllRootNodes,(char *)&pNo,2);
- }
-
- void CCmdSocket::DoXmlToMap( CMarkup &xml )
- {
-	 while(xml.FindElem(_T("Node")))
-	 {
-		 CHNODE changeNode;
-		 changeNode.NodeType = _ttoi(xml.GetAttrib(_T("NodeType")));
-		 changeNode.NodeName = xml.GetAttrib(_T("Name"));
-		 changeNode.ParentNodeID =  _ttoi(xml.GetAttrib(_T("ParentID")));
-		 changeNode.NodeID = _ttoi(xml.GetAttrib(_T("ID")));
-		 switch(changeNode.NodeType)
-		 {
-		 case 0:  //工程
-			 changeNode.ParentNodeID = 0;
-			 upperNodes.push_back(changeNode);
-			 break;
-		 case 1:  //组
-			 upperNodes.push_back(changeNode);
-
-			 break;
-		 case 2:  //有线视频服务器
-			 changeNode.NodeID = _ttoi(xml.GetAttrib(_T("InforID")));
-			 videoSvrNodes.push_back(changeNode);
-			 break;
-		 case 3:  //通道
-			 changeNode.NodeID =changeNode.ParentNodeID*256 +changeNode.NodeID ;
-			 channelNodes.push_back(changeNode);
-			 break;
-		 default:
-			 break;
-		 }
-
-		 if (videoSvrNodes.size() >1)
-		 {
-			SendVideoSvrOnline();
-			Sleep(50);
-		 }
-
-		 if (xml.IntoElem())
-		 {	
-			 DoXmlToMap(xml);
-			 xml.OutOfElem();
-		 }
-	 }//while
- }
-
- int CCmdSocket::SendVideoSvrOnline()
- {
-	 if (videoSvrNodes.size() == 0)
-	 {
-		 return KE_SUCCESS;
-	 }
-	 std::vector<BYTE> msgSend;
-	 int msgLen = sizeof(KEMsgHead) + videoSvrNodes.size()*2;
-	 msgSend.resize(msgLen,0);
-	 PKEMsgHead pReqMsg;
-	 pReqMsg = (PKEMsgHead)&msgSend[0];
-	 pReqMsg->protocal = PROTOCOL_HEAD;
-	 pReqMsg->msgType = KEMSG_TYPE_VideoSvrOnline;
-	 pReqMsg->msgLength = msgLen;
-	 pReqMsg->clientID = m_clientID;
-
-	 for (int i= 0;i<videoSvrNodes.size();i++)
-	 {
-		 short svrID = videoSvrNodes[i].NodeID;
-		 memcpy(&msgSend[sizeof(KEMsgHead)+i*2],(char *)&svrID,2);
-	 }
-	 
-	 keEvent[KEMSG_EVENT_VideoSvrOnline].ResetEvent();
-
-	 int ret = this->Write(&msgSend[0],msgLen);
-	 if (ret != msgLen)
-	 {
-		 return KE_SOCKET_WRITEERROR;
-	 }
-	 DWORD dw = WaitForSingleObject(keEvent[KEMSG_EVENT_VideoSvrOnline].m_hObject,MSG_WAIT_TIMEOUT);
-	 if (dw == WAIT_TIMEOUT)
-	 {
-		 LOG_ERROR("Wait secret key response time out");
-		 return KE_MSG_TIMEOUT;
-	 }
-
-	 theApp.g_pMainWnd->SendMessage(WM_TREESTRUCTNOTIFY,
-		 KEMSG_ASKTREE_DATATYPE_AllRootNodes,(LPARAM)(&upperNodes));		
-	 theApp.g_pMainWnd->SendMessage(WM_TREESTRUCTNOTIFY,
-		 KEMSG_ASKTREE_DATATYPE_AllRootNodes,(LPARAM)(&videoSvrNodes));		
-	 theApp.g_pMainWnd->SendMessage(WM_TREESTRUCTNOTIFY,
-		 KEMSG_ASKTREE_DATATYPE_AllRootNodes,(LPARAM)(&channelNodes));	
-	 upperNodes.clear();
-	 videoSvrNodes.clear();
-	 channelNodes.clear();
-
-	 return KE_SUCCESS;
- }
-
- unsigned int __stdcall CCmdSocket::XMLInfoThreadProc( void* arg )
- {
-	 LOG_DEBUG("start XMLInfoThreadProc thread");
-	 CCmdSocket * ptr = (CCmdSocket *)arg;
-	 CMarkup g_xml;
-	 tstd::tstring xmlStr = str_to_tstr(ptr->AllNotesInfo);
-	 ptr->AllNotesInfo.clear();
-	 g_xml.SetDoc(xmlStr.c_str());
-	 if (g_xml.IsWellFormed())
-	 {
-		 //log("xml is well");
-		 if (g_xml.FindElem(_T("AllRootNodes")))
-		 {
-			 g_xml.IntoElem();
- 			 ptr->upperNodes.clear();
- 			 ptr->videoSvrNodes.clear();
- 			 ptr->channelNodes.clear();
-			 ptr->DoXmlToMap(g_xml);
-			 if (ptr->SendVideoSvrOnline() != KE_SUCCESS)
-			 {
-				
-				 return 0;
-			 }
-			
-		 }
-	 }
-	 else
-	 {
-		 LOG_INFO("*******************error xml not formed**********************");
-	 } 
-	 return 1;
  }
 
  void CCmdSocket::RecvVideoSvrOnline( const BYTE * msgData )
@@ -634,42 +515,47 @@ CCmdSocket::~CCmdSocket(void)
 	if (dataLen%EachNodeStatusLen != 0)
 	{
 		LOG_WARN("RecvVideoSvrOnline data error  1!\n");
-		keEvent[KEMSG_EVENT_VideoSvrOnline].SetEvent();
+		SetRecvMsg(KEMSG_TYPE_VideoSvrOnline,0);
 		return;
 	}
-	if (videoSvrNodes.size() != nodeNum)
+	if (nodeNum == 1)
 	{
-		//LOG_WARN("RecvVideoSvrOnline data error  2!\n");
-		keEvent[KEMSG_EVENT_VideoSvrOnline].SetEvent();
 		return;
 	}
+	if (m_xmlInfoThread.videoSvrNodes.size() != nodeNum)
+	{
+		LOG_WARN("RecvVideoSvrOnline data error  ,nodeNum="<< nodeNum);
+		//SetRecvMsg(KEMSG_TYPE_VideoSvrOnline,nodeNum);
+		//return;
+	}
+	
 	for(int i=0;i<nodeNum;i++)
 	{
 		short nodeID = *((short *)data);
-		CHNODE * node = &videoSvrNodes[i];
+		CHNODE * node = &m_xmlInfoThread.videoSvrNodes[i];
 		if (node->NodeID != nodeID)
 		{
-			LOG_WARN("RecvVideoSvrOnline need to find ?\n");
-			int NodeIndex = FindChNodeByID(videoSvrNodes,nodeID);
-			if (NodeIndex == -1)
+			LOG_WARN("RecvVideoSvrOnline need to find --"<<nodeID);
+			int nodeIndex = FindChNodeByID(m_xmlInfoThread.videoSvrNodes,nodeID);
+			if (nodeIndex == -1)
 			{
-				LOG_WARN("RecvVideoSvrOnline   find  error ?\n");
-				continue;
+				LOG_ERROR("Cannot find the node of id "<< nodeID);
 			}
-			node = &videoSvrNodes[NodeIndex];
+			else
+			{
+				node = &m_xmlInfoThread.videoSvrNodes[nodeIndex];
+			}
 		}
 		node->onLine = data[2];
 		data += EachNodeStatusLen;
 	}
-
-	LOG_DEBUG("RecvVideoSvrOnline\n");
-	 keEvent[KEMSG_EVENT_VideoSvrOnline].SetEvent();
+	 SetRecvMsg(KEMSG_TYPE_VideoSvrOnline,0);
  }
 //返回与nID相同的节点id的索引。成功返回在vector中的位置，失败返回-1
  int CCmdSocket::FindChNodeByID(const std::vector<CHNODE> & nodes,int nID )
  {
 	 //std::vector<CHNODE>::const_iterator nodeIter = nodes.begin();
-	for (int i=0;i<nodes.size();i++)
+	for (UINT i=0;i<nodes.size();i++)
 	{
 		if (nodes[i].NodeID == nID)
 		{

@@ -1,7 +1,6 @@
 
 #include "stdafx.h"
 #include "CommonFunctions.h"
-
 #include <stdio.h>
 
 /**********************************************************************************************************************
@@ -29,7 +28,6 @@ int atoh(char *str)
 		else
 			return -1;
 	}
-
 	return data;
 }
 
@@ -91,7 +89,6 @@ int strtohex(const char *str, char *hex_buf)
 		}
 		index_buf1 = 0;
 	}
-
 	return num;
 }
 

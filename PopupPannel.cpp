@@ -17,6 +17,7 @@ CPopupPannel::CPopupPannel(CWnd* pParent /*=NULL*/)
 
 CPopupPannel::~CPopupPannel()
 {
+
 }
 
 void CPopupPannel::DoDataExchange(CDataExchange* pDX)
@@ -72,4 +73,11 @@ void CPopupPannel::OnPaint()
 	CRect rcClient;
 	GetClientRect(rcClient);
 	m_pannel.MoveWindow(rcClient);
+}
+
+void CPopupPannel::OnCancel()
+{
+	// TODO: 在此添加专用代码和/或调用基类
+	
+	CDialog::OnCancel();
 }

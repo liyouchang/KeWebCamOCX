@@ -3,6 +3,7 @@
 
 
 #include "CommonUtility/tstdlibs.h"
+#include "CommonUtility/CommonFunctions.h"
 
 const int new_MappiingID[16] = { 0,  8,  1,  9,  2, 10,  3, 11,  4, 12,  5, 13,  6, 14,  7, 15 };
 const int new_ChannelID[16]  = { 0,  2,  4,  6,  8, 10, 12, 14,  1,  3,  5,  7,  9, 11, 13, 15 };
@@ -22,6 +23,7 @@ const int new_CIF_ID_16[16]  = { 0,  0,  2,  2,  4,  4,  6,  6,  8,  8, 10, 10, 
 #define DIV_CH16				16
 
 #define DIV_TOGGLED				201
+#define  DIV_PLAYER 202
 
 #define DIV_DEFAULT_CH16		DIV_CH16
 #define DIV_DEFAULT_CH9			DIV_CH9
@@ -117,13 +119,14 @@ struct CamStatusReport
 
 enum KEERRORCODE
 {
-	KE_SUCCESS = 0,
-	KE_FAILED = 1,
+	KE_FAILED = 5,
+	KE_SUCCESS = 13,
 	KE_ERROR_PARAM,
 	KE_SOCKET_NOTOPEN,
 	KE_SOCKET_WRITEERROR,
 	KE_CONNECT_SERVER_ERROR,
 	KE_MSG_TIMEOUT,
+	KE_DEVOFFLINE,
 	KE_LOGIN_NAMEPWDERROR,
 	KE_LOGIN_AlreadyLogin,
 	KE_LOGIN_DBServerOff,
@@ -134,7 +137,10 @@ enum KEERRORCODE
 	KE_RTV_MAXVIEWNUM,
 	KE_RTV_MAXTCPNUM,
 	KE_RTV_OpenStreamFailed,
+	KE_RTV_OpenSoundFailed,
+	KE_RTV_NOPLAY,
 	KE_XML_Receiving,
+	KE_FUNCTION_NOTSUPPORT,
 	KE_OTHERS
 };
 
@@ -157,6 +163,10 @@ inline char * GetKEErrorDescriptA(int errorCode)
 	case KE_ERROR_PARAM:								return "参数错误";
 	case KE_LOGIN_AlreadyLogin:						return "已经登陆";
 	case KE_XML_Receiving:								return "正在接收树形结构";
+	case KE_LOGIN_NAMEPWDERROR:				return "用户名密码错误";
+	case KE_RTV_NOPLAY:									return "未开始视频";
+	case KE_SOCKET_WRITEERROR:					return "发送消息错误";
+
 	default:
 		return "其他错误";
 	}
@@ -174,6 +184,33 @@ inline CString GetKEErrorDescript(int errorCode)
 		return _T("其他错误");
 	}
 }
+
+inline CString GetCamTimeFileName(int cameraID,CString extName,CString path)
+{
+	CString fullPath;
+	CString fileName ;
+	CString filePath;
+
+	SYSTEMTIME sys;
+	GetLocalTime( &sys );
+	fileName.Format(_T("%d_%04d%02d%02d%02d%02d%02d%03d.%s"), cameraID,
+		sys.wYear,sys.wMonth,sys.wDay,sys.wHour,sys.wMinute,sys.wSecond,sys.wMilliseconds,extName);
+	
+	if (path.GetAt(path.GetLength()-1)!=_T('\\'))
+	{
+		path.AppendChar(_T('\\'));
+	}
+	filePath.Format(_T("%s%d\\"),path,cameraID);
+
+	if (!FolderExist(filePath))
+	{
+		CreateFolderEx(filePath);
+	}
+	fullPath = filePath + fileName;
+	return fullPath;
+}
+
+
 
 
 #endif 

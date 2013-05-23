@@ -13,6 +13,9 @@ class CKeWebCamOCXCtrl : public COleControl
 public:
 	CKeWebCamOCXCtrl();
 	CWebCamPannel m_pannel;
+	//CCmdSocket m_socketSvr;
+protected:
+	UINT_PTR m_HeartBeatTimer;
 // 重写
 public:
 	virtual void OnDraw(CDC* pdc, const CRect& rcBounds, const CRect& rcInvalid);
@@ -44,6 +47,16 @@ protected:
 // 调度和事件 ID
 public:
 	enum {
+		dispidQueryRecordFileList = 20L,
+		dispidConnectServer = 19L,
+		dispidInitailCtrl = 18L,
+		dispidStopRecord = 17L,
+		dispidStartRecord = 16L,
+		dispidRecordFilePath = 15,
+		dispidStopAudioTalk = 14L,
+		dispidStartAudioTalk = 13L,
+		dispidStopRealTimeAudio = 12L,
+		dispidStartRealTimeAudio = 11L,
 		eventidTreeStructNotify = 4L,
 		dispidTakeSnapshot = 10L,
 		eventidReportCameraStatus = 3L,
@@ -61,8 +74,9 @@ public:
 protected:
 	void SetDivision(LONG nDivision);
 	BSTR QueryUserCamera(void);
-	BSTR StartRealTimeVideo(LONG videoID, LONG channelNo);
-	BSTR StopRealTimeVideo(LONG videoID, LONG channelNo);
+	BSTR StartRealTimeVideo(LONG nCameraID);
+	BSTR StopRealTimeVideo(LONG nCameraID);
+	
 public:
 	afx_msg void OnDestroy();
 public:
@@ -86,17 +100,31 @@ protected:
 	BSTR LoginServer(LPCTSTR userName, LPCTSTR password, LPCTSTR svrIpAddr);
 	void OnSnapFilePathChanged(void);
 	CString m_SnapFilePath;
+
 protected:
 	void ReportCameraStatus(LPCTSTR info)
 	{
 		FireEvent(eventidReportCameraStatus, EVENT_PARAM(VTS_BSTR), info);
 	}
 	BSTR TakeSnapshot(LONG nCameraID);
-	
-
 	void TreeStructNotify(LPCTSTR jsonInfo)
 	{
 		FireEvent(eventidTreeStructNotify, EVENT_PARAM(VTS_BSTR), jsonInfo);
 	}
+	BSTR StartRealTimeAudio(LONG cameraID);
+	BSTR StopRealTimeAudio(LONG cameraID);
+
+	BSTR StartAudioTalk(LONG cameraID);
+	BSTR StopAudioTalk(LONG cameraID);
+	void OnRecordFilePathChanged(void);
+	CString m_RecordFilePath;
+	BSTR StartRecord(LONG cameraID);
+	BSTR StopRecord(LONG cameraID);
+public:
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+protected:
+	BSTR InitailCtrl(LONG platform);
+	BSTR ConnectServer(LPCTSTR svrAddr, LONG svrPort, LONG clientID);
+	BSTR QueryRecordFileList(LONG cameraID, LONG startTime, LONG endTime, LONG fileType);
 };
 

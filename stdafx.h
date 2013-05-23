@@ -37,3 +37,8 @@
 #include <afxdhtml.h>
 #include <afxwin.h>
 
+
+
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>

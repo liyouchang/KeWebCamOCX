@@ -7,7 +7,8 @@
 #endif
 
 #include "resource.h"       // Ö÷·ûºÅ
-#include "CmdSocket.h"
+//#include "CmdSocket.h"
+#include "CenterCommand.h"
 #include <map>
 #include "CommonUtility/LogModule.h"
 #include "KeWebCamOCXCtrl.h"
@@ -27,13 +28,14 @@ public:
 	BOOL InitInstance();
 	int ExitInstance();
 
+
 public:
 	int			m_nMAXCHANNEL;
-	int			m_nCurrentMappingCamera;
 	BOOL		m_bOneChTransfer;
 	CWebCamPannel	*g_PlayWnd;
-	CCmdSocket *g_cmdSocket;
+	//CCmdSocket *g_cmdSocket;
 	CKeWebCamOCXCtrl * g_pMainWnd;
+	CenterCommand * g_cmd;
 	//CString theLastError;
 	
 };

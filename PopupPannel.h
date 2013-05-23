@@ -24,4 +24,6 @@ public:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
 	afx_msg void OnPaint();
+protected:
+	virtual void OnCancel();
 };

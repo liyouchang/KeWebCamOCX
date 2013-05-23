@@ -18,12 +18,12 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="../bin"
+			OutputDirectory="../ÍøÂçÉãÏñÍ·²¥·Å²å¼þ"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
 			UseOfATL="0"
-			CharacterSet="1"
+			CharacterSet="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -72,7 +72,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="../bin/AVPlay.lib ../bin/log4cplusUSD.lib"
+				AdditionalDependencies="../ÍøÂçÉãÏñÍ·²¥·Å²å¼þ/AVPlay.lib ../ÍøÂçÉãÏñÍ·²¥·Å²å¼þ/log4cplusSD.lib"
 				OutputFile="$(OutDir)\$(ProjectName)D.ocx"
 				LinkIncremental="2"
 				ModuleDefinitionFile=".\KeWebCamOCX.def"
@@ -143,6 +143,7 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
+				ProgramDataBaseFileName="$(IntDir)\"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -197,7 +198,7 @@
 		</Configuration>
 		<Configuration
 			Name="Debug_Unicode|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="../bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
@@ -228,7 +229,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="CommonUtility\include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;LOG4CPLUS_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -251,7 +252,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="../bin/cximagecrtdu.lib ../bin/AVPlay.lib ../bin/log4cplusUD.lib"
+				AdditionalDependencies="../bin/AVPlay.lib ../bin/log4cplusUSD.lib"
 				OutputFile="$(OutDir)\$(ProjectName)UD.ocx"
 				LinkIncremental="2"
 				ModuleDefinitionFile=".\KeWebCamOCX.def"
@@ -317,10 +318,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PopupPannel.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -355,10 +352,6 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\command.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Common.h"
 				>
 			</File>
@@ -380,10 +373,6 @@
 			</File>
 			<File
 				RelativePath=".\OleDropTargetEx.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PopupPannel.h"
 				>
 			</File>
 			<File
@@ -436,6 +425,14 @@
 				RelativePath=".\MyAVPlayer.h"
 				>
 			</File>
+			<File
+				RelativePath=".\Recorder.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Recorder.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Dlg"
@@ -450,6 +447,22 @@
 			</File>
 			<File
 				RelativePath=".\OneCamera.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerCtrlDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PlayerCtrlDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PopupPannel.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PopupPannel.h"
 				>
 			</File>
 			<File
@@ -605,6 +618,14 @@
 			Name="Communication"
 			>
 			<File
+				RelativePath=".\CenterCommand.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CenterCommand.h"
+				>
+			</File>
+			<File
 				RelativePath=".\CmdSocket.cpp"
 				>
 			</File>
@@ -630,6 +651,22 @@
 			</File>
 			<File
 				RelativePath=".\MediaSocket.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Communication\P2PCmdSocket.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Communication\P2PCmdSocket.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Communication\ResendThread.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Communication\ResendThread.h"
 				>
 			</File>
 			<File

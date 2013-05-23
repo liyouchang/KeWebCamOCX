@@ -33,8 +33,12 @@ void InitLogModule()
 		isInitail = 1;
 	else
 		return;
+	//to support chinnese
+	std::locale::global(std::locale(""));
+
 #ifndef _NOLOG
 	log4cplus::tstring iniFile =GetCurrentPath() + _T("log.ini");
+	//iniFile =_T("E:\\workspace\\KeWebCamOCX\\bin\\log.ini");
 	CIniFile ini;
 
 	bool retValue = ini.Load(iniFile);
@@ -46,6 +50,7 @@ void InitLogModule()
 
 	log4cplus::tstring logFileName = ini.GetKeyValue(_T("log"),_T("logFileName"),_T("log.log"));
 	logFileName = GetCurrentPath() + logFileName;
+	//logFileName = _T("E:\\workspace\\KeWebCamOCX\\ÍøÂçÉãÏñÍ·²¥·Å²å¼þ\\logthat.log");
 	log4cplus::tstring sLogLevel = ini.GetKeyValue(_T("log"),_T("logLevel"),_T("OFF_LOG_LEVEL"));
 
 

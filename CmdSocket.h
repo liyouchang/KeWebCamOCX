@@ -3,7 +3,8 @@
 #include <afxmt.h>
 #include "SocketThreadHandler.h"
 #include "HeartBeatThread.h"
-#include "CommonUtility/Markup.h"
+
+
 
 class CCmdSocket :public CSocketThreadHandler
 {
@@ -17,8 +18,8 @@ public:
 	virtual void CloseConnect();
 	int LoginServer(CString userName,CString pwd);
 	int StartView(int vedioID,int ChannelID,long PlayHwd );
-	int SendRealTimeDataMsg(int vedioID,char channelNo,char reqType,char dataType);
-	int SendPTZControlMsg(int cameraID,BYTE ctrlType,BYTE speed,BYTE data);
+	int SendRealTimeDataMsg(int vedioID, char channelNo, char reqType, char dataType);
+	int SendPTZControlMsg(int cameraID, BYTE ctrlType, BYTE speed, BYTE data);
 	int SendAskTreeMsg(int dataType,char * data,int dataLen);
 	int AskAllRootNodes(short packageNo = 0);
 	
@@ -36,29 +37,17 @@ protected:
 	void RecvVideoSvrOnline(const BYTE * msgData);
 	//heartbeat
 	CHeartBeatThread  m_HeartbeatThread;
-
+	XMLInfoThread m_xmlInfoThread;
 protected:
 	static unsigned int __stdcall XMLInfoThreadProc(void* arg);
 
 	int AskKeyt(char * keyt);
 	int SendLoginMsg(const char * userName, const char *encryptData);
-	void DoXmlToMap(CMarkup &xml);
-	int SendVideoSvrOnline();
+
 private:
 	int m_msgWaitTime;
 	int m_clientID;
-	CEvent keEvent[KEMSG_EVENT_MAX];		//申请key
-	int respData[KEMSG_EVENT_MAX];	//传递消息读取的数据,resp函数生成,使用者释放
 
-	std::string AllNotesInfo;
-	short currentPackage;
-	short totalPackageRecv;
-
-	std::vector<CHNODE> upperNodes;
-	std::vector<CHNODE> videoSvrNodes;
-	std::vector<CHNODE> tmpVideoSvrNodes;
-
-	std::vector<CHNODE> channelNodes;
 private:
 	void EncryptData(const char * userName, const char * pwd, const char * keyt, char * encryptedData);
 	int FindChNodeByID(const std::vector<CHNODE> & nodes,int nID);

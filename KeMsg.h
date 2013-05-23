@@ -96,7 +96,7 @@ typedef struct _KEMsgHead
 {
 	BYTE protocal;
 	BYTE msgType;
-	int msgLength;
+	unsigned int msgLength;
 	int clientID;
 }KEMsgHead,*PKEMsgHead;
 
@@ -209,42 +209,18 @@ typedef struct _KEMalfunctionAlert
 	char timeSpan[5];
 }KEMalfunctionAlert,*PKEMalfunctionAlert;
 
-typedef struct _KEVideoStreamHead
+typedef struct _KERTStreamHead
 {
 	BYTE protocal;
-	BYTE msgType;//0x39
+	BYTE msgType;//0x39 0x38
 	int msgLength;
 	int videoID;
 	char channelNo;
-}KEVideoStreamHead,*PKEVideoStreamHead;
+}KERTStreamHead,*PKERTStreamHead;
 
 
 
-typedef struct _KEVideoServerReq
-{
-	BYTE protocal;
-	BYTE msgType;//0x0c
-	int msgLength;
-	int videoID;
-	int clientID;
-	char channelNo;
-	char video;// ”∆µ=0«Î«Û   =1 Õ£÷π
-	char listen;//º‡Ã˝=0«Î«Û   =1 Õ£÷π
-	char talk;// ∂‘Ω≤=0«Î«Û   =1 Õ£÷π
-	char protocalType;
-	int transSvrIp;
-}KEVideoServerReq,*PKEVideoServerReq;
 
-typedef struct _KEVideoServerResp
-{
-	BYTE protocal;
-	BYTE msgType;//0x0c
-	int msgLength;
-	int videoID;
-	int clientID;
-	char channelNo;
-	char respType;// ACK/NAK
-}KEVideoServerResp,*PKEVideoServerResp;
 
 
 typedef struct _KEPTZControlReq
