@@ -574,3 +574,10 @@ void CWebCamPannel::OnMouseMove(UINT nFlags, CPoint point)
 	
 	CDialog::OnMouseMove(nFlags, point);
 }
+
+void CWebCamPannel::OnCancel()
+{
+	// TODO: 在此添加专用代码和/或调用基类
+
+	CDialog::OnCancel();
+}

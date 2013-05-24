@@ -284,6 +284,98 @@
 				CommandLine="copy &quot;KeWebCamOCX.lic&quot; &quot;$(OutDir)&quot;"
 			/>
 		</Configuration>
+		<Configuration
+			Name="Release_Unicode|Win32"
+			OutputDirectory="../bin"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			UseOfMFC="1"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="NDEBUG"
+				MkTypLibCompatible="false"
+				TypeLibraryName="$(IntDir)/KeWebCamOCX.tlb"
+				HeaderFileName="$(ProjectName)idl.h"
+				ValidateParameters="true"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="CommonUtility\include"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;LOG4CPLUS_STATIC"
+				MinimalRebuild="false"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="2"
+				ProgramDataBaseFileName="$(IntDir)\"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG"
+				Culture="2052"
+				AdditionalIncludeDirectories="$(IntDir)"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				RegisterOutput="true"
+				AdditionalDependencies="../bin/AVPlay.lib ../bin/log4cplusUS.lib"
+				OutputFile="$(OutDir)\$(ProjectName)U.ocx"
+				LinkIncremental="1"
+				ModuleDefinitionFile=".\KeWebCamOCX.def"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="正在复制运行库许可证"
+				CommandLine="copy &quot;KeWebCamOCX.lic&quot; &quot;$(OutDir)&quot;"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -338,6 +430,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug_Unicode|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Unicode|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -626,11 +726,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Communication\CloudCtrl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Communication\CloudCtrl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\CmdSocket.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\CmdSocket.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Communication\CriticalLock.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Communication\CriticalLock.h"
 				>
 			</File>
 			<File
@@ -643,6 +759,10 @@
 			</File>
 			<File
 				RelativePath=".\KeMsg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Communication\MapTemplet.h"
 				>
 			</File>
 			<File

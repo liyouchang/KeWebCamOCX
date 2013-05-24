@@ -47,6 +47,7 @@ protected:
 // 调度和事件 ID
 public:
 	enum {
+		dispidPlayRemoteRecord = 21L,
 		dispidQueryRecordFileList = 20L,
 		dispidConnectServer = 19L,
 		dispidInitailCtrl = 18L,
@@ -126,5 +127,6 @@ protected:
 	BSTR InitailCtrl(LONG platform);
 	BSTR ConnectServer(LPCTSTR svrAddr, LONG svrPort, LONG clientID);
 	BSTR QueryRecordFileList(LONG cameraID, LONG startTime, LONG endTime, LONG fileType);
+	BSTR PlayRemoteRecord(LONG cameraID, LONG fileNo);
 };
 

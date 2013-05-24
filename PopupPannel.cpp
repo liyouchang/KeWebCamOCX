@@ -50,9 +50,8 @@ BOOL CPopupPannel::OnInitDialog()
 	m_pannel.Create(IDD_DIALOG_PANNEL,this);
 	TRACE1("Pannel create end %d\n",GetTickCount());
  	MoveWindow(m_FullScreenRect,TRUE);
-
 	m_pannel.CopyPannel(m_pToFullPannel);
-TRACE1("Initialize end %d\n",GetTickCount());
+	TRACE1("Initialize end %d\n",GetTickCount());
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
 }

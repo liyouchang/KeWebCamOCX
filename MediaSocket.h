@@ -4,7 +4,7 @@
 #include "Recorder.h"
 #include <queue>
 #include <vector>
-
+#include "Communication/CloudCtrl.h"
 enum MediaType
 {
 	Media_None = 0x00,
@@ -19,7 +19,8 @@ enum MediaMsgType
 	KEMSG_RecordFileList = 0x53,
 	KEMSG_REQUEST_DOWNLOAD_FILE = 0x54,
 	KEMSG_RecordPlayData = 0x55,
-
+	DevMsg_GetPTZParam = 0x73,
+	DevMsg_SerialData = 0x46,
 };
 
 
@@ -113,12 +114,39 @@ typedef struct _KERecordFileListResp
 	int clientID;
 	char channelNo;
 	char resp;
+
+	
+}KERecordFileListResp,*PKERecordFileListResp;
+
+typedef struct _KERecordFileInfo
+{
 	int fileNo;
 	char startTime[6];
 	char endTime[6];
 	int fileSize;
 	char data[80];
-}KERecordFileListResp,*PKERecordFileListResp;
+}KERecordFileInfo,*PKERecordFileInfo;
+
+struct KEDevGetPTZParamReq
+{
+	BYTE protocal;
+	BYTE msgType;//0x73
+	int msgLength;
+	int videoID;
+	int clientID;
+	char channelNo;
+};
+struct KEDevGetSerialDataHead
+{
+	BYTE protocal;
+	BYTE msgType;//0x46
+	int msgLength;
+	int videoID;
+	int clientID;
+	short dataLen;
+};
+
+
 
 #pragma pack()
 
@@ -130,7 +158,12 @@ struct RecordFileInfo
 	int fileSize;
 	char fileData[80];
 };
-
+struct DevPTZInfo
+{
+	bool isgot;
+	char protocal;
+	char addr;
+};
 
 class AudioTalkThread:public SimpleThreadBase
 {
@@ -161,22 +194,23 @@ public:
 	int StartRecord(const char * fileName);
 	int StopRecord();
 	int GetRecordFileList(int cameraID,int startTime,int endTime,int fileType,std::vector<RecordFileInfo> & fileInfoList);
-	
+	int PTZControl(int cameraID, BYTE ctrlType ,BYTE speed );
 protected:
 	int ReqestMediaTrans( int videoID, int channelNo, int mediaType);
 	int ReqestVideoServer(int videoID, int channelNo, int mediaType);
-	
+	int GetPTZParam(int cameraID);
 	virtual bool CheckMessage(const BYTE* data, DWORD dwCount);
 	virtual void HandleMessage(const BYTE* msgData);
 	virtual void Run();
 	virtual int OpenMedia(int cameraID,int mediaType);
-
-	void RecvMediaTransResp(const BYTE* msgData);
+	
+	void RecvMediaTransResp(const BYTE * msgData);
 	void RecvVideoStream(const BYTE * msgData);
-	void RecvVideoServer(const BYTE *msgData);
-	void RecvAudioStream(const BYTE *msgData);
+	void RecvVideoServer(const BYTE * msgData);
+	void RecvAudioStream(const BYTE * msgData);
 	void RecvRecordFileList(const BYTE * msgData);
 	void RecvRecordPlayData(const BYTE * msgData);
+	void RecvGetPTZParam(const BYTE * msgData);
 protected:
 	CRecorder * m_Recorder;
 	CMyAVPlayer * m_AVPlayer;
@@ -186,7 +220,7 @@ protected:
 	int m_videoID;
 	int m_channelNo;
 	int m_SvrType;//1,视频服务器；2，媒体服务器 
-	
+	DevPTZInfo ptzInfo;
 public:
 	std::vector<RecordFileInfo> recordFileList;
 };

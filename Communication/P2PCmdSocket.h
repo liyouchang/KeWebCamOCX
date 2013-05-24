@@ -253,6 +253,14 @@ typedef struct _KEQueryRecordFileListResp
 	KERecordFileListResp ackData;
 }KEQueryRecordFileListResp,*PKEQueryRecordFileListResp;
 
+typedef struct _KEPTZCtrlUDPReq
+{
+	KEMsgHead head;//0x21
+	int devID;
+	char ptzType;
+	char ptzparam;
+}PTZCtrlUDPReq,*PPTZCtrlUDPReq;
+
 #pragma pack()
 
 
@@ -300,7 +308,7 @@ public:
 	int ChangeDevName(int devID,CString devNewName);
 	int CheckDevShareUser(int devSvrID);
 	int CancelDevShare(int devSvrID,int sharedUserID); 
-	int ChangeUserPwd(CString oldPwd,CString newPwd);
+	int ChangeUserPwd(CString oldPwd, CString newPwd);
 	int DeviceReboot(int devID);
 	int QueryVersion(CString & version ,CString & url);
 	int ResetForgetPwd(CString uname,CString email);
@@ -368,6 +376,7 @@ enum KE_P2PMSG_TYPE
 	KEMSG_TYPE_SHAREDEVLIST = 0x18,
 	KEMSG_TYPE_DEVREBOOT = 0x19,
 	KEMSG_TYPE_FORGETPWD = 0x20,
+	KEMSG_UDP_PTZControl=0x21,
 	KEMSG_TYPE_GetTransIP = 0x22,
 	KEMSG_UDP_QueryRecordFileList= 0x23,
 	KEMSG_TYPE_CHECKVERSION = 0xf9,

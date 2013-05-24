@@ -1,5 +1,6 @@
 #pragma once
 #include "afxwin.h"
+#include "afxcmn.h"
 
 
 // CPlayerCtrlDlg ¶Ô»°¿ò
@@ -25,4 +26,8 @@ protected:
 	virtual void OnCancel();
 public:
 	virtual BOOL OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pLResult);
+	afx_msg void OnNMReleasedcaptureSliderPos(NMHDR *pNMHDR, LRESULT *pResult);
+	CSliderCtrl m_playpos;
+	virtual BOOL OnInitDialog();
+	afx_msg void OnPaint();
 };

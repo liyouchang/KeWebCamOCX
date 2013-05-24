@@ -153,6 +153,9 @@ void CP2PCmdSocket::HandleMessage( const BYTE* msgData )
 	case KEMSG_TYPE_GetTransIP:
 		RecvTransIp(msgData);
 		break;
+	case KEMSG_UDP_QueryRecordFileList:
+		RecvRecordFileList(msgData);
+		break;
 	default:
 		TRACE("Receive unkown message\n");
 	}
@@ -247,19 +250,15 @@ int CP2PCmdSocket::SendLoginMsg( const char * userName,const char *encryptData )
 
 int CP2PCmdSocket::StartView( int cameraID)
 {
-	int devSvrID = cameraID/256;
-	int ret = SendDevNetInfoReq(devSvrID);
+	int ret = SetCameraMedia(cameraID) ;
 	if (ret != KE_SUCCESS)
 	{
 		return ret;
 	}
-	CMediaSocket *media = GetMediaSocket(cameraID);
-	
+	CMediaSocket *media = GetMediaSocket(cameraID);	
 	ret = media->ReqestMediaData(cameraID,Media_Vedio);
 	return ret;
 }
-
-
 
 void CP2PCmdSocket::RecvRealTimeMedia( const BYTE* msgData )
 {
@@ -984,7 +983,39 @@ int CP2PCmdSocket::RefreshCameraList()
 
 int CP2PCmdSocket::PTZControl( int cameraID, BYTE ctrlType ,BYTE speed ,BYTE data )
 {
-	return KE_FUNCTION_NOTSUPPORT;
+	CMediaSocket *media = GetMediaSocket(cameraID);
+	if (media->GetMediaSvrType() == 1)
+	{
+		return media->PTZControl(cameraID,ctrlType,speed);
+
+	}
+	else
+	{
+		return KE_FUNCTION_NOTSUPPORT;
+	}
+	
+// 	int devID = cameraID/256;
+// 	std::vector<BYTE> msgSend;
+// 	int msgLen = sizeof(PTZCtrlUDPReq);
+// 	msgSend.resize(msgLen,0);
+// 
+// 	PPTZCtrlUDPReq pReqMsg;
+// 	pReqMsg = (PPTZCtrlUDPReq)&msgSend[0];
+// 	pReqMsg->head.protocal = PROTOCOL_HEAD;
+// 	pReqMsg->head.msgType = KEMSG_UDP_PTZControl;
+// 	pReqMsg->head.msgLength = msgLen;
+// 	pReqMsg->head.clientID = m_clientID;
+// 	pReqMsg->devID = devID;
+// 	pReqMsg->ptzType = ctrlType;
+// 	pReqMsg->ptzparam = speed;
+// 
+// 	int ret = this->Write(&msgSend[0],msgLen);
+// 	if (ret != msgLen)
+// 	{
+// 		return KE_SOCKET_WRITEERROR;
+// 	}
+// 
+// 	return KE_SUCCESS;
 }
 
 int CP2PCmdSocket::HeartBeat()
@@ -1223,26 +1254,35 @@ void CP2PCmdSocket::RecvRecordFileList( const BYTE * msgData )
 {
 	PKEQueryRecordFileListResp pMsg = (PKEQueryRecordFileListResp)msgData;
 	PKERecordFileListResp pAckMsg = &pMsg->ackData;
-	if (pAckMsg->msgLength == 16)
+	if (pAckMsg->msgLength == sizeof(KERecordFileListResp))
 	{
 		this->SetRecvMsg(KEMSG_UDP_QueryRecordFileList,KE_SUCCESS);
 		return;
 	}
-	RecordFileInfo fileInfo;
-	fileInfo.fileNo = pAckMsg->fileNo;
-	CTime st(pAckMsg->startTime[0]+2000,pAckMsg->startTime[1],pAckMsg->startTime[2],
-		pAckMsg->startTime[3],pAckMsg->startTime[4],pAckMsg->startTime[5]);
-	CTime et(pAckMsg->endTime[0]+2000,pAckMsg->endTime[1],pAckMsg->endTime[2],
-		pAckMsg->endTime[3],pAckMsg->endTime[4],pAckMsg->endTime[5]);
-
-	fileInfo.startTime = st.GetTime();
-	fileInfo.endTime = et.GetTime();
-	fileInfo.fileSize = pAckMsg->fileSize;
-	memcpy(fileInfo.fileData,pAckMsg->data,80);
-
 	int cameraID = pAckMsg->videoID<<8+pAckMsg->channelNo;
 	CMediaSocket *media = GetMediaSocket(cameraID);
-	media->recordFileList.push_back(fileInfo);
+	int fileInfoNum = (pAckMsg->msgLength-sizeof(KERecordFileListResp))/100;
+	PKERecordFileInfo pRecordFileInfo = (PKERecordFileInfo) (msgData+sizeof(KEQueryRecordFileListResp));
+
+	for (int i=0;i<fileInfoNum;i++,pRecordFileInfo++)
+	{
+		RecordFileInfo fileInfo;
+		fileInfo.fileNo = pRecordFileInfo->fileNo;
+		CTime st(pRecordFileInfo->startTime[0]+2000,pRecordFileInfo->startTime[1],pRecordFileInfo->startTime[2],
+			pRecordFileInfo->startTime[3],pRecordFileInfo->startTime[4],pRecordFileInfo->startTime[5]);
+		CTime et(pRecordFileInfo->endTime[0]+2000,pRecordFileInfo->endTime[1],pRecordFileInfo->endTime[2],
+			pRecordFileInfo->endTime[3],pRecordFileInfo->endTime[4],pRecordFileInfo->endTime[5]);
+
+		fileInfo.startTime = st.GetTime();
+		fileInfo.endTime = et.GetTime();
+		fileInfo.fileSize = pRecordFileInfo->fileSize;
+		memcpy(fileInfo.fileData,pRecordFileInfo->data,80);
+		media->recordFileList.push_back(fileInfo);
+	}
+	
+
+	
+
 
 	if (pAckMsg->resp == 6)
 	{

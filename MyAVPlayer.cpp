@@ -7,6 +7,10 @@
 CMyAVPlayer::CMyAVPlayer(void)
 {
 	StreamID++;
+	if (StreamID>35)
+	{
+		StreamID=1;
+	}
 	m_lPlayHandle = StreamID;
 	m_lPause      = 1;
 	m_hPlayWnd = NULL;
@@ -63,7 +67,7 @@ int CMyAVPlayer::OpenStream()
 	iRet = AV_Play(m_lPlayHandle,m_hPlayWnd);
 	if (iRet != 0 )
 	{
-		LOG_ERROR("²¥·ÅÆ÷²¥·ÅÊ§°Ü iRet=",iRet);
+		LOG_ERROR("²¥·ÅÆ÷²¥·ÅÊ§°Ü iRet="<<iRet);
 		m_PlayStatus = PLAYSTATUS_Free;
 		return iRet;
 	}

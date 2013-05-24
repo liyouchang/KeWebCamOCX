@@ -24,8 +24,8 @@ extern CKeWebCamOCXApp theApp;
 
 COneCamera::COneCamera()
 {
-	m_pOwner		= NULL;
-	m_nCamNo		= 0;
+	m_pOwner	 = NULL;
+	m_nCamNo = 0;
 	m_cameraID = 0;
 	menu.LoadMenu(IDR_MENU_CAMSELECT);
 	m_MediaSocket = NULL;
@@ -38,17 +38,20 @@ COneCamera::COneCamera()
 
 COneCamera::~COneCamera()
 {
-	LOG_DEBUG("COneCamera ["<< m_nCamNo<<"] distructor!");
+	//LOG_DEBUG("COneCamera ["<< m_nCamNo<<"] distructor!");
 	if (m_MediaSocket != NULL)
 	{
-
 		m_MediaSocket->CloseConnect();
 		delete m_MediaSocket;
 	}
 
 	if (m_AVIPlayer != NULL)
 	{
-		m_AVIPlayer->CloseStream();
+		if (IsPlaying())
+		{
+			m_AVIPlayer->CloseStream();
+		}
+		
 		delete m_AVIPlayer;
 	}
 
@@ -199,6 +202,7 @@ BOOL COneCamera::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 void COneCamera::ExchangeAVIPlayer( CMyAVPlayer *otherPlayer )
 {
 	this->m_AVIPlayer = otherPlayer;
+	
 	m_AVIPlayer->SetPlayWnd(this->GetSafeHwnd());
 }
 
@@ -264,7 +268,7 @@ void COneCamera::SwapVideo( COneCamera * camera )
 		int tmpID = camera->m_cameraID;
 		camera->m_cameraID = this->m_cameraID;
 		this->m_cameraID = tmpID;
-
+		//½»»»AVPlayer *
 		CMyAVPlayer * pOtherPlayer =  camera->m_AVIPlayer;
 		camera->ExchangeAVIPlayer(m_AVIPlayer);
 		this->ExchangeAVIPlayer(pOtherPlayer);

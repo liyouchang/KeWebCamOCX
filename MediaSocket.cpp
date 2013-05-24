@@ -10,6 +10,7 @@ CMediaSocket::CMediaSocket(void)
 	m_Recorder = NULL;
 	m_nSockType = SOCK_TCP;
 	Init();
+	
 }
 
 CMediaSocket::~CMediaSocket(void)
@@ -23,6 +24,7 @@ CMediaSocket::~CMediaSocket(void)
 		delete m_Recorder;
 		m_Recorder = NULL;
 	}
+	
 }
 
 void CMediaSocket::HandleMessage( const BYTE* msgData )
@@ -63,6 +65,7 @@ bool CMediaSocket::Init()
 		m_Recorder = new CRecorder();
 		m_Recorder->Initialize();
 	}
+	IniCloudData();
 	const int recvBufSize = 0x10000;
 	//const int recvBufSize = 4096;
 	return __super::Init(recvBufSize);
@@ -79,6 +82,7 @@ bool CMediaSocket::ConnectToServer(CString severAddr,CString serverPort )
 	}
 	this->m_serverIP  = severAddr;
 	this->m_serverPort = serverPort;
+	ptzInfo.isgot = false;
 	return true;
 }
 
@@ -94,6 +98,7 @@ bool CMediaSocket::ConnectToServer( int serverAddr,int serverPort ,int svrType ,
 	this->m_clientID = clientID;
 	TCHAR strPort[8];
 	_itot(serverPort,strPort,10);
+	ptzInfo.isgot = false;
 	return ConnectToServer(pointIP,strPort);
 
 }
@@ -238,7 +243,7 @@ int CMediaSocket::ReqestVideoServer( int videoID,int channelNo ,int mediaType)
 	DWORD dw = WaitForSingleObject(mediaEvent.m_hObject,MSG_WAIT_TIMEOUT);
 	if (dw == WAIT_TIMEOUT)
 	{
-		LOG_ERROR("ReqestVideoServer timeout !");
+		LOG_ERROR("Receive KEMSG_TYPE_VIDEOSERVER timeout !");
 		return KE_MSG_TIMEOUT;
 	}
 	ret = respData;
@@ -405,19 +410,24 @@ void CMediaSocket::RecvRecordFileList( const BYTE * msgData )
 		this->SetRecvMsg(KEMSG_RecordFileList,KE_SUCCESS);
 		return;
 	}
-	RecordFileInfo fileInfo;
-	fileInfo.fileNo = pMsg->fileNo;
-	CTime st(pMsg->startTime[0]+2000,pMsg->startTime[1],pMsg->startTime[2],
-		pMsg->startTime[3],pMsg->startTime[4],pMsg->startTime[5]);
-	CTime et(pMsg->endTime[0]+2000,pMsg->endTime[1],pMsg->endTime[2],
-		pMsg->endTime[3],pMsg->endTime[4],pMsg->endTime[5]);
 
-	fileInfo.startTime = st.GetTime();
-	fileInfo.endTime = et.GetTime();
-	fileInfo.fileSize = pMsg->fileSize;
-	memcpy(fileInfo.fileData,pMsg->data,80);
+	int fileInfoNum = (pMsg->msgLength-sizeof(KERecordFileListResp))/100;
+	PKERecordFileInfo pRecordFileInfo = (PKERecordFileInfo) (msgData+sizeof(KERecordFileListResp));
+	for (int i=0;i<fileInfoNum;i++,pRecordFileInfo++)
+	{
+		RecordFileInfo fileInfo;
+		fileInfo.fileNo = pRecordFileInfo->fileNo;
+		CTime st(pRecordFileInfo->startTime[0]+2000,pRecordFileInfo->startTime[1],pRecordFileInfo->startTime[2],
+			pRecordFileInfo->startTime[3],pRecordFileInfo->startTime[4],pRecordFileInfo->startTime[5]);
+		CTime et(pRecordFileInfo->endTime[0]+2000,pRecordFileInfo->endTime[1],pRecordFileInfo->endTime[2],
+			pRecordFileInfo->endTime[3],pRecordFileInfo->endTime[4],pRecordFileInfo->endTime[5]);
 
-	recordFileList.push_back(fileInfo);
+		fileInfo.startTime = st.GetTime();
+		fileInfo.endTime = et.GetTime();
+		fileInfo.fileSize = pRecordFileInfo->fileSize;
+		memcpy(fileInfo.fileData,pRecordFileInfo->data,80);
+		this->recordFileList.push_back(fileInfo);
+	}
 
 	if (pMsg->resp == 6)
 	{
@@ -451,7 +461,7 @@ int CMediaSocket::RemoteRecordPlay( int cameraID,int fileNo )
 	pReqMsg->videoID = devID;
 	pReqMsg->clientIp = 0;
 	pReqMsg->protocalType = 1;
-
+	
 	memcpy(pReqMsg->fileData,recordFileList[fileNo].fileData,80);
 	int ret = OpenMedia(cameraID,Media_Vedio);
 	if (ret != KE_SUCCESS)
@@ -478,6 +488,84 @@ void CMediaSocket::RecvRecordPlayData( const BYTE * msgData )
 	}
 }
 
+void CMediaSocket::RecvGetPTZParam( const BYTE * msgData )
+{
+	int resp = msgData[15];
+	this->ptzInfo.protocal = msgData[16];
+	this->ptzInfo.addr = msgData[17];
+	if (resp == KE_SUCCESS)
+	{
+		this->ptzInfo.isgot = true;
+	}
+	SetRecvMsg(DevMsg_GetPTZParam,resp);
+
+}
+
+int CMediaSocket::GetPTZParam( int cameraID )
+{
+	int devID = cameraID/256;
+	int channelNo = cameraID%256;
+	std::vector<BYTE> msgSend;
+	int msgLen = sizeof(KEDevGetPTZParamReq);
+	msgSend.resize(msgLen,0);
+	KEDevGetPTZParamReq *  pReqMsg = (KEDevGetPTZParamReq *)&msgSend[0];
+	pReqMsg->protocal = PROTOCOL_HEAD;
+	pReqMsg->msgType = DevMsg_GetPTZParam;
+	pReqMsg->msgLength = msgLen;
+	pReqMsg->clientID = m_clientID;
+	pReqMsg->videoID = devID;
+	pReqMsg->channelNo = channelNo;
+	int	ret = this->Write(&msgSend[0],msgLen);
+	if (ret != msgLen)
+	{
+		return KE_SOCKET_WRITEERROR;
+	}
+	ret = WaitRecvMsg(DevMsg_GetPTZParam);
+	return ret;
+}
+
+int CMediaSocket::PTZControl( int cameraID, BYTE ctrlType ,BYTE speed )
+{
+	int ret = KE_SUCCESS;
+	ptzInfo.isgot = true;
+	ptzInfo.protocal = 0;
+	ptzInfo.addr = 0;
+	if (!ptzInfo.isgot)
+	{
+		ret = GetPTZParam(cameraID);
+		if (ret != KE_SUCCESS)		return ret;
+	}
+	WORD wSpeed = speed;
+	if (ctrlType == 2 || ctrlType == 3)
+	{
+		wSpeed = wSpeed << 8;
+	}
+	char szBuf[128];
+	int iLen = GetCloudProtocol(ptzInfo.protocal, ptzInfo.addr, ctrlType, wSpeed, szBuf );    
+	if (iLen < 0)	return KE_FAILED;
+	
+	int devID = cameraID/256;
+	int channelNo = cameraID%256;
+	std::vector<BYTE> msgSend;
+	int msgLen = sizeof(KEDevGetSerialDataHead) + iLen;
+	msgSend.resize(msgLen,0);
+	KEDevGetSerialDataHead *  pReqMsg = (KEDevGetSerialDataHead *)&msgSend[0];
+	pReqMsg->protocal = PROTOCOL_HEAD;
+	pReqMsg->msgType = DevMsg_SerialData;
+	pReqMsg->msgLength = msgLen;
+	pReqMsg->clientID = m_clientID;
+	pReqMsg->videoID = devID;
+	pReqMsg->dataLen = iLen;
+	memcpy(&msgSend[0]+sizeof(KEDevGetSerialDataHead) ,szBuf,iLen);
+
+	ret = this->Write(&msgSend[0],msgLen);
+	if (ret != msgLen)
+	{
+		return KE_SOCKET_WRITEERROR;
+	}
+	return KE_SUCCESS;
+
+}
 
 // 
 // CMediaSocket * CMediaSocket::GetMediaSocket( int videoID,int channelNo,bool noCreate )

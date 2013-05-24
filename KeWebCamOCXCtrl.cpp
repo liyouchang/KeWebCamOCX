@@ -54,6 +54,7 @@ BEGIN_DISPATCH_MAP(CKeWebCamOCXCtrl, COleControl)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "InitailCtrl", dispidInitailCtrl, InitailCtrl, VT_BSTR, VTS_I4 )
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "ConnectServer", dispidConnectServer, ConnectServer, VT_BSTR, VTS_BSTR VTS_I4 VTS_I4)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "QueryRecordFileList", dispidQueryRecordFileList, QueryRecordFileList, VT_BSTR, VTS_I4 VTS_I4 VTS_I4 VTS_I4)
+	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "PlayRemoteRecord", dispidPlayRemoteRecord, PlayRemoteRecord, VT_BSTR, VTS_I4 VTS_I4)
 END_DISPATCH_MAP()
 
 
@@ -788,7 +789,7 @@ BSTR CKeWebCamOCXCtrl::InitailCtrl(LONG platform)
 	}
 	theApp.g_cmd->platformType = platform;
 	//建立心跳定时器,时间间隔为30s  
-	m_HeartBeatTimer=SetTimer(1,10000,NULL);  
+	m_HeartBeatTimer=SetTimer(1,60000,NULL);  
 
 	Json::Value root;
 	root["retValue"] = ret;
@@ -852,5 +853,22 @@ BSTR CKeWebCamOCXCtrl::QueryRecordFileList(LONG cameraID, LONG startTime, LONG e
 	root["fileList"] = arrayObj;
 	std::string out = root.toStyledString();
 	strResult = out.c_str();
+	return strResult.AllocSysString();
+}
+
+BSTR CKeWebCamOCXCtrl::PlayRemoteRecord(LONG cameraID, LONG fileNo)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	CString strResult;
+
+	// TODO: 在此添加调度处理程序代码
+	int ret  = theApp.g_cmd->PlayRemoteRecord(cameraID,fileNo);
+	Json::Value root;
+	root["retValue"] = ret;
+	root["retDes"] = theApp.g_cmd->GetErrorDesA(ret);
+	std::string out = root.toStyledString();
+	strResult = out.c_str();
+
 	return strResult.AllocSysString();
 }

@@ -20,7 +20,6 @@ public:
 	virtual int StartView(int cameraID);
 	virtual int PTZControl(int cameraID, BYTE ctrlType ,BYTE speed ,BYTE data);
 	virtual int RefreshCameraList();
-	
 	virtual int LogoutServer();
 	virtual int HeartBeat();
 	virtual int SetClientID(int clientID);

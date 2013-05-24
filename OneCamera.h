@@ -44,6 +44,7 @@ public:
 	BOOL				m_bDrawable;	// «∑Òœ‘ æ 6, 8, 13 mode
 	BOOL				m_bFull;
 	
+
 	COneCamera();
 	void SetOwner(CWebCamPannel* pOwner);
 	void ExchangeAVIPlayer(CMyAVPlayer *otherPlayer);
