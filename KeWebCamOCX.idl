@@ -42,6 +42,8 @@ library KeWebCamOCXLib
 			[id(19), helpstring("方法ConnectServer")] BSTR ConnectServer(BSTR svrAddr, LONG svrPort, LONG clientID);
 			[id(20), helpstring("方法QueryRecordFileList")] BSTR QueryRecordFileList(LONG cameraID, LONG startTime, LONG endTime, LONG fileType);
 			[id(21), helpstring("方法PlayRemoteRecord")] BSTR PlayRemoteRecord(LONG cameraID, LONG fileNo);
+			[id(22), helpstring("方法GetDevWifiAP")] BSTR GetDevWifiAP(LONG cameraID);
+			[id(23), helpstring("方法SetDevWifiAP")] BSTR SetDevWifiAP(LONG cameraID, BSTR jsonParam);
 	};
 
 	//  CKeWebCamOCXCtrl 的事件调度接口

@@ -1290,4 +1290,33 @@ void CP2PCmdSocket::RecvRecordFileList( const BYTE * msgData )
 	}
 }
 
+int CP2PCmdSocket::GetDevWifiAPList( int cameraID,std::vector<KEDevAPListItem> &apList )
+{
+	int ret = SetCameraMedia(cameraID);
+	if (ret != KE_SUCCESS)
+	{
+		return ret;
+	}
+	CMediaSocket *media = GetMediaSocket(cameraID);
+	ret = media->GetDevWifiAPList(cameraID);
+	if (ret == KE_SUCCESS)
+	{
+		apList = media->APList;
+	}
+	return ret;
+}
+
+
+int CP2PCmdSocket::SetDevWifi( int cameraID,int listNo,KEDevWifiStartReq wifiStart )
+{
+	int ret = SetCameraMedia(cameraID);
+	if (ret != KE_SUCCESS)
+	{
+		return ret;
+	}
+	CMediaSocket *media = GetMediaSocket(cameraID);
+	ret = media->SetDevWifi(cameraID,listNo,wifiStart);
+	return ret;
+}
+
 

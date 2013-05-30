@@ -26,12 +26,15 @@ public:
 	virtual int GetClientID();
 	virtual int GetRecordFileList(int cameraID,int startTime,int endTime,int fileType,std::vector<RecordFileInfo> & fileInfoList);
 	virtual int PlayRemoteRecord(int cameraID,int fileNo);
+	virtual int GetDevWifiAPList(int cameraID,std::vector<KEDevAPListItem> &apList);
+	virtual int SetDevWifi(int cameraID,int listNo,KEDevWifiStartReq wifiStart);
 	std::string GetErrorDesA(int errorCode);
 	int platformType;
+	CMediaSocket * GetMediaSocket(int cameraID);
 protected:
 	void SetErrorDesA(std::string des,int errorCode);
 	
-	CMediaSocket * GetMediaSocket(int cameraID);
+	
 
 private:
 	

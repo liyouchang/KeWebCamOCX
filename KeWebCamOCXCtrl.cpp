@@ -8,6 +8,7 @@
 #include "PopupPannel.h"
 #include "CommonUtility/tstdlibs.h"
 #include "Communication/P2PCmdSocket.h"
+#include "CommonUtility/inifile.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -55,6 +56,8 @@ BEGIN_DISPATCH_MAP(CKeWebCamOCXCtrl, COleControl)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "ConnectServer", dispidConnectServer, ConnectServer, VT_BSTR, VTS_BSTR VTS_I4 VTS_I4)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "QueryRecordFileList", dispidQueryRecordFileList, QueryRecordFileList, VT_BSTR, VTS_I4 VTS_I4 VTS_I4 VTS_I4)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "PlayRemoteRecord", dispidPlayRemoteRecord, PlayRemoteRecord, VT_BSTR, VTS_I4 VTS_I4)
+	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "GetDevWifiAP", dispidGetDevWifiAP, GetDevWifiAP, VT_BSTR, VTS_I4)
+	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "SetDevWifiAP", dispidSetDevWifiAP, SetDevWifiAP, VT_BSTR, VTS_I4 VTS_BSTR)
 END_DISPATCH_MAP()
 
 
@@ -255,10 +258,7 @@ int CKeWebCamOCXCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	//theApp.g_cmdSocket = new CCmdSocket;
 	//theApp.g_cmdSocket = &m_socketSvr;
 	//theApp.g_cmdSocket->Init();
-
-	m_SnapFilePath = _T("c:\\SNAP\\");
-	m_RecordFilePath = _T("D:\\Record\\");
-
+	iniFile =GetCurrentPathW() + _T("WebClient.ini");
 	LOG_DEBUG("CKeWebCamOCXCtrl::OnCreate end!");
 	return 0;
 }
@@ -453,7 +453,17 @@ void CKeWebCamOCXCtrl::OnSnapFilePathChanged(void)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-	// TODO: 在此添加属性处理程序代码
+	
+	CIniFile ini;
+	bool retValue = ini.Load(iniFile);
+	if(!retValue)
+		TRACE(_T("Load WebClient.ini file error"));
+	else
+	{
+		tstd::tstring snapPath = m_SnapFilePath.GetString();
+		ini.SetKeyValue(_T("LocalPath"),_T("SnapFilePath"),snapPath);
+		ini.Save(iniFile);
+	}
 	
 	SetModifiedFlag();
 }
@@ -621,7 +631,7 @@ BSTR CKeWebCamOCXCtrl::StartAudioTalk(LONG cameraID)
 		if (ret == KE_SUCCESS)
 		{
 			AudioTalkThread::GetInstanse()->Stop();
-			AudioTalkThread::GetInstanse()->Initialize(pCamera->m_MediaSocket,cameraID);
+			AudioTalkThread::GetInstanse()->Initialize(pCamera->m_MediaSocket,pCamera->m_cameraID);
 			AudioTalkThread::GetInstanse()->Start();
 		}
 	}
@@ -668,7 +678,16 @@ void CKeWebCamOCXCtrl::OnRecordFilePathChanged(void)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-	// TODO: 在此添加属性处理程序代码
+	
+	CIniFile ini;
+	bool retValue = ini.Load(iniFile);
+	if(!retValue)
+		TRACE(_T("Load WebClient.ini file error"));
+	else
+	{
+		ini.SetKeyValue(_T("LocalPath"),_T("RecordFilePath"),m_RecordFilePath.GetString());
+		ini.Save(iniFile);
+	}
 
 	SetModifiedFlag();
 }
@@ -791,6 +810,22 @@ BSTR CKeWebCamOCXCtrl::InitailCtrl(LONG platform)
 	//建立心跳定时器,时间间隔为30s  
 	m_HeartBeatTimer=SetTimer(1,60000,NULL);  
 
+	CIniFile ini;
+	bool retValue = ini.Load(iniFile);
+	if(!retValue)
+	{
+		TRACE(_T("Load WebClient.ini file error"));
+		m_SnapFilePath = _T("c:\\SNAP\\");
+		m_RecordFilePath = _T("c:\\Record\\");
+	}
+	else
+	{
+		tstd::tstring spanPath = ini.GetKeyValue(_T("LocalPath"),_T("SnapFilePath"),_T("c:\\SNAP\\"));
+		tstd::tstring recordPath = ini.GetKeyValue(_T("LocalPath"),_T("RecordFilePath"),_T("c:\\Record\\"));
+		m_SnapFilePath = spanPath.c_str();
+		m_RecordFilePath = recordPath.c_str();
+	}
+
 	Json::Value root;
 	root["retValue"] = ret;
 	root["retDes"] = theApp.g_cmd->GetErrorDesA(ret);
@@ -831,10 +866,7 @@ BSTR CKeWebCamOCXCtrl::QueryRecordFileList(LONG cameraID, LONG startTime, LONG e
 	int ret = KE_SUCCESS;
 
 	std::vector<RecordFileInfo> recordFileList;
-	
 	ret  = theApp.g_cmd->GetRecordFileList(cameraID,startTime,endTime,fileType,recordFileList);
-	
-	
 	Json::Value root;
 	root["retValue"] = ret;
 	root["retDes"] = theApp.g_cmd->GetErrorDesA(ret);
@@ -870,5 +902,74 @@ BSTR CKeWebCamOCXCtrl::PlayRemoteRecord(LONG cameraID, LONG fileNo)
 	std::string out = root.toStyledString();
 	strResult = out.c_str();
 
+	return strResult.AllocSysString();
+}
+
+BSTR CKeWebCamOCXCtrl::GetDevWifiAP(LONG cameraID)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	CString strResult;
+
+	std::vector<KEDevAPListItem> apList;
+	int ret = theApp.g_cmd->GetDevWifiAPList(cameraID,apList);
+	Json::Value root;
+	root["retValue"] = ret;
+	root["retDes"] = theApp.g_cmd->GetErrorDesA(ret);
+	if (ret == KE_SUCCESS)
+	{
+		Json::Value arrayObj;
+		Json::Value item;
+		for (int i=0;i< apList.size();i++)
+		{
+			KEDevAPListItem listItem = apList[i];
+			item["listNo"] = i;
+			item["essid"] = listItem.essid;
+			item["encryptType"] = listItem.encryptType;
+			item["wepPlace"] = listItem.wepPlace;
+			item["pwdFormat"] = listItem.pwdFormat;
+			item["wifiStart"] = listItem.wifiStart;
+			item["password"] = listItem.password;
+			arrayObj.append(item);
+		}
+		root["apList"] = arrayObj;
+	}
+	std::string out = root.toStyledString();
+	strResult = out.c_str();
+	return strResult.AllocSysString();
+}
+
+BSTR CKeWebCamOCXCtrl::SetDevWifiAP(LONG cameraID, LPCTSTR jsonParam)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	CString strResult;
+
+	// 在此添加调度处理程序代码
+	Json::Reader reader;  
+	Json::Value root;  
+	std::string strToRead= tstr_to_str(jsonParam);
+	int ret = KE_SUCCESS;
+	if (reader.parse(strToRead, root))  // reader将Json字符串解析到root，root将包含Json里所有子元素  
+	{  
+		int listNo = root["wifiListNo"].asInt();
+		std::string wifiPwd = root["wifiPwd"].asString();
+		int pppoeUse = root["pppoeUse"].asInt();
+		std::string pppoeName = root["pppoeName"].asString(); 
+		std::string pppoePwd = root["pppoePwd"].asString(); 
+		KEDevWifiStartReq wifiStart;
+		strcpy(wifiStart.APItem.password,wifiPwd.c_str());
+		wifiStart.pppoeUse = pppoeUse;
+		strcpy(wifiStart.pppoeAccount,pppoeName.c_str());
+		strcpy(wifiStart.pppoePWD,pppoePwd.c_str());
+		ret = theApp.g_cmd->SetDevWifi(cameraID,listNo,wifiStart)	;
+	}  
+	else{
+		ret = KE_ERROR_PARAM;
+	}
+	root["retValue"] = ret;
+	root["retDes"] = theApp.g_cmd->GetErrorDesA(ret);
+	std::string out = root.toStyledString();
+	strResult = out.c_str();
 	return strResult.AllocSysString();
 }

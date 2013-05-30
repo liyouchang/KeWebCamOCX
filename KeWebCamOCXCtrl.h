@@ -14,6 +14,7 @@ public:
 	CKeWebCamOCXCtrl();
 	CWebCamPannel m_pannel;
 	//CCmdSocket m_socketSvr;
+	tstd::tstring iniFile;
 protected:
 	UINT_PTR m_HeartBeatTimer;
 // 重写
@@ -47,6 +48,8 @@ protected:
 // 调度和事件 ID
 public:
 	enum {
+		dispidSetDevWifiAP = 23L,
+		dispidGetDevWifiAP = 22L,
 		dispidPlayRemoteRecord = 21L,
 		dispidQueryRecordFileList = 20L,
 		dispidConnectServer = 19L,
@@ -128,5 +131,7 @@ protected:
 	BSTR ConnectServer(LPCTSTR svrAddr, LONG svrPort, LONG clientID);
 	BSTR QueryRecordFileList(LONG cameraID, LONG startTime, LONG endTime, LONG fileType);
 	BSTR PlayRemoteRecord(LONG cameraID, LONG fileNo);
+	BSTR GetDevWifiAP(LONG cameraID);
+	BSTR SetDevWifiAP(LONG cameraID, LPCTSTR jsonParam);
 };
 

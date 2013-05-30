@@ -51,6 +51,15 @@ void CMediaSocket::HandleMessage( const BYTE* msgData )
 	case  KEMSG_RecordPlayData:
 		RecvRecordPlayData(msgData);
 		break;
+	case  DevMsg_GetPTZParam:
+		RecvGetPTZParam(msgData);
+		break;
+	case  DevMsg_WifiCheck:
+		RecvDevWifiCheck(msgData);
+		break;
+	case  DevMsg_WifiStart:
+		RecvSetDevWifiResp(msgData);
+		break;
 	default:
 		break;
 		//LOG_INFO("Receive unkown message: " <<pHead->msgType);
@@ -143,7 +152,7 @@ int CMediaSocket::ReqestMediaTrans( int videoID,int channelNo,int mediaType )
 	case  0://ÇëÇó³É¹¦
 			return KE_SUCCESS;
 	case 1:		return KE_FAILED;
-	case 2:		return KE_RTV_VIDEOSERVEROFFLINE;
+	case 2:		return KE_RTV_DVSOFFLINE;
 	case 3:		return KE_RTV_CHANNELDISABLE;
 	case 4:		return KE_RTV_MAXTRANSNUM;
 	case 8:		return KE_RTV_MAXVIEWNUM;
@@ -564,6 +573,107 @@ int CMediaSocket::PTZControl( int cameraID, BYTE ctrlType ,BYTE speed )
 		return KE_SOCKET_WRITEERROR;
 	}
 	return KE_SUCCESS;
+
+}
+
+int CMediaSocket::GetDevWifiAPList( int cameraID )
+{
+	if (!m_SocketClient.IsOpen())
+	{
+		return KE_SOCKET_NOTOPEN;
+	}
+	if (this->m_SvrType != MediaSvr_DVS)
+	{
+		return KE_RTV_DVSOFFLINE;
+	}
+	int devID = cameraID/256;
+	int channelNo = cameraID%256;
+	std::vector<BYTE> msgSend;
+	int msgLen = sizeof(KEDevWifiCheckReq);
+	msgSend.resize(msgLen,0);
+	KEDevWifiCheckReq* pReqMsg;
+	pReqMsg = (KEDevWifiCheckReq*)&msgSend[0];
+	pReqMsg->protocal = PROTOCOL_HEAD;
+	pReqMsg->msgType = DevMsg_WifiCheck;
+	pReqMsg->msgLength = msgLen;
+	pReqMsg->clientID = m_clientID;
+	pReqMsg->videoID = devID;
+	this->APList.clear();
+	int ret = this->Write(&msgSend[0],msgLen);
+	if (ret != msgLen)
+	{
+		return KE_SOCKET_WRITEERROR;
+	}
+	ret = this->WaitRecvMsg(DevMsg_WifiCheck,10000);
+	return ret;
+}
+
+void CMediaSocket::RecvDevWifiCheck( const BYTE * msgData )
+{
+	KEDevWifiCheckResp * pMsg = (KEDevWifiCheckResp*)msgData;
+	if (pMsg->resp != KE_SUCCESS)
+	{
+		SetRecvMsg(DevMsg_WifiCheck,pMsg->resp);
+		return;
+	}
+	int listNum = (pMsg->msgLength - sizeof(KEDevWifiCheckResp))/sizeof(KEDevAPListItem);
+	KEDevAPListItem * pItem	= (KEDevAPListItem *)(msgData+sizeof(KEDevWifiCheckResp));
+	for (int i=0;i<listNum;i++)
+	{
+			KEDevAPListItem aItem = *pItem;
+			APList.push_back(aItem);
+			pItem++;
+	}
+	SetRecvMsg(DevMsg_WifiCheck,pMsg->resp);
+}
+
+int CMediaSocket::SetDevWifi( int cameraID,int apListNum,KEDevWifiStartReq wifiStart )
+{
+	if (!IsConnect())
+	{
+		return KE_SOCKET_NOTOPEN;
+	}
+	if (apListNum >= APList.size())
+	{
+		return KE_ERROR_PARAM;
+	}
+	if (this->m_SvrType != MediaSvr_DVS)
+	{
+		return KE_RTV_DVSOFFLINE;
+	}
+	int devID = cameraID/256;
+	int channelNo = cameraID%256;
+	std::vector<BYTE> msgSend;
+	int msgLen = sizeof(KEDevWifiStartReq);
+	msgSend.resize(msgLen,0);
+	KEDevWifiStartReq* pReqMsg;
+	pReqMsg = (KEDevWifiStartReq*)&msgSend[0];
+	pReqMsg->protocal = PROTOCOL_HEAD;
+	pReqMsg->msgType = DevMsg_WifiStart;
+	pReqMsg->msgLength = msgLen;
+	pReqMsg->clientID = m_clientID;
+	pReqMsg->videoID = devID;
+
+	pReqMsg->APItem = APList[apListNum];
+	//wifiStart parameter
+	memcpy(pReqMsg->APItem.password, wifiStart.APItem.password,32);
+	pReqMsg->pppoeUse = wifiStart.pppoeUse;
+	memcpy(pReqMsg->pppoeAccount,wifiStart.pppoeAccount,30);
+	memcpy(pReqMsg->pppoePWD,wifiStart.pppoePWD,30);
+
+	int ret = this->Write(&msgSend[0],msgLen);
+	if (ret != msgLen)
+	{
+		return KE_SOCKET_WRITEERROR;
+	}
+	ret = this->WaitRecvMsg(DevMsg_WifiStart);
+	return ret;
+}
+
+void CMediaSocket::RecvSetDevWifiResp( const BYTE * msgData )
+{
+	int resp = msgData[14];
+	SetRecvMsg(DevMsg_WifiStart,resp);
 
 }
 

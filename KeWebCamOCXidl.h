@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Fri May 24 15:44:12 2013
+/* at Thu May 30 15:01:57 2013
  */
 /* Compiler settings for .\KeWebCamOCX.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)

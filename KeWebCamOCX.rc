@@ -243,6 +243,7 @@ BEGIN
         MENUITEM "全部关闭",                        ID_MENU_RESET_ALL
         MENUITEM "显示水印",                        ID_MENU_SHOW_WATERMARK
         MENUITEM "全屏",                          ID_MENU_FULLSCREEN
+        MENUITEM "取消全屏",                        ID_MENU_CancelFullScreen
     END
 END
 

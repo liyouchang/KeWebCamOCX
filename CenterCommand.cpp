@@ -16,7 +16,7 @@ std::string CenterCommand::GetErrorDesA( int errorCode )
 	{
 	case KE_SUCCESS:											return "成功";
 	case KE_FAILED:												return "失败";
-	case KE_RTV_VIDEOSERVEROFFLINE:			return "视频服务器不在线";
+	case KE_RTV_DVSOFFLINE:			return "视频服务器不在线";
 	case KE_RTV_CHANNELDISABLE:					return "通道被禁用";
 	case KE_SOCKET_NOTOPEN:							return "通讯未建立";
 	case KE_CONNECT_SERVER_ERROR:			return "连接服务器失败";
@@ -115,6 +115,16 @@ return KE_FUNCTION_NOTSUPPORT;
 }
 
 int CenterCommand::PlayRemoteRecord( int cameraID,int fileNo)
+{
+return KE_FUNCTION_NOTSUPPORT;
+}
+
+int CenterCommand::GetDevWifiAPList( int cameraID,std::vector<KEDevAPListItem> &apList )
+{
+	return KE_FUNCTION_NOTSUPPORT;
+}
+
+int CenterCommand::SetDevWifi( int cameraID,int listNo,KEDevWifiStartReq wifiStart )
 {
 return KE_FUNCTION_NOTSUPPORT;
 }

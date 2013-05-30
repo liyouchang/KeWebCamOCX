@@ -36,14 +36,12 @@
 #define IDC_TEXT_LEFT                   219
 #define IDC_TEXT_MID                    220
 #define IDC_TEXT_RIGHT                  221
-#define IDC_SLIDER1                     222
 #define IDC_SLIDER_POS                  222
 #define IDC_BUTTON_PLAY                 223
 #define IDC_BUTTON_FAST                 224
 #define IDC_BUTTON_SLOW                 225
 #define IDC_BUTTON_PAUSE                226
 #define IDC_BUTTON_STOP                 227
-#define IDC_CAMERA_PLAY                 228
 #define ID_SELECTCAMERA_SAVEIMAGE       32768
 #define ID_SELECTCAMERA_SAVEIMAGEALL    32769
 #define ID_SELECTCAMERA_PRINTIMAGE      32770
@@ -71,13 +69,15 @@
 #define ID_SELECTCAMERA_32792           32792
 #define ID_MENU_FULLSCREEN              32793
 #define ID_MENU_AllFullScreen           32794
+#define ID_SELECTCAMERA_32795           32795
+#define ID_MENU_CancelFullScreen        32796
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        210
-#define _APS_NEXT_COMMAND_VALUE         32795
+#define _APS_NEXT_COMMAND_VALUE         32797
 #define _APS_NEXT_CONTROL_VALUE         229
 #define _APS_NEXT_SYMED_VALUE           105
 #endif

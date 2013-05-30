@@ -13,7 +13,11 @@ enum MediaType
 	Media_Talk = 0x04
 };
 
-
+enum MediaSvrType
+{
+	MediaSvr_DVS = 1,
+	MediaSvr_Trans=2
+};
 enum MediaMsgType
 {
 	KEMSG_RecordFileList = 0x53,
@@ -21,6 +25,8 @@ enum MediaMsgType
 	KEMSG_RecordPlayData = 0x55,
 	DevMsg_GetPTZParam = 0x73,
 	DevMsg_SerialData = 0x46,
+	DevMsg_WifiCheck=0xD1,
+	DevMsg_WifiStart = 0xD2
 };
 
 
@@ -146,6 +152,42 @@ struct KEDevGetSerialDataHead
 	short dataLen;
 };
 
+struct KEDevAPListItem
+{
+	char essid[32];
+	char encryptType;//0/1/2/3 关闭/wep/WPA-PSK/WPA2-PSK
+	char wepPlace;//WEP:1-4的数字 PSK:1- TKIP;2-AES
+	char pwdFormat;//0/1 WEP 16禁制/ASCII
+	char wifiStart;//0/1=关/开
+	char password[32];
+};
+
+struct KEDevWifiCheckReq{
+	BYTE protocal;
+	BYTE msgType;//0xD1
+	int msgLength;
+	int videoID;
+	int clientID;
+};
+struct KEDevWifiCheckResp{
+	BYTE protocal;
+	BYTE msgType;//0xD1
+	int msgLength;
+	int videoID;
+	int clientID;
+	char resp;
+};
+struct KEDevWifiStartReq{
+	BYTE protocal;
+	BYTE msgType;//0xD2
+	int msgLength;
+	int videoID;
+	int clientID;
+	KEDevAPListItem APItem;
+	char  pppoeUse;//0/1关/开
+	char pppoeAccount[30];
+	char pppoePWD[30];
+};
 
 
 #pragma pack()
@@ -195,6 +237,8 @@ public:
 	int StopRecord();
 	int GetRecordFileList(int cameraID,int startTime,int endTime,int fileType,std::vector<RecordFileInfo> & fileInfoList);
 	int PTZControl(int cameraID, BYTE ctrlType ,BYTE speed );
+	int GetDevWifiAPList(int cameraID);
+	int SetDevWifi(int cameraID,int apListNum,KEDevWifiStartReq wifiStart);
 protected:
 	int ReqestMediaTrans( int videoID, int channelNo, int mediaType);
 	int ReqestVideoServer(int videoID, int channelNo, int mediaType);
@@ -211,6 +255,9 @@ protected:
 	void RecvRecordFileList(const BYTE * msgData);
 	void RecvRecordPlayData(const BYTE * msgData);
 	void RecvGetPTZParam(const BYTE * msgData);
+	void RecvDevWifiCheck(const BYTE * msgData);
+	void RecvSetDevWifiResp(const BYTE * msgData);
+	
 protected:
 	CRecorder * m_Recorder;
 	CMyAVPlayer * m_AVPlayer;
@@ -223,4 +270,5 @@ protected:
 	DevPTZInfo ptzInfo;
 public:
 	std::vector<RecordFileInfo> recordFileList;
+	std::vector<KEDevAPListItem> APList;
 };

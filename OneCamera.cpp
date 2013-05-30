@@ -148,6 +148,12 @@ void COneCamera::OnRButtonDown(UINT nFlags, CPoint point)
 	if(!IsPlaying())
 	{
 		menu.GetSubMenu(0)->EnableMenuItem(ID_MENU_RESET,MF_BYCOMMAND|MF_GRAYED);  
+		TRACE("Right click is not playing, so gray!\n");
+	}
+	else
+	{
+		menu.GetSubMenu(0)->EnableMenuItem(ID_MENU_RESET,MF_BYCOMMAND|MF_ENABLED  );  
+		TRACE("Right click is playing\n");
 	}
 	menu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
 	CStatic::OnRButtonDown(nFlags, point);

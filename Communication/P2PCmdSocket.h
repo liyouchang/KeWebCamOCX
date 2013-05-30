@@ -296,6 +296,9 @@ public:
 
 	virtual int GetRecordFileList(int cameraID,int startTime,int endTime,int fileType,vector<RecordFileInfo> & fileInfoList);
 	virtual int PlayRemoteRecord(int cameraID,int fileNo);
+	virtual int GetDevWifiAPList(int cameraID,std::vector<KEDevAPListItem> &apList);
+	virtual int SetDevWifi(int cameraID,int listNo,KEDevWifiStartReq wifiStart);
+
 	int LogoutServer();
 	
 	void CheckAllDevListAsyn();
