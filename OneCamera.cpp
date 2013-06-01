@@ -231,6 +231,7 @@ void COneCamera::StopRTPlay(bool reUse)
  	 {
  		 m_cameraID = 0;
  	 }
+
 	 this->Invalidate();
 }
 
@@ -278,7 +279,6 @@ void COneCamera::SwapVideo( COneCamera * camera )
 		CMyAVPlayer * pOtherPlayer =  camera->m_AVIPlayer;
 		camera->ExchangeAVIPlayer(m_AVIPlayer);
 		this->ExchangeAVIPlayer(pOtherPlayer);
-
 		CMediaSocket * tmpMedia = camera->m_MediaSocket;
 		camera->m_MediaSocket = this->m_MediaSocket;
 		this->m_MediaSocket = tmpMedia;

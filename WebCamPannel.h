@@ -64,6 +64,10 @@ public:
 	void SetCamDrawable(int nDiv = 0);
 	void SetActiveCamera(int nCamNo);
 	void StopAllRTPlay();
+	//停止全部监听
+	void StopAllAudio();
+	//停止全部对讲
+	void StopAllTalk();
 public:
 	CWebCamPannel(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~CWebCamPannel();

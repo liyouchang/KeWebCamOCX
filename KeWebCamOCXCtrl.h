@@ -48,6 +48,7 @@ protected:
 // 调度和事件 ID
 public:
 	enum {
+		dispidCheckVersion = 24L,
 		dispidSetDevWifiAP = 23L,
 		dispidGetDevWifiAP = 22L,
 		dispidPlayRemoteRecord = 21L,
@@ -133,5 +134,6 @@ protected:
 	BSTR PlayRemoteRecord(LONG cameraID, LONG fileNo);
 	BSTR GetDevWifiAP(LONG cameraID);
 	BSTR SetDevWifiAP(LONG cameraID, LPCTSTR jsonParam);
+	BSTR CheckVersion(void);
 };
 

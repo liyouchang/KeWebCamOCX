@@ -28,6 +28,7 @@ typedef struct _KEUserRegisterReq
 	int tmpID;
 	//	vector<char>  data;//<Reg><Info U=”username” P=”password” E=”email”></Reg>
 }KEUserRegisterReq,*PKEUserRegisterReq;
+
 typedef struct _KEUserRegisterResp
 {
 	KEMsgHead head;
@@ -40,6 +41,7 @@ typedef struct _KEUserLoginReq
 {
 	KEMsgHead head;
 }KEUserLoginReq,*PKEUserLoginReq;
+
 typedef struct _KEUserLoginResp
 {
 	KEMsgHead head;
@@ -53,6 +55,7 @@ typedef struct _KEDeleteCameraReq
 	char devType;
 	int devID;
 }KEDeleteCameraReq,*PKEDeleteCameraReq;
+
 typedef struct _KEDeleteCameraResp
 {
 	KEMsgHead head;
@@ -61,12 +64,12 @@ typedef struct _KEDeleteCameraResp
 	char respData;
 }KEDeleteCameraResp,*PKEDeleteCameraResp;
 
-typedef struct _KEDeviceStatus
+struct KEDeviceStatus
 {
 	KEMsgHead head;
 	int devID;
 	int status;
-}KEDeviceStatus,*PKEDeviceStatus;
+};
 
 typedef struct _KEAlarm
 {
@@ -83,6 +86,7 @@ typedef struct _KEAddDeviceReq
 	BYTE type;
 	//	vector<char>  data;//<AddDevice><Info D=”Mac” N=”devicename” ></AddDevice>
 }KEAddDeviceReq,*PKEAddDeviceReq;
+
 typedef struct _KEAddDeviceResp
 {
 	KEMsgHead head;
@@ -182,6 +186,7 @@ typedef struct _KEChangeUserPwdReq
 	BYTE type;//类型：14
 	char pwdData[40];
 }KEChangeUserPwdReq,*PKEChangeUserPwdReq;
+
 typedef struct _KEChangeUserPwdResp
 {
 	KEMsgHead head;
@@ -190,7 +195,6 @@ typedef struct _KEChangeUserPwdResp
 }KEChangeUserPwdResp,*PKEChangeUserPwdResp;
 
 //设备重启
-
 typedef struct _KEDevRebootReq
 {
 	KEMsgHead head;
@@ -293,7 +297,6 @@ public:
 	virtual int RefreshCameraList();
 	virtual int SetClientID(int clientID);
 	virtual int HeartBeat();
-
 	virtual int GetRecordFileList(int cameraID,int startTime,int endTime,int fileType,vector<RecordFileInfo> & fileInfoList);
 	virtual int PlayRemoteRecord(int cameraID,int fileNo);
 	virtual int GetDevWifiAPList(int cameraID,std::vector<KEDevAPListItem> &apList);
@@ -306,7 +309,7 @@ public:
 	int DeleteCamera(char type,int devID);
 	int AddDevice(CString mac,CString devName);
 	int ShareCamera(CString userName,int devID);
-	int SendDevNetInfoReq(int devID);
+
 	int SendHeartBeat();
 	int ChangeDevName(int devID,CString devNewName);
 	int CheckDevShareUser(int devSvrID);
@@ -320,12 +323,16 @@ public:
 protected:
 	virtual void HandleMessage(const BYTE* msgData);
 	std::map<int ,DevSvrInfo> devSvrMap;
+	//连接媒体
 	int ConnectToMedia(PKEDevNetInfoResp pMsg);
 	int SetCameraMedia(int cameraID);
 protected:
 	int SendLoginMsg(const char * userName,const char *encryptData);
 	void AskKeyMsgResp(const BYTE * msgData);
 	void LoginMsgResp(const BYTE * msgData);
+	int RequestDevStatus(int devID);
+	int RequestDevNetInfo(int devID);
+protected://received message functions 
 	void RecvRealTimeMedia(const BYTE * msgData);
 	void RecvUserRegister(const BYTE * msgData);
 	void RecvDevList(const BYTE* msgData);
@@ -399,7 +406,6 @@ enum KE_P2PMSG_EVENT
 	KEMSG_EVENT_CANCELSHAREDDEV,
 	KEMSG_EVENT_CHGUSERPWD,
 	KEMSG_EVENT_DEVREBOOT,
-	KEMSG_EVENT_CHECKVERSION,
 	KEMSG_EVENT_FORGETPWD,
 //	KEMSG_EVENT_MAX
 };

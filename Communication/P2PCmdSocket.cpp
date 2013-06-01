@@ -356,8 +356,24 @@ void CP2PCmdSocket::RecvHeartbeat( const BYTE *msgData )
 
 void CP2PCmdSocket::RecvDevStatus( const BYTE *msgData )
 {
-	PKEDeviceStatus pMsg = (PKEDeviceStatus)msgData;
-	//GetViewPointer()->DevStatusChange(pMsg->devID,pMsg->status);
+	KEDeviceStatus * pMsg = (KEDeviceStatus *)msgData;
+	CamStatusReport report;
+	report.devID = pMsg->devID;
+	report.cameraID = pMsg->devID*256+1;
+	if (pMsg->status == 0)
+	{
+		devSvrMap[pMsg->devID].connectSuccess = false;
+		report.reportType = CamStatusReportType_DevOffline;
+		this->ReportCamStatus(report);
+		this->SetRecvMsg(KEMSG_TYPE_DEVSTATUS,KE_DEVOFFLINE);		
+	}
+	else if (pMsg->status == 1)
+	{
+		report.reportType = CamStatusReportType_DevOnline;
+		this->ReportCamStatus(report);
+		this->SetRecvMsg(KEMSG_TYPE_DEVSTATUS,KE_SUCCESS);
+	}
+	
 }
 
 void CP2PCmdSocket::RecvAlarm( const BYTE *msgData )
@@ -526,7 +542,7 @@ int CP2PCmdSocket::LogoutServer()
 	return KE_SUCCESS;
 }
 
-int CP2PCmdSocket::SendDevNetInfoReq( int devID )
+int CP2PCmdSocket::RequestDevNetInfo( int devID )
 {
 	KEDevNetInfoReq msg;
 	msg.head.protocal = PROTOCOL_HEAD;
@@ -833,18 +849,10 @@ int CP2PCmdSocket::QueryVersion( CString & version ,CString & url )
 	{
 		return KE_SOCKET_WRITEERROR;
 	}
-	//return KE_SUCCESS;
-	keEvent[KEMSG_EVENT_CHECKVERSION].ResetEvent();
-	DWORD dw = WaitForSingleObject(keEvent[KEMSG_EVENT_CHECKVERSION].m_hObject,MSG_WAIT_TIMEOUT);
-	if (dw == WAIT_TIMEOUT)
-	{
-		TRACE("QueryVersion--Timeout\n");
-		return KE_MSG_TIMEOUT;
-	}
-	VersionInfo *info = (VersionInfo* )respData[KEMSG_EVENT_CHECKVERSION];
+	VersionInfo *info ;
+	this->WaitRecvMsg(KEMSG_TYPE_CHECKVERSION,MSG_WAIT_TIMEOUT,(void **)&info);
 	version = info->version.c_str();
 	url = info->url.c_str();
-	delete info;
 	return KE_SUCCESS;
 }
 
@@ -860,9 +868,10 @@ void CP2PCmdSocket::RecvCheckVersionResp( const BYTE * msgData )
 	short urlLen = *((short *)data);
 	data += 2;
 	info->url.insert(0,data,urlLen);
-	respData[KEMSG_EVENT_CHECKVERSION] = (int)info;
-	Sleep(0);
-	keEvent[KEMSG_EVENT_CHECKVERSION].SetEvent();	
+	this->SetRecvMsg(KEMSG_TYPE_CHECKVERSION,KE_SUCCESS,info);
+	//respData[KEMSG_EVENT_CHECKVERSION] = (int)info;
+	//Sleep(0);
+	//keEvent[KEMSG_EVENT_CHECKVERSION].SetEvent();	
 	TRACE("RecvCheckVersionResp--end\n");
 }
 
@@ -973,6 +982,7 @@ void CP2PCmdSocket::RecvTransIp( const BYTE * msgData )
 int CP2PCmdSocket::SetClientID( int clientID )
 {
 	this->m_clientID = clientID;
+	
 	return KE_SUCCESS;
 }
 
@@ -1049,9 +1059,13 @@ int CP2PCmdSocket::ConnectToMedia( PKEDevNetInfoResp pMsg )
 	//使用外网IP登陆
 	in.s_addr =pMsg->devOuterIP ;
 	tmpIP = inet_ntoa(in);
-	TRACE2("RecvDevNetInfoResp--外网登陆,设备IP:%s;端口%d\n",tmpIP,pMsg->devOuterPort);
-	if (media->ConnectToServer(pMsg->devOuterIP,pMsg->devOuterPort))
+	//TRACE2("RecvDevNetInfoResp--外网登陆,设备IP:%s;端口%d\n",tmpIP,pMsg->devOuterPort);
+	LOG_DEBUG("outer IP login,device IP:"<<tmpIP.GetString()<<";port:"<<pMsg->devOuterPort);
+	if (media->ConnectToServer(pMsg->devOuterIP,pMsg->devOuterPort) &&
+		media->CheckHeartBeat(pMsg->devID)==KE_SUCCESS)
 	{
+
+		LOG_INFO("device login by outer IP(UPnP) success!");
 		devSvrMap[pMsg->devID].svrIp = pMsg->devOuterIP;
 		devSvrMap[pMsg->devID].svrPort = pMsg->devOuterPort;
 		devSvrMap[pMsg->devID].connectSuccess = true;
@@ -1060,9 +1074,13 @@ int CP2PCmdSocket::ConnectToMedia( PKEDevNetInfoResp pMsg )
 	//直连ip登陆，使用外网端口
 	in.s_addr =pMsg->devSvrIp ;
 	tmpIP = inet_ntoa(in);
-	TRACE2("RecvDevNetInfoResp--连线IP登陆,设备IP:%s;端口%d\n",tmpIP,pMsg->devOuterPort);
-	if ((pMsg->devSvrIp != pMsg->devOuterIP) && media->ConnectToServer(pMsg->devSvrIp,pMsg->devOuterPort))
+	//TRACE2("RecvDevNetInfoResp--连线IP登陆,设备IP:%s;端口%d\n",tmpIP,pMsg->devOuterPort);
+	LOG_DEBUG("connect IP login ,device IP:"<<tmpIP.GetString()<<";port:"<<pMsg->devOuterPort);
+	if ((pMsg->devSvrIp != pMsg->devOuterIP) &&
+		media->ConnectToServer(pMsg->devSvrIp,pMsg->devOuterPort)&&
+		media->CheckHeartBeat(pMsg->devID)==KE_SUCCESS)
 	{
+		LOG_INFO("Device login by connect IP success!");
 		devSvrMap[pMsg->devID].svrIp = pMsg->devSvrIp;
 		devSvrMap[pMsg->devID].svrPort = pMsg->devOuterPort;
 		devSvrMap[pMsg->devID].connectSuccess = true;
@@ -1071,11 +1089,13 @@ int CP2PCmdSocket::ConnectToMedia( PKEDevNetInfoResp pMsg )
 	//使用内网IP登陆
 	in.s_addr =pMsg->devInnerIP ;
 	tmpIP = inet_ntoa(in);
-	TRACE2("RecvDevNetInfoResp--内网登陆,设备IP:%s;端口%d\n",tmpIP,pMsg->devInnerPort);
+	//TRACE2("RecvDevNetInfoResp--内网登陆,设备IP:%s;端口%d\n",tmpIP,pMsg->devInnerPort);
+	LOG_DEBUG("inner ip login,device IP:"<<tmpIP.GetString()<<";port:"<<pMsg->devInnerPort);
 	if ((pMsg->devInnerIP != pMsg->devOuterIP || pMsg->devOuterPort != pMsg->devInnerPort)  && 
-		media->ConnectToServer(pMsg->devInnerIP,pMsg->devInnerPort))
+		media->ConnectToServer(pMsg->devInnerIP,pMsg->devInnerPort)&&
+		media->CheckHeartBeat(pMsg->devID)==KE_SUCCESS)
 	{
-		TRACE("RecvDevNetInfoResp--设备内网登陆成功!\n");
+		LOG_INFO("device login by inner ip success!");
 		devSvrMap[pMsg->devID].svrIp = pMsg->devInnerIP;
 		devSvrMap[pMsg->devID].svrPort = pMsg->devInnerPort;
 		devSvrMap[pMsg->devID].connectSuccess = true;
@@ -1085,10 +1105,13 @@ int CP2PCmdSocket::ConnectToMedia( PKEDevNetInfoResp pMsg )
 	//PPPOE，使用内网端口
 	in.s_addr =pMsg->devSvrIp ;
 	tmpIP = inet_ntoa(in);
-	TRACE2("RecvDevNetInfoResp--PPPOE登陆,设备IP:%s;端口%d\n",tmpIP,pMsg->devInnerPort);
-	if ((pMsg->devSvrIp != pMsg->devInnerIP) && media->ConnectToServer(pMsg->devSvrIp,pMsg->devInnerPort))
+	//TRACE2("RecvDevNetInfoResp--PPPOE登陆,设备IP:%s;端口%d\n",tmpIP,pMsg->devInnerPort);
+	LOG_DEBUG("PPPOE login, device IP:"<<tmpIP.GetString()<<";port:"<<pMsg->devInnerPort);
+	if ((pMsg->devSvrIp != pMsg->devInnerIP) && 
+		media->ConnectToServer(pMsg->devSvrIp,pMsg->devInnerPort)&&
+		media->CheckHeartBeat(pMsg->devID)==KE_SUCCESS)
 	{
-		TRACE("RecvDevNetInfoResp--直连ip登陆成功!\n");
+		LOG_INFO("Device login by PPPOE success!\n");
 		devSvrMap[pMsg->devID].svrIp = pMsg->devSvrIp;
 		devSvrMap[pMsg->devID].svrPort = pMsg->devInnerPort;
 		devSvrMap[pMsg->devID].connectSuccess = true;
@@ -1108,17 +1131,17 @@ int CP2PCmdSocket::ConnectToMedia( PKEDevNetInfoResp pMsg )
 	{
 		in.s_addr =pMsg->mediaBackIP ;
 		tmpIP = inet_ntoa(in);
-		TRACE2("RecvDevNetInfoResp--媒体登陆,设备IP:%s;端口%d\n",tmpIP,pMsg->mediaBackPort);
+		TRACE2("Media login,Device IP:%s;port:%d\n",tmpIP.GetString(),pMsg->mediaBackPort);
 		devSvrMap[pMsg->devID].svrIp = pMsg->mediaBackIP;
 		devSvrMap[pMsg->devID].svrPort = pMsg->mediaBackPort;
 		devSvrMap[pMsg->devID].connectSuccess = false;
 	}
 	if (media->ConnectToServer(devSvrMap[pMsg->devID].svrIp,devSvrMap[pMsg->devID].svrPort,2,m_clientID))
 	{
-		TRACE("RecvDevNetInfoResp--媒体登陆成功!\n");
+		LOG_INFO("Device connect media success!\n");
 		return KE_SUCCESS;
 	}
-	TRACE("RecvDevNetInfoResp--设备登陆失败!\n");
+	LOG_ERROR("connect to Device  failed!\n");
 	return KE_RTV_BOTHOFFLINE;
 }
 
@@ -1181,6 +1204,13 @@ int CP2PCmdSocket::SetCameraMedia( int cameraID )
 		return KE_SUCCESS;
 	}
 	int devSvrID = cameraID/256;
+	//判断设备是否在线
+	int ret =  this->RequestDevStatus(devSvrID);
+	if (ret != KE_SUCCESS)
+	{
+		return ret;
+	}
+
 	if (devSvrMap[devSvrID].connectSuccess)
 	{
 		if (media->ConnectToServer(devSvrMap[devSvrID].svrIp,devSvrMap[devSvrID].svrPort))
@@ -1188,7 +1218,7 @@ int CP2PCmdSocket::SetCameraMedia( int cameraID )
 			return KE_SUCCESS;
 		}
 	}
-	return SendDevNetInfoReq(devSvrID);
+	return RequestDevNetInfo(devSvrID);
 }
 
 int CP2PCmdSocket::RequestRecordFileList( int cameraID,int startTime,int endTime,int fileType )
@@ -1279,11 +1309,6 @@ void CP2PCmdSocket::RecvRecordFileList( const BYTE * msgData )
 		memcpy(fileInfo.fileData,pRecordFileInfo->data,80);
 		media->recordFileList.push_back(fileInfo);
 	}
-	
-
-	
-
-
 	if (pAckMsg->resp == 6)
 	{
 		this->SetRecvMsg(KEMSG_UDP_QueryRecordFileList,KE_SUCCESS);
@@ -1316,6 +1341,39 @@ int CP2PCmdSocket::SetDevWifi( int cameraID,int listNo,KEDevWifiStartReq wifiSta
 	}
 	CMediaSocket *media = GetMediaSocket(cameraID);
 	ret = media->SetDevWifi(cameraID,listNo,wifiStart);
+	return ret;
+}
+
+//************************************
+// Method:    RequestDevStatus
+// FullName:  CP2PCmdSocket::RequestDevStatus
+// Access:    protected 
+// Returns:   int-- 0:不在线，1：在线
+// Qualifier:
+// Parameter: int devID
+//************************************
+int CP2PCmdSocket::RequestDevStatus( int devID )
+{
+	if (!IsConnect())
+	{
+		return KE_SOCKET_NOTOPEN;
+	}
+	std::vector<BYTE> msgSend;
+	int msgLen = sizeof(KEDeviceStatus);
+	msgSend.resize(msgLen,0);
+	KEDeviceStatus* pReqMsg;
+	pReqMsg = (KEDeviceStatus*)&msgSend[0];
+	pReqMsg->head.protocal = PROTOCOL_HEAD;
+	pReqMsg->head.msgType = KEMSG_TYPE_DEVSTATUS;
+	pReqMsg->head.msgLength = msgLen;
+	pReqMsg->head.clientID = m_clientID;
+	pReqMsg->devID = devID;
+	int ret = this->Write(&msgSend[0],msgLen);
+	if (ret != msgLen)
+	{
+		return KE_SOCKET_WRITEERROR;
+	}
+	ret = this->WaitRecvMsg(KEMSG_TYPE_DEVSTATUS);
 	return ret;
 }
 

@@ -60,6 +60,9 @@ void CMediaSocket::HandleMessage( const BYTE* msgData )
 	case  DevMsg_WifiStart:
 		RecvSetDevWifiResp(msgData);
 		break;
+	case DevMsg_HeartBeat:
+		RecvHeartBeat(msgData);
+		break;
 	default:
 		break;
 		//LOG_INFO("Receive unkown message: " <<pHead->msgType);
@@ -176,6 +179,8 @@ void CMediaSocket::RecvVideoStream( const BYTE * msgData )
 	//TRACE2("Receive %d Msg Len %d\n",pMsg->msgType,pMsg->msgLength);
 	int videoID = pMsg->videoID;
 	int channelNo = pMsg->channelNo;
+	int cameraID = videoID*256+channelNo;
+	//CMyAVPlayer *AVIPlayer = theApp.g_PlayWnd->GetCamera(cameraID)->m_AVIPlayer;
 	int ret = m_AVPlayer->InputStream(msgData+sizeof(KERTStreamHead),pMsg->msgLength-sizeof(KERTStreamHead));
 	if (ret != 0)
 	{
@@ -219,6 +224,7 @@ void CMediaSocket::CloseConnect()
 	m_SocketClient.Terminate();
 	//清空读缓冲
 	m_recvBuf.Drain(m_recvBuf.GetCount() );
+	this->m_clientID = 0;
 }
 
 int CMediaSocket::ReqestVideoServer( int videoID,int channelNo ,int mediaType)
@@ -276,7 +282,7 @@ void CMediaSocket::RecvVideoServer( const BYTE *msgData )
 
 int CMediaSocket::OpenMedia( int cameraID, int mediaType )
 {
-	m_AVPlayer = theApp.g_PlayWnd->GetOnePlayer(cameraID)->m_AVIPlayer;
+	m_AVPlayer = theApp.g_PlayWnd->GetCamera(cameraID)->m_AVIPlayer;
 	if ( (mediaType & Media_Vedio) && !m_AVPlayer->IsPlaying())
 	{
 		int ret = m_AVPlayer->OpenStream();
@@ -293,8 +299,11 @@ int CMediaSocket::OpenMedia( int cameraID, int mediaType )
 		{
 			LOG_ERROR(" Open sound error: "<<ret);
 			return KE_RTV_OpenSoundFailed;
-
 		}
+	}
+	else
+	{
+		m_AVPlayer->CloseSound();
 	}
 	return KE_SUCCESS;
 }
@@ -655,12 +664,13 @@ int CMediaSocket::SetDevWifi( int cameraID,int apListNum,KEDevWifiStartReq wifiS
 	pReqMsg->videoID = devID;
 
 	pReqMsg->APItem = APList[apListNum];
+	pReqMsg->APItem.wifiStart = 1;
 	//wifiStart parameter
 	memcpy(pReqMsg->APItem.password, wifiStart.APItem.password,32);
 	pReqMsg->pppoeUse = wifiStart.pppoeUse;
 	memcpy(pReqMsg->pppoeAccount,wifiStart.pppoeAccount,30);
 	memcpy(pReqMsg->pppoePWD,wifiStart.pppoePWD,30);
-
+	
 	int ret = this->Write(&msgSend[0],msgLen);
 	if (ret != msgLen)
 	{
@@ -675,6 +685,104 @@ void CMediaSocket::RecvSetDevWifiResp( const BYTE * msgData )
 	int resp = msgData[14];
 	SetRecvMsg(DevMsg_WifiStart,resp);
 
+}
+
+bool CMediaSocket::GetMessageData()
+{
+	int nRead= 0;
+	int headLen = sizeof(KEMsgHead);
+	if (m_MsgRecv.size() == 0)//上一个消息已经读取完成
+	{
+		KEDevMsgHead head;
+		nRead = m_recvBuf.Read( (BYTE*)&head , headLen );
+		if (nRead != headLen)
+		{
+			return false;
+		}
+		if (head.protocal != PROTOCOL_HEAD|| head.msgLength>8192)
+		{
+			LOG_ERROR("The message Protocal Head error, Clear the recv buffer!");
+			m_recvBuf.Drain(m_recvBuf.GetCount());
+			m_MsgRecv.clear();
+			return false;
+		}
+		m_MsgRecv.resize(head.msgLength,0);
+		memcpy(&m_MsgRecv[0],&head,headLen);
+		if (head.msgLength-headLen != 0)//防止 headLen 越界
+		{
+			nRead = m_recvBuf.Read(&m_MsgRecv[headLen], head.msgLength-headLen);
+			if (nRead != head.msgLength-headLen)
+			{
+				return false;
+			}
+		}
+	}
+	else//上一个消息未完成读取
+	{
+		int waitRecv = m_MsgRecv.size() - headLen;
+		nRead = m_recvBuf.Read(&m_MsgRecv[headLen],waitRecv);
+		if (nRead != waitRecv)
+		{
+			//TRACE("Read fifo buffer error:1 ");
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void CMediaSocket::OnThreadExit( CSocketHandle* pSH )
+{
+	__super::OnThreadExit(pSH);
+}
+
+void CMediaSocket::OnConnectionDropped( CSocketHandle* pSH )
+{
+	int cameraID = m_videoID*256+m_clientID;
+	theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,KE_SOCKET_ConnectionDropped);
+	__super::OnConnectionDropped(pSH);
+}
+
+void CMediaSocket::OnConnectionError( CSocketHandle* pSH, DWORD dwError )
+{
+	int cameraID = m_videoID*256+m_clientID;
+	theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,KE_SOCKET_ConnectionError);
+	__super::OnConnectionDropped(pSH);
+}
+
+int CMediaSocket::CheckHeartBeat( int devID )
+{
+	if (!IsConnect())
+	{
+		return KE_SOCKET_NOTOPEN;
+	}
+	if (this->m_SvrType != MediaSvr_DVS)
+	{
+		return KE_RTV_DVSOFFLINE;
+	}
+	this->m_videoID = devID;
+	std::vector<BYTE> msgSend;
+	int msgLen = sizeof(KEDevMsgHead);
+	msgSend.resize(msgLen,0);
+	KEDevMsgHead* pReqMsg;
+	pReqMsg = (KEDevMsgHead*)&msgSend[0];
+	pReqMsg->protocal = PROTOCOL_HEAD;
+	pReqMsg->msgType = DevMsg_HeartBeat;
+	pReqMsg->msgLength = msgLen;
+	pReqMsg->videoID = devID;
+
+	int ret = this->Write(&msgSend[0],msgLen);
+	if (ret != msgLen)
+	{
+		return KE_SOCKET_WRITEERROR;
+	}
+	ret = this->WaitRecvMsg(DevMsg_HeartBeat);
+	return ret;
+}
+
+void CMediaSocket::RecvHeartBeat( const BYTE * msgData )
+{
+	SetRecvMsg(DevMsg_HeartBeat,KE_SUCCESS);
 }
 
 // 
@@ -743,9 +851,13 @@ void AudioTalkThread::Run()
 			memcpy(&SendBuf[15], &buf[0], 6);
 			*(short*)&SendBuf[21] = datalen - 6;
 			memcpy(&SendBuf[23], &buf[6], datalen - 6);
-			if (m_socketHandle!= NULL)
+			if (m_socketHandle!= NULL && m_socketHandle->IsConnect())
 			{
 				m_socketHandle->Write((BYTE *)SendBuf,msgLen);
+			}
+			else{
+				TRACE(_T("AudioTalkThread::Run--No socket or socket is closed,exit thread"));
+				break;
 			}
 		}
 		Sleep(15);

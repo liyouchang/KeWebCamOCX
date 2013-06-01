@@ -58,6 +58,7 @@ BEGIN_DISPATCH_MAP(CKeWebCamOCXCtrl, COleControl)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "PlayRemoteRecord", dispidPlayRemoteRecord, PlayRemoteRecord, VT_BSTR, VTS_I4 VTS_I4)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "GetDevWifiAP", dispidGetDevWifiAP, GetDevWifiAP, VT_BSTR, VTS_I4)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "SetDevWifiAP", dispidSetDevWifiAP, SetDevWifiAP, VT_BSTR, VTS_I4 VTS_BSTR)
+	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "CheckVersion", dispidCheckVersion, CheckVersion, VT_BSTR, VTS_NONE)
 END_DISPATCH_MAP()
 
 
@@ -363,7 +364,7 @@ void CKeWebCamOCXCtrl::OnSetClientSite()
 
 	COleControl::OnSetClientSite();
 }
-
+//关闭链接，停止播放器
 LRESULT CKeWebCamOCXCtrl::OnRTVideoStop( WPARAM wParam, LPARAM lParam )
 {
 	int cameraID = (int)wParam;
@@ -411,7 +412,7 @@ BSTR CKeWebCamOCXCtrl::ControlPTZ(LONG cameraID, BYTE PTZCmd, BYTE iSpeed, BYTE 
 	TRACE1("SendPTZControlMsg %d!\n",PTZCmd);
 	Json::Value root;
 	root["retValue"] = ret;
-	root["retDes"] = GetKEErrorDescriptA(ret);
+	root["retDes"] = theApp.g_cmd->GetErrorDesA(ret);
 	std::string out = root.toStyledString();
 	strResult = out.c_str();
 
@@ -475,11 +476,22 @@ LRESULT CKeWebCamOCXCtrl::OnCamStatusReport( WPARAM wParam, LPARAM lParam )
 	root["reportType"] = report->reportType;
 	root["cameraID"] = report->cameraID;
 	root["retValue"] = report->errorCode;
-	root["retDes"] = GetKEErrorDescriptA(report->errorCode);
-
+	root["retDes"] = theApp.g_cmd->GetErrorDesA(report->errorCode);
+	root["devID"] = report->devID;
 	std::string out = root.toStyledString();
 	tstd::tstring tout = str_to_tstr(out);
 
+	if ((report->reportType==2|| report->reportType==4)&& report->cameraID != 0)//停止视频
+	{
+		COneCamera * camera = theApp.g_PlayWnd->GetCamera(report->cameraID);
+		if (camera != NULL)
+		{
+			camera->StopRTPlay();
+		}
+		
+	}
+
+	delete report;
 	//触发事件
 	ReportCameraStatus(tout.c_str());
 	return 0;
@@ -566,9 +578,7 @@ LRESULT CKeWebCamOCXCtrl::OnTreeStructNotify( WPARAM wParam, LPARAM lParam )
 BSTR CKeWebCamOCXCtrl::StartRealTimeAudio(LONG cameraID)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
 	CString strResult;
-	
 	int ret = 0;
 	COneCamera * pCamera = theApp.g_PlayWnd->GetCamera(cameraID);
 	if (pCamera == NULL || !pCamera->IsPlaying())
@@ -577,6 +587,8 @@ BSTR CKeWebCamOCXCtrl::StartRealTimeAudio(LONG cameraID)
 	}
 	else
 	{
+		//先停止其他监听
+		theApp.g_PlayWnd->StopAllAudio();
 		ret = pCamera->m_MediaSocket->ReqestMediaData(pCamera->m_cameraID,Media_Vedio|Media_Listen);
 	}
 	Json::Value root;
@@ -602,7 +614,6 @@ BSTR CKeWebCamOCXCtrl::StopRealTimeAudio(LONG cameraID)
 	}
 	else
 	{
-		pCamera->m_AVIPlayer->CloseSound();
 		ret = pCamera->m_MediaSocket->ReqestMediaData(pCamera->m_cameraID,Media_Vedio);
 	}
 	Json::Value root;
@@ -658,7 +669,7 @@ BSTR CKeWebCamOCXCtrl::StopAudioTalk(LONG cameraID)
 	}
 	else
 	{
-		pCamera->m_AVIPlayer->CloseSound();
+		//pCamera->m_AVIPlayer->CloseSound();
 		ret = pCamera->m_MediaSocket->ReqestMediaData(pCamera->m_cameraID,Media_Vedio);
 		if (ret == KE_SUCCESS)
 		{
@@ -774,7 +785,7 @@ BSTR CKeWebCamOCXCtrl::StopRecord(LONG cameraID)
 
 void CKeWebCamOCXCtrl::OnTimer(UINT_PTR nIDEvent)
 {
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	// 在此添加消息处理程序代码和/或调用默认值
 	switch(nIDEvent)
 	{
 	case 1://心跳定时器
@@ -808,7 +819,7 @@ BSTR CKeWebCamOCXCtrl::InitailCtrl(LONG platform)
 	}
 	theApp.g_cmd->platformType = platform;
 	//建立心跳定时器,时间间隔为30s  
-	m_HeartBeatTimer=SetTimer(1,60000,NULL);  
+	m_HeartBeatTimer=SetTimer(1,10000,NULL);  
 
 	CIniFile ini;
 	bool retValue = ini.Load(iniFile);
@@ -952,7 +963,7 @@ BSTR CKeWebCamOCXCtrl::SetDevWifiAP(LONG cameraID, LPCTSTR jsonParam)
 	int ret = KE_SUCCESS;
 	if (reader.parse(strToRead, root))  // reader将Json字符串解析到root，root将包含Json里所有子元素  
 	{  
-		int listNo = root["wifiListNo"].asInt();
+		int listNo = root["listNo"].asInt();
 		std::string wifiPwd = root["wifiPwd"].asString();
 		int pppoeUse = root["pppoeUse"].asInt();
 		std::string pppoeName = root["pppoeName"].asString(); 
@@ -971,5 +982,16 @@ BSTR CKeWebCamOCXCtrl::SetDevWifiAP(LONG cameraID, LPCTSTR jsonParam)
 	root["retDes"] = theApp.g_cmd->GetErrorDesA(ret);
 	std::string out = root.toStyledString();
 	strResult = out.c_str();
+	return strResult.AllocSysString();
+}
+
+BSTR CKeWebCamOCXCtrl::CheckVersion(void)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	CString strResult;
+
+	// TODO: 在此添加调度处理程序代码
+
 	return strResult.AllocSysString();
 }

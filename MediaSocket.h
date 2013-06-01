@@ -20,18 +20,42 @@ enum MediaSvrType
 };
 enum MediaMsgType
 {
+	DevMsg_HeartBeat = 0x03,
 	KEMSG_RecordFileList = 0x53,
 	KEMSG_REQUEST_DOWNLOAD_FILE = 0x54,
 	KEMSG_RecordPlayData = 0x55,
 	DevMsg_GetPTZParam = 0x73,
 	DevMsg_SerialData = 0x46,
 	DevMsg_WifiCheck=0xD1,
-	DevMsg_WifiStart = 0xD2
+	DevMsg_WifiStart = 0xD2,
+	DevMsg_EncryptKey= 0xE0,
+	DevMsg_Login=0xE1,
 };
 
 
 #pragma pack(1)
 
+
+struct KEDevMsgHead
+{
+	BYTE protocal;
+	BYTE msgType;
+	unsigned int msgLength;
+	int videoID;
+};
+struct KEDevMsgViaClient
+{
+	BYTE protocal;
+	BYTE msgType;
+	unsigned int msgLength;
+	int videoID;
+	int clientID;
+};
+struct KEDevMsgResp
+{
+	KEDevMsgViaClient head;
+	char resp;
+};
 typedef struct _KEVideoServerReq
 {
 	BYTE protocal;
@@ -107,9 +131,7 @@ typedef struct _KERecordFileListReq
 	char endTime[6];
 	char fileType;//1计划录像；2表示传感器报警；	3移动侦测报警；4抓拍照片；
 	char alarmNo;//1
-
 }KERecordFileListReq,*PKERecordFileListReq;
-
 
 typedef struct _KERecordFileListResp
 {
@@ -120,8 +142,6 @@ typedef struct _KERecordFileListResp
 	int clientID;
 	char channelNo;
 	char resp;
-
-	
 }KERecordFileListResp,*PKERecordFileListResp;
 
 typedef struct _KERecordFileInfo
@@ -151,7 +171,6 @@ struct KEDevGetSerialDataHead
 	int clientID;
 	short dataLen;
 };
-
 struct KEDevAPListItem
 {
 	char essid[32];
@@ -161,7 +180,6 @@ struct KEDevAPListItem
 	char wifiStart;//0/1=关/开
 	char password[32];
 };
-
 struct KEDevWifiCheckReq{
 	BYTE protocal;
 	BYTE msgType;//0xD1
@@ -189,6 +207,14 @@ struct KEDevWifiStartReq{
 	char pppoePWD[30];
 };
 
+struct KEDevEncryptKeyResp{
+	KEDevMsgViaClient head;
+	char keyt[8];
+};
+struct KEDevLoginReq{
+	KEDevMsgViaClient head;
+	char md5Str[16];
+};
 
 #pragma pack()
 
@@ -212,7 +238,7 @@ class AudioTalkThread:public SimpleThreadBase
 public:
 	AudioTalkThread();
 	virtual ~AudioTalkThread();
-	void Initialize(CSocketThreadHandler * socketHandle,int cameraID);
+	void Initialize(CSocketThreadHandler * socketHandle , int cameraID);
 	virtual void Run();
 	static AudioTalkThread * GetInstanse();
 protected:
@@ -239,15 +265,23 @@ public:
 	int PTZControl(int cameraID, BYTE ctrlType ,BYTE speed );
 	int GetDevWifiAPList(int cameraID);
 	int SetDevWifi(int cameraID,int apListNum,KEDevWifiStartReq wifiStart);
+	//通过发送心跳协议，检查链接是否正常；
+	int CheckHeartBeat(int devID);
+protected://parents functions inherit
+	virtual bool CheckMessage(const BYTE* data, DWORD dwCount);
+	virtual void HandleMessage(const BYTE* msgData);
+	virtual void Run();
+	virtual bool GetMessageData();
+	virtual void OnThreadExit(CSocketHandle* pSH);
+	virtual void OnConnectionDropped(CSocketHandle* pSH);
+	virtual void OnConnectionError(CSocketHandle* pSH, DWORD dwError);
 protected:
 	int ReqestMediaTrans( int videoID, int channelNo, int mediaType);
 	int ReqestVideoServer(int videoID, int channelNo, int mediaType);
 	int GetPTZParam(int cameraID);
-	virtual bool CheckMessage(const BYTE* data, DWORD dwCount);
-	virtual void HandleMessage(const BYTE* msgData);
-	virtual void Run();
 	virtual int OpenMedia(int cameraID,int mediaType);
-	
+	int RequestEncryptKey(char * keyt);
+protected://received message functions
 	void RecvMediaTransResp(const BYTE * msgData);
 	void RecvVideoStream(const BYTE * msgData);
 	void RecvVideoServer(const BYTE * msgData);
@@ -257,7 +291,7 @@ protected:
 	void RecvGetPTZParam(const BYTE * msgData);
 	void RecvDevWifiCheck(const BYTE * msgData);
 	void RecvSetDevWifiResp(const BYTE * msgData);
-	
+	void RecvHeartBeat(const BYTE * msgData);
 protected:
 	CRecorder * m_Recorder;
 	CMyAVPlayer * m_AVPlayer;

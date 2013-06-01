@@ -91,6 +91,8 @@ enum CamStatusReportType
 {
 	CamStatusReportType_SelectCam = 1,
 	CamStatusReportType_StopVideo = 2,
+	CamStatusReportType_DevOnline = 3,
+	CamStatusReportType_DevOffline = 4,
 };
 
 typedef struct tagCHNODE
@@ -107,15 +109,6 @@ typedef struct tagCHNODE
 
 
 
-struct CamStatusReport
-{
-	int reportType;//1-Ñ¡Ôñ¾µÍ·£»2-ÊÓÆµÍ£Ö¹
-	int cameraID;
-	int errorCode;
-
-};
-
-
 
 enum KEERRORCODE
 {
@@ -123,6 +116,8 @@ enum KEERRORCODE
 	KE_SUCCESS = 13,
 	KE_ERROR_PARAM,
 	KE_SOCKET_NOTOPEN,
+	KE_SOCKET_ConnectionDropped,
+	KE_SOCKET_ConnectionError,
 	KE_SOCKET_WRITEERROR,
 	KE_CONNECT_SERVER_ERROR,
 	KE_MSG_TIMEOUT,

@@ -104,8 +104,9 @@ void CSocketThreadHandler::Run()
 void CSocketThreadHandler::OnThreadExit( CSocketHandle* pSH )
 {
 	LOG_INFO("Connection "<<m_loacalAddr<<" thread exit");
+	//停止缓存数据线程
 	this->Stop();
-	
+	//pSH->Close();	
 }
 
 void CSocketThreadHandler::GetAddress( const SockAddrIn& addrIn, CString& rString )
@@ -241,13 +242,13 @@ int CSocketThreadHandler::GetRecvMsgData( int msgType ,void ** respPtr /*= NULL*
 
 void CSocketThreadHandler::OnConnectionDropped( CSocketHandle* pSH )
 {
-	TRACE("OnConnectionDropped-------\n");
+	LOG_WARN("OnConnectionDropped-------\n");
 	pSH->Close();
 }
 
 void CSocketThreadHandler::OnConnectionError( CSocketHandle* pSH, DWORD dwError )
 {
-	TRACE("OnConnectionError-------\n");
+	LOG_WARN("OnConnectionError-------\n");
 	pSH->Close();
 }
 

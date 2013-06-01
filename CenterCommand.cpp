@@ -33,6 +33,7 @@ std::string CenterCommand::GetErrorDesA( int errorCode )
 	case KE_RTV_NOPLAY:									return "未开始视频";
 	case KE_SOCKET_WRITEERROR:					return "发送消息错误";
 	case KE_FUNCTION_NOTSUPPORT:				return "不支持此功能";
+	case KE_SOCKET_ConnectionDropped:	return "socket连接丢失";
 	case KE_DEVOFFLINE:	return "设备不在线";
 	default:
 		{
@@ -127,4 +128,12 @@ int CenterCommand::GetDevWifiAPList( int cameraID,std::vector<KEDevAPListItem> &
 int CenterCommand::SetDevWifi( int cameraID,int listNo,KEDevWifiStartReq wifiStart )
 {
 return KE_FUNCTION_NOTSUPPORT;
+}
+
+int CenterCommand::ReportCamStatus( CamStatusReport report )
+{
+	CamStatusReport * pReport = new CamStatusReport;
+	*pReport = report;
+	theApp.g_pMainWnd->PostMessage(WM_CAMSTATUSREPORT,0,(LPARAM)pReport);
+	return KE_SUCCESS;
 }

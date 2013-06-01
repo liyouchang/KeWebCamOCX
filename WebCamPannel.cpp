@@ -352,10 +352,19 @@ void CWebCamPannel::SetActiveCamera( int nCamNo )
 		report.cameraID = m_camarray[nCamNo].m_cameraID;
 		report.reportType = 1;
 		DrawCameraFrame();
-		theApp.g_pMainWnd->SendMessage(WM_CAMSTATUSREPORT,0,(LPARAM)&report);
+		theApp.g_cmd->ReportCamStatus(report);
+		//theApp.g_pMainWnd->SendMessage(WM_CAMSTATUSREPORT,0,(LPARAM)&report);
 	}
 }
-//返回拥有cameraID的镜头，若cameraID为0，则返回当前选中的镜头
+//返回拥有cameraID的镜头，若cameraID为0，则返回当前选中的镜头.
+//************************************
+// Method:    GetCamera 根据cameraID，选择一个播放窗口并返回
+// FullName:  CWebCamPannel::GetCamera
+// Access:    public 
+// Returns:   COneCamera *——为NULL则表示没有找到与cameraID匹配的播放窗口
+// Qualifier:
+// Parameter: int cameraID——若cameraID为0，返回当前选中的播放窗口。
+//************************************
 COneCamera * CWebCamPannel::GetCamera( int cameraID )
 {
 	if (cameraID == 0)
@@ -580,4 +589,27 @@ void CWebCamPannel::OnCancel()
 	// TODO: 在此添加专用代码和/或调用基类
 
 	CDialog::OnCancel();
+}
+
+void CWebCamPannel::StopAllAudio()
+{
+	for(int i = 0; i < CAM_MAX; i++)
+	{
+		if (m_camarray[i].IsPlaying())
+		{
+			m_camarray[i].m_MediaSocket->ReqestMediaData(m_camarray[i].m_cameraID,Media_Vedio);
+		}
+	}
+}
+
+void CWebCamPannel::StopAllTalk()
+{
+	AudioTalkThread::GetInstanse()->Stop();
+	for(int i = 0; i < CAM_MAX; i++)
+	{
+		if (m_camarray[i].IsPlaying())
+		{
+			m_camarray[i].m_MediaSocket->ReqestMediaData(m_camarray[i].m_cameraID,Media_Vedio);
+		}
+	}
 }

@@ -43,7 +43,6 @@ public:
 	BOOL m_bDrag;
 	BOOL				m_bDrawable;	// «∑Òœ‘ æ 6, 8, 13 mode
 	BOOL				m_bFull;
-	
 
 	COneCamera();
 	void SetOwner(CWebCamPannel* pOwner);
@@ -65,7 +64,6 @@ public:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(COneCamera)
 	//}}AFX_VIRTUAL
-
 // Implementation
 public:
 	virtual ~COneCamera();

@@ -7,6 +7,15 @@
 #include <vector>
 
 
+struct CamStatusReport
+{
+	int reportType;//1-选择镜头；2-视频停止; 3-设备上线；4-设备离线
+	int cameraID;
+	int devID;
+	int errorCode;
+};
+
+
 
 
 class CenterCommand
@@ -28,14 +37,13 @@ public:
 	virtual int PlayRemoteRecord(int cameraID,int fileNo);
 	virtual int GetDevWifiAPList(int cameraID,std::vector<KEDevAPListItem> &apList);
 	virtual int SetDevWifi(int cameraID,int listNo,KEDevWifiStartReq wifiStart);
+
 	std::string GetErrorDesA(int errorCode);
 	int platformType;
 	CMediaSocket * GetMediaSocket(int cameraID);
-protected:
+	int ReportCamStatus(CamStatusReport report);
 	void SetErrorDesA(std::string des,int errorCode);
-	
-	
-
+protected:
 private:
 	
 	std::string errorDesA;
