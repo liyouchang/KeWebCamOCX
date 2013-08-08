@@ -30,7 +30,7 @@ library KeWebCamOCXLib
 			[id(5), helpstring("方法StartRealTimeVideo")] BSTR StartRealTimeVideo(LONG nCameraID);
 			[id(6), helpstring("停止实时视频")] BSTR StopRealTimeVideo(LONG nCameraID);
 			[id(7), helpstring("云台控制方法")] BSTR ControlPTZ(LONG cameraID, BYTE PTZCmd, BYTE iSpeed, BYTE iData);
-			[id(8), helpstring("方法LoginServer")] BSTR LoginServer(BSTR userName, BSTR password, BSTR svrIpAddr);
+			[id(8), helpstring("方法LoginServer")] BSTR LoginServer(BSTR userName, BSTR password);
 			[id(10), helpstring("拍快照")] BSTR TakeSnapshot(LONG nCameraID);
 			[id(11), helpstring("开启音频")] BSTR StartRealTimeAudio(LONG cameraID);
 			[id(12), helpstring("方法StopRealTimeAudio")] BSTR StopRealTimeAudio(LONG cameraID);
@@ -45,6 +45,7 @@ library KeWebCamOCXLib
 			[id(22), helpstring("方法GetDevWifiAP")] BSTR GetDevWifiAP(LONG cameraID);
 			[id(23), helpstring("方法SetDevWifiAP")] BSTR SetDevWifiAP(LONG cameraID, BSTR jsonParam);
 			[id(24), helpstring("方法CheckVersion")] BSTR CheckVersion(void);
+			[id(25), helpstring("方法GetLocalMac")] BSTR GetLocalMac(void);
 	};
 
 	//  CKeWebCamOCXCtrl 的事件调度接口

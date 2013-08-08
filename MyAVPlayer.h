@@ -3,6 +3,7 @@
 #include "AVPlay.h"
 #include <map>
 // #include <afxmt.h>
+#include "PlayerCtrlDlg.h"
 
 //******************************请求数据状态*********************************
 #define STA_QUESTDATA_FREE                 0								//空闲状态
@@ -16,7 +17,8 @@
 enum PlayStatus
 {
 	PLAYSTATUS_Free = 0,
-	PLAYSTATUS_Play,
+	PLAYSTATUS_PlayStream,
+	PLAYSTATUS_PlayFile,
 };
 
 
@@ -29,14 +31,30 @@ public:
 	virtual int OpenStream();
 	virtual int OpenSound();
 	virtual int CloseSound();
-	int InputStream(const BYTE * data,int dataLen);
+	int InputStream(const BYTE * data, int dataLen);
 	int CloseStream();
-	void PlayFile(HWND hWnd);
+	
 	bool IsPlaying();	
 	int CapPic(LPCTSTR pFileName);
 	int m_nCamNo;//拥有此播放器的Static
 	int m_videoID;
 	int m_channelNo;
+
+	//文件播放方法
+	int PlayFile(const char * fileName,int fileSize = 0,HWND endMsgWnd = NULL);
+	//int SetFileEndMsgWnd(HWND fileWnd);
+	int SetSpeed(int speed);
+	int GetSpeed(){return m_iPlaySpeed;}
+	int ChgSpeed(int chgSpeed);
+	int SetPlayPos(int pos);
+	int GetPlayPos(int &pos);
+	int PausePlay();
+	int CloseFile();
+	int NormalPlay();
+	int SetFileSize(long fileSize);
+	void SetCtrlDlg(CPlayerCtrlDlg * dlg);
+
+public://静态方法
 	static int StartTalk();
 	static int StopTalk();
 	static int GetAudioData(char * pBuf);
@@ -47,9 +65,10 @@ private:
 	long  m_lPause;
 	HWND m_hPlayWnd;
 	int m_PlayStatus;
-
+	int m_iPlaySpeed;                       //播放速度 0、正常播放；-5、暂停
 	static int isInitail ;
 	//CCriticalSection m_cs; // sinchronicity
+	CPlayerCtrlDlg * m_CtrlDlg;
 public:
 
 	static int StreamID;

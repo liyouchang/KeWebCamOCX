@@ -256,7 +256,7 @@ int CP2PCmdSocket::StartView( int cameraID)
 		return ret;
 	}
 	CMediaSocket *media = GetMediaSocket(cameraID);	
-	ret = media->ReqestMediaData(cameraID,Media_Vedio);
+	ret = media->ReqestMediaData(cameraID,CMediaSocket::Media_Vedio);
 	return ret;
 }
 
@@ -552,6 +552,7 @@ int CP2PCmdSocket::RequestDevNetInfo( int devID )
 	msg.devID = devID;
 	std::vector<BYTE> msgSend;
 	msgSend.resize(msg.head.msgLength+1);
+
 	memcpy(&msgSend[0],&msg,msg.head.msgLength);
 	int ret = this->Write((BYTE *)&msg,msg.head.msgLength);
 	if (ret != msg.head.msgLength)
@@ -850,7 +851,11 @@ int CP2PCmdSocket::QueryVersion( CString & version ,CString & url )
 		return KE_SOCKET_WRITEERROR;
 	}
 	VersionInfo *info ;
-	this->WaitRecvMsg(KEMSG_TYPE_CHECKVERSION,MSG_WAIT_TIMEOUT,(void **)&info);
+	ret = this->WaitRecvMsg(KEMSG_TYPE_CHECKVERSION,MSG_WAIT_TIMEOUT,(void **)&info);
+	if (ret != KE_SUCCESS)
+	{
+		return ret;
+	}
 	version = info->version.c_str();
 	url = info->url.c_str();
 	return KE_SUCCESS;
@@ -997,35 +1002,52 @@ int CP2PCmdSocket::PTZControl( int cameraID, BYTE ctrlType ,BYTE speed ,BYTE dat
 	if (media->GetMediaSvrType() == 1)
 	{
 		return media->PTZControl(cameraID,ctrlType,speed);
-
 	}
 	else
 	{
-		return KE_FUNCTION_NOTSUPPORT;
+		int devID = cameraID/256;
+		WORD wSpeed = speed;
+		if (ctrlType == 2 || ctrlType == 3)
+		{
+			wSpeed = wSpeed << 8;
+		}
+		char szBuf[128];
+		int iLen = GetCloudProtocol(0,1, ctrlType, wSpeed, szBuf );   
+		if (iLen < 0)	return KE_FAILED;
+
+		int msgLen = sizeof(PTZCtrlUDPReq) + iLen;
+
+		std::vector<BYTE> msgSend;
+		msgSend.resize(msgLen);
+	
+		PPTZCtrlUDPReq pReqMsg;
+		pReqMsg = (PPTZCtrlUDPReq)&msgSend[0];
+		pReqMsg->head.protocal = PROTOCOL_HEAD;
+		pReqMsg->head.msgType = KEMSG_UDP_PTZControl;
+		pReqMsg->head.clientID = m_clientID;
+		pReqMsg->head.msgLength = msgLen;
+		pReqMsg->devID = devID;
+
+
+		int dataLen = sizeof(KEDevGetSerialDataHead) + iLen;
+		pReqMsg->data.protocal = PROTOCOL_HEAD;
+		pReqMsg->data.msgType = DevMsg_SerialData;
+		pReqMsg->data.msgLength = dataLen;
+		pReqMsg->data.clientID = m_clientID;
+		pReqMsg->data.videoID = devID;
+		pReqMsg->data.dataLen = iLen;
+		memcpy(&msgSend[0]+sizeof(PTZCtrlUDPReq) ,szBuf,iLen);
+		
+		int ret = this->Write(&msgSend[0],msgLen);
+		if (ret != msgLen)
+		{
+			return KE_SOCKET_WRITEERROR;
+		}
+
+		return KE_SUCCESS;
 	}
 	
-// 	int devID = cameraID/256;
-// 	std::vector<BYTE> msgSend;
-// 	int msgLen = sizeof(PTZCtrlUDPReq);
-// 	msgSend.resize(msgLen,0);
-// 
-// 	PPTZCtrlUDPReq pReqMsg;
-// 	pReqMsg = (PPTZCtrlUDPReq)&msgSend[0];
-// 	pReqMsg->head.protocal = PROTOCOL_HEAD;
-// 	pReqMsg->head.msgType = KEMSG_UDP_PTZControl;
-// 	pReqMsg->head.msgLength = msgLen;
-// 	pReqMsg->head.clientID = m_clientID;
-// 	pReqMsg->devID = devID;
-// 	pReqMsg->ptzType = ctrlType;
-// 	pReqMsg->ptzparam = speed;
-// 
-// 	int ret = this->Write(&msgSend[0],msgLen);
-// 	if (ret != msgLen)
-// 	{
-// 		return KE_SOCKET_WRITEERROR;
-// 	}
-// 
-// 	return KE_SUCCESS;
+
 }
 
 int CP2PCmdSocket::HeartBeat()
@@ -1049,7 +1071,7 @@ int CP2PCmdSocket::ConnectToMedia( PKEDevNetInfoResp pMsg )
 {
 	CString tmpIP; 
 	struct in_addr in;
-	int camID = pMsg->devID<<8+1;
+	int camID = (pMsg->devID<<8)+1;
 	CMediaSocket * media = GetMediaSocket(camID);
 
 	if (media->IsConnect())
@@ -1118,7 +1140,7 @@ int CP2PCmdSocket::ConnectToMedia( PKEDevNetInfoResp pMsg )
 		return KE_SUCCESS;
 	}
 
-	//使用备用媒体ip登陆
+	//使用媒体ip登陆
 	if (pMsg->mediaBackIP == 0)
 	{
 		int ret = 	RequestTransIp(pMsg->devID);
@@ -1134,7 +1156,7 @@ int CP2PCmdSocket::ConnectToMedia( PKEDevNetInfoResp pMsg )
 		TRACE2("Media login,Device IP:%s;port:%d\n",tmpIP.GetString(),pMsg->mediaBackPort);
 		devSvrMap[pMsg->devID].svrIp = pMsg->mediaBackIP;
 		devSvrMap[pMsg->devID].svrPort = pMsg->mediaBackPort;
-		devSvrMap[pMsg->devID].connectSuccess = false;
+		devSvrMap[pMsg->devID].connectSuccess = true;
 	}
 	if (media->ConnectToServer(devSvrMap[pMsg->devID].svrIp,devSvrMap[pMsg->devID].svrPort,2,m_clientID))
 	{
@@ -1165,6 +1187,7 @@ int CP2PCmdSocket::GetRecordFileList( int cameraID,int startTime,int endTime,int
 	{
 		return ret;
 	}
+	fileType = 0;
 	CMediaSocket *media = GetMediaSocket(cameraID);
 	if (media->GetMediaSvrType() == 1)
 	{
@@ -1185,32 +1208,42 @@ int CP2PCmdSocket::PlayRemoteRecord( int cameraID,int fileNo )
 {
 	int devSvrID = cameraID/256;
 	int ret = KE_SUCCESS;
+	//断开原有连接
+
+
+	CMediaSocket *media = GetMediaSocket(cameraID);
+	if (fileNo == -1)
+	{
+		media->CloseConnect();
+		return KE_SUCCESS;
+	}
+	
+
 	ret = SetCameraMedia(cameraID) ;
 	if (ret != KE_SUCCESS)
 	{
 		return ret;
 	}
-	CMediaSocket *media = GetMediaSocket(cameraID);
-	ret = media->RemoteRecordPlay(cameraID,fileNo);
+	media = GetMediaSocket(cameraID);
 
+	ret = media->RemoteRecordPlay(cameraID,fileNo);
 	return ret;
 }
 
 int CP2PCmdSocket::SetCameraMedia( int cameraID )
 {
+	int devSvrID = cameraID/256;
 	CMediaSocket *media = GetMediaSocket(cameraID);
 	if (media->IsConnect())
 	{
 		return KE_SUCCESS;
 	}
-	int devSvrID = cameraID/256;
 	//判断设备是否在线
 	int ret =  this->RequestDevStatus(devSvrID);
 	if (ret != KE_SUCCESS)
 	{
 		return ret;
 	}
-
 	if (devSvrMap[devSvrID].connectSuccess)
 	{
 		if (media->ConnectToServer(devSvrMap[devSvrID].svrIp,devSvrMap[devSvrID].svrPort))
@@ -1242,7 +1275,7 @@ int CP2PCmdSocket::RequestRecordFileList( int cameraID,int startTime,int endTime
 	pReqMsg->devID = devID;
 	pReqMsg->data.protocal = PROTOCOL_HEAD;
 	pReqMsg->data.msgType = KEMSG_RecordFileList;
-	pReqMsg->data.msgLength = msgLen;
+	pReqMsg->data.msgLength = sizeof(KERecordFileListReq);
 	pReqMsg->data.clientID = m_clientID;
 	pReqMsg->data.channelNo = channelNo;
 	pReqMsg->data.videoID = devID;
@@ -1262,7 +1295,7 @@ int CP2PCmdSocket::RequestRecordFileList( int cameraID,int startTime,int endTime
 	pReqMsg->data.endTime[5] = et.GetSecond();
 
 	pReqMsg->data.fileType = fileType;
-	pReqMsg->data.alarmNo = 0;
+	pReqMsg->data.alarmNo = 1;
 
 	CMediaSocket *media = GetMediaSocket(cameraID);
 	media->recordFileList.clear();
@@ -1289,7 +1322,7 @@ void CP2PCmdSocket::RecvRecordFileList( const BYTE * msgData )
 		this->SetRecvMsg(KEMSG_UDP_QueryRecordFileList,KE_SUCCESS);
 		return;
 	}
-	int cameraID = pAckMsg->videoID<<8+pAckMsg->channelNo;
+	int cameraID = (pAckMsg->videoID<<8)+(pAckMsg->channelNo&0x7F);
 	CMediaSocket *media = GetMediaSocket(cameraID);
 	int fileInfoNum = (pAckMsg->msgLength-sizeof(KERecordFileListResp))/100;
 	PKERecordFileInfo pRecordFileInfo = (PKERecordFileInfo) (msgData+sizeof(KEQueryRecordFileListResp));
@@ -1375,6 +1408,55 @@ int CP2PCmdSocket::RequestDevStatus( int devID )
 	}
 	ret = this->WaitRecvMsg(KEMSG_TYPE_DEVSTATUS);
 	return ret;
+}
+
+int CP2PCmdSocket::SendPTZControl( int cameraID, BYTE ctrlType ,BYTE speed )
+{
+// 	int ret = KE_SUCCESS;
+// 	ptzInfo.isgot = true;
+// 	ptzInfo.protocal = 0;
+// 	ptzInfo.addr = 0;
+// 	if (!ptzInfo.isgot)
+// 	{
+// 		ret = GetPTZParam(cameraID);
+// 		if (ret != KE_SUCCESS)		return ret;
+// 	}
+// 	WORD wSpeed = speed;
+// 	if (ctrlType == 2 || ctrlType == 3)
+// 	{
+// 		wSpeed = wSpeed << 8;
+// 	}
+// 	char szBuf[128];
+// 	int iLen = GetCloudProtocol(ptzInfo.protocal, ptzInfo.addr, ctrlType, wSpeed, szBuf );    
+// 	if (iLen < 0)	return KE_FAILED;
+// 
+// 	int devID = cameraID/256;
+// 	int channelNo = cameraID%256;
+// 	std::vector<BYTE> msgSend;
+// 	int msgLen = sizeof(KEDevGetSerialDataHead) + iLen;
+// 	msgSend.resize(msgLen,0);
+// 	KEDevGetSerialDataHead *  pReqMsg = (KEDevGetSerialDataHead *)&msgSend[0];
+// 	pReqMsg->protocal = PROTOCOL_HEAD;
+// 	pReqMsg->msgType = DevMsg_SerialData;
+// 	pReqMsg->msgLength = msgLen;
+// 	pReqMsg->clientID = m_clientID;
+// 	pReqMsg->videoID = devID;
+// 	pReqMsg->dataLen = iLen;
+// 	memcpy(&msgSend[0]+sizeof(KEDevGetSerialDataHead) ,szBuf,iLen);
+// 
+// 	ret = this->Write(&msgSend[0],msgLen);
+// 	if (ret != msgLen)
+// 	{
+// 		return KE_SOCKET_WRITEERROR;
+// 	}
+	return KE_SUCCESS;
+}
+
+int CP2PCmdSocket::StopView( int cameraID )
+{
+	CMediaSocket *media = GetMediaSocket(cameraID);	
+	media->CloseConnect();
+	return KE_SUCCESS;
 }
 
 

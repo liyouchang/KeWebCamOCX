@@ -52,22 +52,6 @@
 #define MSG_WAIT_TIMEOUT 3000	//相应消息读取等待时间
 
 
-enum KEMSG_TYPE
-{
-	KEMSG_TYPE_VIDEOSERVER = 0x0C,
-	KEMSG_TYPE_AUDIOSTREAM = 0x38,
-	KEMSG_TYPE_VIDEOSTREAM = 0x39,
-	KEMSG_TYPE_ASKKEY = 0xD0,
-	KEMSG_TYPE_LOGIN = 0x80,
-	KEMSG_TYPE_AskTreeStruct = 0x81,
-	KEMSG_TYPE_HEARTBEAT=0x82,
-	KEMSG_TYPE_REALTIMEDATA = 0x83,
-	KEMSG_TYPE_PTZControl = 0x85,
-	KEMSG_TYPE_MalfunctionAlert = 0x8A,
-	KEMSG_TYPE_VideoSvrOnline = 0x8B,//13.	请求视频服务器的状态
-	KEMSG_TYPE_MEDIATRANS = 0x8F,
-	
-};
 
 enum KEMSG_EVENT
 {
@@ -100,7 +84,6 @@ typedef struct _KEMsgHead
 	int clientID;
 }KEMsgHead,*PKEMsgHead;
 
-
 typedef struct _KEMsgSecretKeyReq
 {
 	KEMsgHead head;
@@ -121,14 +104,12 @@ typedef struct _KEMsgUserLoginReq
 	char encreptData[ENCRYPTED_DATA_LEN];
 }KEMsgUserLoginReq ,*PKEMsgUserLoginReq;
 
-
 typedef struct _KEMsgUserLoginResp
 {
 	KEMsgHead head;
 	int clientLevel;
 	char respData;
 }KEMsgUserLoginResp,*PKEMsgUserLoginResp;
-
 
 typedef struct _KEMsgXMLInfo
 {
@@ -218,11 +199,6 @@ typedef struct _KERTStreamHead
 	char channelNo;
 }KERTStreamHead,*PKERTStreamHead;
 
-
-
-
-
-
 typedef struct _KEPTZControlReq
 {
 	BYTE protocal;
@@ -252,6 +228,7 @@ enum KEMSG_ASKTREE_DATATYPE
 	KEMSG_ASKTREE_DATATYPE_AllRootNodes = 32,
 	KEMSG_ASKTREE_DATATYPE_ErrorOccured
 };
+
 //请求树形结构，数据头
 typedef struct _KEAskTreeMsg
 {

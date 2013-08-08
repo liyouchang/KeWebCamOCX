@@ -41,22 +41,22 @@ CWebCamPannel::~CWebCamPannel()
 void CWebCamPannel::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_CAMERA0, m_camarray[0]);
-	DDX_Control(pDX, IDC_CAMERA1, m_camarray[1]);
-	DDX_Control(pDX, IDC_CAMERA2, m_camarray[2]);
-	DDX_Control(pDX, IDC_CAMERA3, m_camarray[3]);
-	DDX_Control(pDX, IDC_CAMERA4, m_camarray[4]);
-	DDX_Control(pDX, IDC_CAMERA5, m_camarray[5]);
-	DDX_Control(pDX, IDC_CAMERA6, m_camarray[6]);
-	DDX_Control(pDX, IDC_CAMERA7, m_camarray[7]);
-	DDX_Control(pDX, IDC_CAMERA8, m_camarray[8]);
-	DDX_Control(pDX, IDC_CAMERA9, m_camarray[9]);
-	DDX_Control(pDX, IDC_CAMERA10, m_camarray[10]);
-	DDX_Control(pDX, IDC_CAMERA11, m_camarray[11]);
-	DDX_Control(pDX, IDC_CAMERA12, m_camarray[12]);
-	DDX_Control(pDX, IDC_CAMERA13, m_camarray[13]);
-	DDX_Control(pDX, IDC_CAMERA14, m_camarray[14]);
-	DDX_Control(pDX, IDC_CAMERA15, m_camarray[15]);
+// 	DDX_Control(pDX, IDC_CAMERA0, m_camarray[0]);
+// 	DDX_Control(pDX, IDC_CAMERA1, m_camarray[1]);
+// 	DDX_Control(pDX, IDC_CAMERA2, m_camarray[2]);
+// 	DDX_Control(pDX, IDC_CAMERA3, m_camarray[3]);
+// 	DDX_Control(pDX, IDC_CAMERA4, m_camarray[4]);
+// 	DDX_Control(pDX, IDC_CAMERA5, m_camarray[5]);
+// 	DDX_Control(pDX, IDC_CAMERA6, m_camarray[6]);
+// 	DDX_Control(pDX, IDC_CAMERA7, m_camarray[7]);
+// 	DDX_Control(pDX, IDC_CAMERA8, m_camarray[8]);
+// 	DDX_Control(pDX, IDC_CAMERA9, m_camarray[9]);
+// 	DDX_Control(pDX, IDC_CAMERA10, m_camarray[10]);
+// 	DDX_Control(pDX, IDC_CAMERA11, m_camarray[11]);
+// 	DDX_Control(pDX, IDC_CAMERA12, m_camarray[12]);
+// 	DDX_Control(pDX, IDC_CAMERA13, m_camarray[13]);
+// 	DDX_Control(pDX, IDC_CAMERA14, m_camarray[14]);
+// 	DDX_Control(pDX, IDC_CAMERA15, m_camarray[15]);
 }
 
 
@@ -79,8 +79,8 @@ COLORREF CWebCamPannel::GetCamFontColor()
 
 void CWebCamPannel::InvalidateAll()
 {
-	for(int i=0; i < CAM_MAX; i++)
-		m_camarray[i].Invalidate();
+	//for(int i=0; i < CAM_MAX; i++)
+//		m_camarray[i].Invalidate();
 	//DrawCameraFrame();
 	this->Invalidate();
 }
@@ -103,9 +103,10 @@ BOOL CWebCamPannel::OnInitDialog()
 	CDialog::OnInitDialog();
 	for(int i = 0; i < CAM_MAX; i++)
 	{
-		m_camarray[i].m_nCamNo		 = i;
-		m_camarray[i].SetOwner(this);
-		m_camarray[i].m_bFull = FALSE;
+		m_camarray[i].Create(IDD_FORMVIEW_PLAY,this);
+ 		m_camarray[i].m_nCamNo		 = i;
+ 		m_camarray[i].SetOwner(this);
+ 		m_camarray[i].m_bFull = FALSE;
 	}
 	SetPlayDivision(4);
 	LOG_DEBUG("Pannel OnInitDialog end " << GetTickCount());
@@ -302,7 +303,7 @@ void CWebCamPannel::DrawFrame(CDC *pDC)
 
 
 //************************************
-// Method:    GetOnePlayer
+// Method:    GetOnePlayer 获取并设置当前活动播放器，如果没有任何一个播放器被找到，则使用当前活动播放器
 // FullName:  CWebCamPannel::GetOnePlayer
 // Access:    public 
 // Returns:   CMyAVPlayer	*
@@ -310,62 +311,42 @@ void CWebCamPannel::DrawFrame(CDC *pDC)
 // Parameter: int cameraID
 // Parameter: int * isPlaying
 //************************************
-COneCamera 	* CWebCamPannel::GetOnePlayer( int cameraID,int * isPlaying /*= NULL*/ )
-{
-	int nIndex;
-	int nFind = 0;
-	for (nIndex=0;nIndex< CAM_MAX;nIndex++)
-	{
-		if (m_camarray[nIndex].m_cameraID == cameraID)
-		{
-			break;
-		}
-	}
-	if (nIndex < CAM_MAX)
-	{
-		SetActiveCamera(nIndex);
-		nFind = 1;
-	}
-	if (isPlaying != NULL)
-	{
-		*isPlaying = nFind;
-	}
-	//DrawAllCameraImages();
-	m_camarray[m_nActiveCamera].m_cameraID = cameraID;
-	return &m_camarray[m_nActiveCamera];
-}
+//COnePlayer 	* CWebCamPannel::GetOnePlayer( int cameraID,int * isPlaying /*= NULL*/ )
+//{
+	
 
-
-BOOL CWebCamPannel::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
-{
-	// 直接返回以保持设置的鼠标样式
-	return TRUE;
-	return CDialog::OnSetCursor(pWnd, nHitTest, message);
-}
-
-void CWebCamPannel::SetActiveCamera( int nCamNo )
-{
-	if (m_nActiveCamera != nCamNo)
-	{
-		m_nActiveCamera = nCamNo;
-		CamStatusReport report;
-		report.cameraID = m_camarray[nCamNo].m_cameraID;
-		report.reportType = 1;
-		DrawCameraFrame();
-		theApp.g_cmd->ReportCamStatus(report);
-		//theApp.g_pMainWnd->SendMessage(WM_CAMSTATUSREPORT,0,(LPARAM)&report);
-	}
-}
+// 	int nIndex;
+// 	int nFind = 0;
+// 	for (nIndex=0;nIndex< CAM_MAX;nIndex++)
+// 	{
+// 		if (m_camarray[nIndex].m_cameraID == cameraID)
+// 		{
+// 			break;
+// 		}
+// 	}
+// 	if (nIndex < CAM_MAX)
+// 	{
+// 		SetActiveCamera(nIndex);
+// 		nFind = 1;
+// 	}
+// 	if (isPlaying != NULL)
+// 	{
+// 		*isPlaying = nFind;
+// 	}
+// 	//DrawAllCameraImages();
+// 	m_camarray[m_nActiveCamera].m_cameraID = cameraID;
+// 	return &m_camarray[m_nActiveCamera].m_camera;
+//}
 //返回拥有cameraID的镜头，若cameraID为0，则返回当前选中的镜头.
 //************************************
-// Method:    GetCamera 根据cameraID，选择一个播放窗口并返回
-// FullName:  CWebCamPannel::GetCamera
+// Method:    GetOnePlayer
+// FullName:  CWebCamPannel::GetOnePlayer
 // Access:    public 
-// Returns:   COneCamera *——为NULL则表示没有找到与cameraID匹配的播放窗口
+// Returns:   COnePlayer *——为NULL则表示没有找到与cameraID匹配的播放窗口
 // Qualifier:
 // Parameter: int cameraID——若cameraID为0，返回当前选中的播放窗口。
 //************************************
-COneCamera * CWebCamPannel::GetCamera( int cameraID )
+COnePlayer * CWebCamPannel::GetOnePlayer( int cameraID )
 {
 	if (cameraID == 0)
 	{
@@ -384,6 +365,29 @@ COneCamera * CWebCamPannel::GetCamera( int cameraID )
 		return &m_camarray[nIndex];
 	}
 	return NULL;
+}
+
+
+BOOL CWebCamPannel::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
+{
+	// 直接返回以保持设置的鼠标样式
+	return TRUE;
+	return CDialog::OnSetCursor(pWnd, nHitTest, message);
+}
+
+void CWebCamPannel::SetActiveCamera( int nCamNo )
+{
+	if (m_nActiveCamera != nCamNo)
+	{
+		m_nActiveCamera = nCamNo;
+		CamStatusReport report;
+		report.cameraID = m_camarray[nCamNo].m_cameraID;
+		report.reportType = CamStatusReportType_SelectCam;
+		DrawCameraFrame();
+		theApp.g_cmd->ReportCamStatus(report);
+		//theApp.g_pMainWnd->SendMessage(WM_CAMSTATUSREPORT,0,(LPARAM)&report);
+
+	}
 }
 
 void CWebCamPannel::CopyPannel( CWebCamPannel * pannel )
@@ -434,7 +438,7 @@ void CWebCamPannel::StopAllRTPlay()
 {
 	for(int i = 0; i < CAM_MAX; i++)
 	{
-		m_camarray[i].StopRTPlay(false);
+		//m_camarray[i].StopRTPlay(false);
 	}
 }
 
@@ -442,18 +446,28 @@ void CWebCamPannel::MoveCameraPlay()
 {
 	for(int i = 0; i < CAM_MAX; i++)
 	{
-		if (!m_camarray[i].m_bDrawable && m_camarray[i].IsPlaying())
-		{
-			for(int j = 0; j < CAM_MAX; j++)
-			{
-				if (m_camarray[j].m_bDrawable && !m_camarray[j].IsPlaying())
-				{
-					m_camarray[j].SwapVideo(&m_camarray[i]);
-					break;
-				}
-			}
-		}
+ 		if (!m_camarray[i].m_bDrawable && m_camarray[i].IsPlaying())
+ 		{
+ 			for(int j = 0; j < CAM_MAX; j++)
+ 			{
+ 				if (m_camarray[j].m_bDrawable && !m_camarray[j].IsPlaying())
+ 				{
+ 					m_camarray[j].SwapVideo(&m_camarray[i]);
+					if (m_camarray[i].IsActive())
+					{
+						m_camarray[j].SetActive();
+					}
+ 					break;
+ 				}
+ 			}
+			
+ 		}
 		
+	}
+	//设置选中镜头，选中镜头有可能不在显示镜头中
+	if (m_camarray[m_nActiveCamera].m_bDrawable == FALSE)
+	{
+		SetActiveCamera(0);	
 	}
 }
 
@@ -556,11 +570,7 @@ void CWebCamPannel::SetCamDrawable( int nDiv /*= 0*/ )
 		}
 	}
 
-	//设置选中镜头，选中镜头有可能不在显示镜头中
-	if (m_camarray[m_nActiveCamera].m_bDrawable == FALSE)
-	{
-		SetActiveCamera(0);	
-	}
+
 
 }
 
@@ -587,7 +597,7 @@ void CWebCamPannel::OnMouseMove(UINT nFlags, CPoint point)
 void CWebCamPannel::OnCancel()
 {
 	// TODO: 在此添加专用代码和/或调用基类
-
+	GetParent()->SendMessage(WM_CLOSE);
 	CDialog::OnCancel();
 }
 
@@ -597,7 +607,8 @@ void CWebCamPannel::StopAllAudio()
 	{
 		if (m_camarray[i].IsPlaying())
 		{
-			m_camarray[i].m_MediaSocket->ReqestMediaData(m_camarray[i].m_cameraID,Media_Vedio);
+			CMediaSocket * pMedia = theApp.g_cmd->GetMediaSocket(m_camarray[i].m_cameraID);
+			pMedia->ReqestMediaData(m_camarray[i].m_cameraID,CMediaSocket::Media_Vedio);
 		}
 	}
 }
@@ -609,7 +620,26 @@ void CWebCamPannel::StopAllTalk()
 	{
 		if (m_camarray[i].IsPlaying())
 		{
-			m_camarray[i].m_MediaSocket->ReqestMediaData(m_camarray[i].m_cameraID,Media_Vedio);
+			CMediaSocket * pMedia = theApp.g_cmd->GetMediaSocket(m_camarray[i].m_cameraID);
+			pMedia->ReqestMediaData(m_camarray[i].m_cameraID,CMediaSocket::Media_Vedio);
 		}
 	}
+}
+
+COnePlayer * CWebCamPannel::ReuseActivePlayer( int cameraID )
+{
+	if (m_camarray[m_nActiveCamera].m_cameraID != cameraID)
+	{
+		if (m_camarray[m_nActiveCamera].IsPlaying())
+		{
+			m_camarray[m_nActiveCamera].StopRTPlay(true);
+		}
+		m_camarray[m_nActiveCamera].m_cameraID = cameraID;
+	}
+	return &m_camarray[m_nActiveCamera];
+}
+
+COnePlayer * CWebCamPannel::GetActivePlayer()
+{
+	return &m_camarray[m_nActiveCamera];
 }

@@ -12,6 +12,7 @@
 #include "MyAVPlayer.h"
 #include "MediaSocket.h"
 #include "PlayerCtrlDlg.h"
+
 //#include "OleDropTargetEx.h"
 
 
@@ -25,6 +26,7 @@ typedef struct _event_information
 class CWebCamPannel;
 class CxImage;
 class CLock;
+class COnePlayer;
 //class TAVI;
 /////////////////////////////////////////////////////////////////////////////
 // COneCamera window
@@ -33,30 +35,25 @@ class COneCamera : public CStatic
 {
 public:
 	CMenu				menu;
-	CWebCamPannel*		m_pOwner;
-	CMyAVPlayer *m_AVIPlayer;
-	CMediaSocket * m_MediaSocket;
-	int m_cameraID;
-	bool CheckMediaExist(int videoID,int channelNo);
-	void SetPlayIndex(int videoID,int channelNo);
-	int					m_nCamNo;//在父窗口中的镜头数组中的位置
-	BOOL m_bDrag;
-	BOOL				m_bDrawable;	//是否显示 6, 8, 13 mode
-	BOOL				m_bFull;
+	COnePlayer*		m_pOwner;
+	//CMyAVPlayer *m_AVIPlayer;
+	//CMediaSocket * m_MediaSocket;
+	//int m_cameraID;
+	bool CheckMediaExist(int videoID, int channelNo);
+// 	BOOL	m_bDrag;
+// 	BOOL	m_bDrawable;	//是否显示 6, 8, 13 mode
+// 	BOOL	m_bFull;
 
 	COneCamera();
-	void SetOwner(CWebCamPannel* pOwner);
+	void SetOwner(COnePlayer* pOwner);
 	void ExchangeAVIPlayer(CMyAVPlayer *otherPlayer);
 	void ExchangeCamera(COneCamera *camera);
-	void SwapVideo(COneCamera * camera);
-	bool IsPlaying();
-	void StopRTPlay(bool reUse = false);
-	int StartPlay();
-	
+
+
 // Attributes
 public:
 	CBrush m_brBkgnd; 
-	CPlayerCtrlDlg * ctrlDlg;
+	//CPlayerCtrlDlg * ctrlDlg;
 // Operations
 public:
 
@@ -66,32 +63,26 @@ public:
 	//}}AFX_VIRTUAL
 // Implementation
 public:
-	virtual ~COneCamera();
+	virtual		~COneCamera();
 	// Generated message map functions
 protected:
 	//{{AFX_MSG(COneCamera)
-//	afx_msg void OnPaint();
-	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+//	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 
-	afx_msg void OnMenuResetChannel();
-	afx_msg void OnMenuResetAll();
+//	afx_msg void OnMenuResetChannel();
+//	afx_msg void OnMenuResetAll();
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()
 
 public:
-	afx_msg void OnMenuPlay();
-	afx_msg void OnMenuSlow();
-	afx_msg void OnMenuFast();
 	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
-	afx_msg void OnMenuFullscreen();
-	afx_msg void OnMenuAllfullscreen();
+//	afx_msg void OnMenuFullscreen();
 public:
-	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+//	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnPaint();
-	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 };
 
 /////////////////////////////////////////////////////////////////////////////

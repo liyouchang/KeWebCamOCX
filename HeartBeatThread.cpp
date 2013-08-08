@@ -35,7 +35,7 @@ void CHeartBeatThread::Run()
 		KEMsgHeartBeat msg;
 		msg.head.clientID = m_clientID;
 		msg.head.msgLength = sizeof(KEMsgHeartBeat);
-		msg.head.msgType = KEMSG_TYPE_HEARTBEAT;
+		msg.head.msgType = 0x82;
 		msg.head.protocal = PROTOCOL_HEAD;
 		msg.status = 0;
 		m_socketHandle->Write((BYTE *)&msg,msg.head.msgLength);

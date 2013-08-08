@@ -2,6 +2,7 @@
 #include "MyAVPlayer.h"
 #include "CommonUtility/CommonFunctions.h"
 #include "CommonUtility/LogModule.h"
+#include "Common.h"
 #pragma comment(lib, "AVPlay.lib")
 
 CMyAVPlayer::CMyAVPlayer(void)
@@ -17,8 +18,9 @@ CMyAVPlayer::CMyAVPlayer(void)
 	int m_videoID = 0;
 	int m_channelNo =0 ;
 	m_PlayStatus = PLAYSTATUS_Free;
+	m_iPlaySpeed = 0;
 	//AV_Initial(0);
-
+	m_CtrlDlg = NULL;
 }
 
 CMyAVPlayer::~CMyAVPlayer(void)
@@ -26,33 +28,42 @@ CMyAVPlayer::~CMyAVPlayer(void)
 	//AV_Free();
 }
 
-void CMyAVPlayer::PlayFile(HWND hWnd)
+//************************************
+// Method:    PlayFile
+// FullName:  CMyAVPlayer::PlayFile
+// Access:    public 
+// Returns:   int
+// Qualifier:
+// Parameter: const char * fileName
+// Parameter: int fileSize   文件大小，KB
+// Parameter: HWND endMsgWnd
+//************************************
+int CMyAVPlayer::PlayFile(const char * fileName,int fileSize,HWND endMsgWnd)
 {
-	if (m_lPlayHandle>0)
-	{
-		AV_CloseFile_Ex(m_lPlayHandle);
-		m_lPlayHandle = 0;
-	}
 	m_lPlayHandle = 65;  //回放句柄范围  65~96
-	CFileDialog fDlg(TRUE);
-	if (fDlg.DoModal() == IDOK)
+	long lRet = AV_OpenFile_Ex(m_lPlayHandle,(char *)fileName,fileSize);
+	if (lRet == 0)
 	{
-		CString strFileName = fDlg.GetPathName();
-		char fileName[MAX_PATH];
-		//WideCharToMultiByte(CP_ACP, 0, strFileName, -1, fileName, sizeof(fileName), NULL, NULL );
-		TRACE(fileName);
-		long lRet = AV_OpenFile_Ex(m_lPlayHandle,fileName);
-		if (lRet == 0)
+		if (endMsgWnd == NULL )
 		{
-			lRet = AV_Play(m_lPlayHandle,hWnd);
-			if (lRet != 0)
-			{
-				AfxMessageBox(_T("播放失败"));
-			}
-		}else{
-			AfxMessageBox(TEXT("打开文件失败"));
+			endMsgWnd = m_CtrlDlg->GetSafeHwnd();
+		//	m_CtrlDlg->OnBnClickedButtonPlay();
 		}
+		AV_SetFileEndMsgWnd(m_lPlayHandle, (long)endMsgWnd, WM_PLAYOVER);
+		lRet = AV_Play(m_lPlayHandle,m_hPlayWnd);
+		if (lRet != 0)
+		{
+			TRACE(_T("播放失败"));
+			return lRet;
+		}
+		//AV_SetSpeed(m_lPlayHandle,m_iPlaySpeed);
+		this->NormalPlay();
+		m_PlayStatus = PLAYSTATUS_PlayStream;
+		m_CtrlDlg->PlayStart();
+	}else{
+		TRACE(TEXT("打开文件失败"));
 	}
+	return lRet;
 }
 
 int CMyAVPlayer::OpenStream()
@@ -71,7 +82,7 @@ int CMyAVPlayer::OpenStream()
 		m_PlayStatus = PLAYSTATUS_Free;
 		return iRet;
 	}
-	m_PlayStatus = PLAYSTATUS_Play;
+	m_PlayStatus = PLAYSTATUS_PlayStream;
 	//AV_SetPlayVideoInfo(m_lPlayHandle,m_videoID,m_channelNo);
 	return iRet;
 }
@@ -100,7 +111,7 @@ int CMyAVPlayer::InputStream( const BYTE * data, int dataLen )
 bool CMyAVPlayer::IsPlaying()
 {
 	//CSingleLock lock(&m_cs, TRUE);
-	return (m_PlayStatus == PLAYSTATUS_Play);
+	return (m_PlayStatus == PLAYSTATUS_PlayStream);
 }
 
 int CMyAVPlayer::CloseStream()
@@ -167,6 +178,72 @@ int CMyAVPlayer::StopTalk()
 {
 	return AV_TalkClose();
 }
+
+int CMyAVPlayer::SetSpeed( int speed )
+{
+	if (speed >=-4 || speed <=4)
+	{
+		this->m_iPlaySpeed = speed;
+		return AV_SetSpeed(m_lPlayHandle,m_iPlaySpeed);
+	}
+	return -1;
+}
+
+int CMyAVPlayer::ChgSpeed( int chgSpeed )
+{
+	m_iPlaySpeed += chgSpeed;
+	if (m_iPlaySpeed>4)
+	{
+		m_iPlaySpeed = 4;
+	}
+	if (m_iPlaySpeed < -4)
+	{
+		m_iPlaySpeed = -4;
+	}
+	return AV_SetSpeed(m_lPlayHandle,m_iPlaySpeed);
+}
+
+int CMyAVPlayer::SetPlayPos( int pos )
+{
+	return AV_SetPlayPos(m_lPlayHandle, pos);
+}
+
+int CMyAVPlayer::CloseFile()
+{
+	m_PlayStatus = PLAYSTATUS_Free;
+	return AV_CloseFile_Ex(m_lPlayHandle);
+}
+
+int CMyAVPlayer::PausePlay()
+{
+	return AV_Pause(m_lPlayHandle,0);
+}
+
+int CMyAVPlayer::GetPlayPos( int &pos )
+{
+	return AV_GetPlayPos(m_lPlayHandle,(long*)&pos);
+}
+
+int CMyAVPlayer::NormalPlay()
+{
+	m_iPlaySpeed = 0;
+	return AV_BackPlayNormal(m_lPlayHandle);
+}
+
+void CMyAVPlayer::SetCtrlDlg( CPlayerCtrlDlg * dlg )
+{
+	this->m_CtrlDlg = dlg;
+}
+
+int CMyAVPlayer::SetFileSize( long fileSize )
+{
+	return AV_SetFileSize(m_lPlayHandle,fileSize);
+}
+
+// int CMyAVPlayer::SetFileEndMsgWnd( HWND fileWnd )
+// {
+// 	return AV_SetFileEndMsgWnd(m_lPlayHandle, (long)fileWnd, WM_PLAYOVER);
+// }
 
 int CMyAVPlayer::isInitail = 0;
 

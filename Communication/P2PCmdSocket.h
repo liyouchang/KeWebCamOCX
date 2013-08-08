@@ -170,6 +170,7 @@ typedef struct _KECancelSharedDevReq
 	int devSvrID;
 	int sharedUserID;
 }KECancelSharedDevReq,*PKECancelSharedDevReq;
+
 typedef struct _KECancelSharedDevResp
 {
 	KEMsgHead head;
@@ -261,8 +262,7 @@ typedef struct _KEPTZCtrlUDPReq
 {
 	KEMsgHead head;//0x21
 	int devID;
-	char ptzType;
-	char ptzparam;
+	KEDevGetSerialDataHead data;
 }PTZCtrlUDPReq,*PPTZCtrlUDPReq;
 
 #pragma pack()
@@ -293,6 +293,7 @@ public:
 	bool ConnectToServer(CString severAddr,int svrPort);
 	virtual int ConnectServer(CString svrIp,int svrPort);
 	virtual int StartView(int cameraID);
+	virtual int StopView(int cameraID);
 	virtual int PTZControl(int cameraID, BYTE ctrlType ,BYTE speed ,BYTE data);
 	virtual int RefreshCameraList();
 	virtual int SetClientID(int clientID);
@@ -301,9 +302,11 @@ public:
 	virtual int PlayRemoteRecord(int cameraID,int fileNo);
 	virtual int GetDevWifiAPList(int cameraID,std::vector<KEDevAPListItem> &apList);
 	virtual int SetDevWifi(int cameraID,int listNo,KEDevWifiStartReq wifiStart);
-
+	virtual int QueryVersion(CString & version ,CString & url);
+	
 	int LogoutServer();
 	
+
 	void CheckAllDevListAsyn();
 	void CheckShareDevListAsyn();
 	int DeleteCamera(char type,int devID);
@@ -316,7 +319,7 @@ public:
 	int CancelDevShare(int devSvrID,int sharedUserID); 
 	int ChangeUserPwd(CString oldPwd, CString newPwd);
 	int DeviceReboot(int devID);
-	int QueryVersion(CString & version ,CString & url);
+	
 	int ResetForgetPwd(CString uname,CString email);
 	int RequestTransIp(int devID);
 	int RequestRecordFileList(int cameraID,int startTime,int endTime,int fileType);
@@ -332,6 +335,7 @@ protected:
 	void LoginMsgResp(const BYTE * msgData);
 	int RequestDevStatus(int devID);
 	int RequestDevNetInfo(int devID);
+	int SendPTZControl(int cameraID, BYTE ctrlType ,BYTE speed );
 protected://received message functions 
 	void RecvRealTimeMedia(const BYTE * msgData);
 	void RecvUserRegister(const BYTE * msgData);
@@ -390,7 +394,6 @@ enum KE_P2PMSG_TYPE
 	KEMSG_TYPE_GetTransIP = 0x22,
 	KEMSG_UDP_QueryRecordFileList= 0x23,
 	KEMSG_TYPE_CHECKVERSION = 0xf9,
-
 };
 
 enum KE_P2PMSG_EVENT

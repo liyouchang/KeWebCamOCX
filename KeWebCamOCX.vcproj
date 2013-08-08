@@ -21,7 +21,7 @@
 			OutputDirectory="../ÍøÂçÉãÏñÍ·²¥·Å²å¼þ"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="1"
+			UseOfMFC="2"
 			UseOfATL="0"
 			CharacterSet="2"
 			>
@@ -52,7 +52,7 @@
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;LOG4CPLUS_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -72,7 +72,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="../ÍøÂçÉãÏñÍ·²¥·Å²å¼þ/AVPlay.lib ../ÍøÂçÉãÏñÍ·²¥·Å²å¼þ/log4cplusSD.lib"
+				AdditionalDependencies="../bin/AVPlay.lib ../bin/log4cplusUSD.lib"
 				OutputFile="$(OutDir)\$(ProjectName)D.ocx"
 				LinkIncremental="2"
 				ModuleDefinitionFile=".\KeWebCamOCX.def"
@@ -109,7 +109,7 @@
 			OutputDirectory="../bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="1"
+			UseOfMFC="2"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -140,7 +140,7 @@
 				AdditionalIncludeDirectories="CommonUtility\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;LOG4CPLUS_STATIC"
 				MinimalRebuild="false"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				ProgramDataBaseFileName="$(IntDir)\"
@@ -201,7 +201,7 @@
 			OutputDirectory="../bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="1"
+			UseOfMFC="2"
 			UseOfATL="0"
 			CharacterSet="1"
 			>
@@ -232,7 +232,7 @@
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;LOG4CPLUS_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -252,7 +252,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="../bin/AVPlay.lib ../bin/log4cplusUSD.lib"
+				AdditionalDependencies="../bin/AVPlay.lib ../bin/log4cplusUSD.lib gdiplus.lib"
 				OutputFile="$(OutDir)\$(ProjectName)UD.ocx"
 				LinkIncremental="2"
 				ModuleDefinitionFile=".\KeWebCamOCX.def"
@@ -498,7 +498,47 @@
 				>
 			</File>
 			<File
+				RelativePath=".\res\RecordBtn\bitmap4.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\bluenormal.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\bluenormalsel.bmp"
+				>
+			</File>
+			<File
 				RelativePath=".\res\DivLogo.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\fastplay.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\fastplay1.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\fastplay2.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\front.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\front1.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\front2.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\KeWebCamOCX.lic"
 				>
 			</File>
 			<File
@@ -507,6 +547,110 @@
 			</File>
 			<File
 				RelativePath=".\KeWebCamOCXCtrl.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\mp_channel.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\mp_channel_active.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\mp_thumb.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\mp_thumb_active.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\normal.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\normalsel.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\open.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\open1.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\open2.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\pause.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\pause1.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\pause2.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\play.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\play1.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\play2.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\save.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\save1.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\save2.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\slide.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\slowplay1.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\sound.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\sound1.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\sound2.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\stop.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\stop1.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\RecordBtn\stop2.bmp"
 				>
 			</File>
 		</Filter>
@@ -547,6 +691,14 @@
 			</File>
 			<File
 				RelativePath=".\OneCamera.h"
+				>
+			</File>
+			<File
+				RelativePath=".\OnePlayer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\OnePlayer.h"
 				>
 			</File>
 			<File
@@ -798,10 +950,26 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath=".\KeWebCamOCX.lic"
+		<Filter
+			Name="ExtCtrl"
 			>
-		</File>
+			<File
+				RelativePath=".\CButtonST_src\BkDialogST.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CButtonST_src\BkDialogST.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CButtonST_src\BtnST.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CButtonST_src\BtnST.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt"
 			>

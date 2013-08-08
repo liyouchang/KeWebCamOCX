@@ -16,10 +16,7 @@
 // CKeWebCamOCXApp : 有关实现的信息，请参阅 KeWebCamOCX.cpp。
 
 //user message define start lht message from 1029
-#define WM_HEARTBEATSTOP (WM_USER+1029)
-#define WM_RTVIDEOSTOP (WM_USER+1030)
-#define WM_CAMSTATUSREPORT (WM_USER + 1031)
-#define WM_TREESTRUCTNOTIFY (WM_USER + 1032)
+
 
 class CKeWebCamOCXApp : public COleControlModule
 {
@@ -37,11 +34,9 @@ public:
 	CKeWebCamOCXCtrl * g_pMainWnd;
 	CenterCommand * g_cmd;
 	//CString theLastError;
+	tstd::tstring iniFile;
 	
 };
-
-
-
 
 extern CKeWebCamOCXApp theApp;
 

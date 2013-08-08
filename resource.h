@@ -5,6 +5,12 @@
 #define IDS_KEWEBCAMOCX                 1
 #define IDB_KEWEBCAMOCX                 1
 #define IDS_KEWEBCAMOCX_PPG             2
+#define IDS_STRING_BtnOpenFile          3
+#define IDS_STRING_BtnPlay              4
+#define IDS_STRING_BtnPlaySlow          5
+#define IDS_STRING_BtnPlayFast          6
+#define IDS_STRING_BtnPause             7
+#define IDS_STRING_BtnStop              8
 #define IDD_DLG_PLAYCONTROL             101
 #define IDR_HTML_WEBCAMPANNEL           103
 #define IDS_KEWEBCAMOCX_PPG_CAPTION     200
@@ -18,7 +24,6 @@
 #define IDC_CAMERA3                     204
 #define IDC_CAMERA4                     205
 #define IDB_BITMAP1                     205
-#define IDB_DIVLOGO                     205
 #define IDC_CAMERA5                     206
 #define IDC_CAMERA6                     207
 #define IDR_MENU1                       207
@@ -31,17 +36,46 @@
 #define IDC_CAMERA12                    213
 #define IDC_CAMERA13                    214
 #define IDC_CAMERA14                    215
+#define IDD_ABOUTBOX_KEWEBCAMOCX        215
 #define IDC_CAMERA15                    216
-#define IDC_STATIC_PICTURE              218
+#define IDC_CAMERA                      218
 #define IDC_TEXT_LEFT                   219
 #define IDC_TEXT_MID                    220
+#define IDB_BITMAP2                     220
+#define IDB_FastPlay1                   220
 #define IDC_TEXT_RIGHT                  221
-#define IDC_SLIDER_POS                  222
+#define IDB_BITMAP3                     221
+#define IDB_FastPlay2                   221
 #define IDC_BUTTON_PLAY                 223
 #define IDC_BUTTON_FAST                 224
 #define IDC_BUTTON_SLOW                 225
 #define IDC_BUTTON_PAUSE                226
+#define IDB_BITMAP8                     226
+#define IDB_OPEN1                       226
 #define IDC_BUTTON_STOP                 227
+#define IDB_BITMAP9                     227
+#define IDB_OPEN2                       227
+#define IDB_BITMAP10                    228
+#define IDB_OpenFile1                   228
+#define IDC_STATIC_SPEED                229
+#define IDB_BITMAP11                    229
+#define IDB_B                           229
+#define IDB_PAUSE1                      229
+#define IDB_BITMAP12                    230
+#define IDB_Pause2                      230
+#define IDC_BUTTON_OpenFile             231
+#define IDC_STATIC_Status               232
+#define IDB_BITMAP14                    232
+#define IDB_PLAY1                       232
+#define IDB_BITMAP15                    233
+#define IDB_PLAY2                       233
+#define IDC_SLIDER_MP                   234
+#define IDC_SlowPlay                    235
+#define IDB_BITMAP23                    241
+#define IDB_Stop1                       241
+#define IDB_BITMAP24                    242
+#define IDB_Stop2                       242
+#define IDB_SlowPlay1                   245
 #define ID_SELECTCAMERA_SAVEIMAGE       32768
 #define ID_SELECTCAMERA_SAVEIMAGEALL    32769
 #define ID_SELECTCAMERA_PRINTIMAGE      32770
@@ -76,9 +110,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        210
+#define _APS_NEXT_RESOURCE_VALUE        246
 #define _APS_NEXT_COMMAND_VALUE         32797
-#define _APS_NEXT_CONTROL_VALUE         229
+#define _APS_NEXT_CONTROL_VALUE         236
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

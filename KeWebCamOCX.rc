@@ -59,8 +59,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,2
- PRODUCTVERSION 1,0,0,2
+ FILEVERSION 2,0,0,0
+ PRODUCTVERSION 2,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -77,12 +77,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Kaer"
             VALUE "FileDescription", "Kaer web camera activex"
-            VALUE "FileVersion", "1.0.0.2"
+            VALUE "FileVersion", "2.0.0.0"
             VALUE "InternalName", "KeWebCamOCX.ocx"
             VALUE "LegalCopyright", "(C)2013 Kaer。保留所有权利。"
             VALUE "OriginalFilename", "KeWebCamOCX.ocx"
             VALUE "ProductName", "KeWebCam"
-            VALUE "ProductVersion", "1.0.0.2"
+            VALUE "ProductVersion", "2.0.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -98,7 +98,18 @@ END
 //
 
 IDB_KEWEBCAMOCX         BITMAP                  "KeWebCamOCXCtrl.bmp"
-IDB_DIVLOGO             BITMAP                  "res\\DivLogo.bmp"
+IDB_FastPlay1           BITMAP                  "res\\RecordBtn\\fastplay1.bmp"
+IDB_FastPlay2           BITMAP                  "res\\RecordBtn\\fastplay2.bmp"
+IDB_OPEN1               BITMAP                  "res\\RecordBtn\\open1.bmp"
+IDB_OPEN2               BITMAP                  "res\\RecordBtn\\open2.bmp"
+IDB_OpenFile1           BITMAP                  "res\\RecordBtn\\open.bmp"
+IDB_PAUSE1              BITMAP                  "res\\RecordBtn\\pause1.bmp"
+IDB_Pause2              BITMAP                  "res\\RecordBtn\\pause2.bmp"
+IDB_PLAY1               BITMAP                  "res\\RecordBtn\\play1.bmp"
+IDB_PLAY2               BITMAP                  "res\\RecordBtn\\play2.bmp"
+IDB_Stop1               BITMAP                  "res\\RecordBtn\\stop1.bmp"
+IDB_Stop2               BITMAP                  "res\\RecordBtn\\stop2.bmp"
+IDB_SlowPlay1           BITMAP                  "res\\RecordBtn\\slowplay1.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -116,22 +127,22 @@ STYLE DS_ABSALIGN | DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBL
 EXSTYLE WS_EX_APPWINDOW
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_CAMERA0,"Static",SS_BLACKFRAME | SS_NOTIFY,14,18,15,13
-    CONTROL         "",IDC_CAMERA1,"Static",SS_BLACKFRAME | SS_NOTIFY,79,18,15,13
-    CONTROL         "",IDC_CAMERA2,"Static",SS_BLACKFRAME | SS_NOTIFY,144,18,15,13
-    CONTROL         "",IDC_CAMERA3,"Static",SS_BLACKFRAME | SS_NOTIFY,209,18,15,13
-    CONTROL         "",IDC_CAMERA4,"Static",SS_BLACKFRAME | SS_NOTIFY,14,68,15,13
-    CONTROL         "",IDC_CAMERA5,"Static",SS_BLACKFRAME | SS_NOTIFY,79,68,15,13
-    CONTROL         "",IDC_CAMERA6,"Static",SS_BLACKFRAME | SS_NOTIFY,144,68,15,13
-    CONTROL         "",IDC_CAMERA7,"Static",SS_BLACKFRAME | SS_NOTIFY,209,68,15,13
-    CONTROL         "",IDC_CAMERA8,"Static",SS_BLACKFRAME | SS_NOTIFY,14,118,15,13
-    CONTROL         "",IDC_CAMERA9,"Static",SS_BLACKFRAME | SS_NOTIFY,79,118,15,13
-    CONTROL         "",IDC_CAMERA10,"Static",SS_BLACKFRAME | SS_NOTIFY,144,118,15,13
-    CONTROL         "",IDC_CAMERA11,"Static",SS_BLACKFRAME | SS_NOTIFY,209,118,15,13
-    CONTROL         "",IDC_CAMERA12,"Static",SS_BLACKFRAME | SS_NOTIFY,14,168,15,13
-    CONTROL         "",IDC_CAMERA13,"Static",SS_BLACKFRAME | SS_NOTIFY,79,168,15,13
-    CONTROL         "",IDC_CAMERA14,"Static",SS_BLACKFRAME | SS_NOTIFY,144,168,15,13
-    CONTROL         "",IDC_CAMERA15,"Static",SS_BLACKFRAME | SS_NOTIFY,209,168,15,13
+    CONTROL         "",IDC_CAMERA0,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,14,18,15,13
+    CONTROL         "",IDC_CAMERA1,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,79,18,15,13
+    CONTROL         "",IDC_CAMERA2,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,144,18,15,13
+    CONTROL         "",IDC_CAMERA3,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,209,18,15,13
+    CONTROL         "",IDC_CAMERA4,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,14,68,15,13
+    CONTROL         "",IDC_CAMERA5,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,79,68,15,13
+    CONTROL         "",IDC_CAMERA6,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,144,68,15,13
+    CONTROL         "",IDC_CAMERA7,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,209,68,15,13
+    CONTROL         "",IDC_CAMERA8,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,14,118,15,13
+    CONTROL         "",IDC_CAMERA9,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,79,118,15,13
+    CONTROL         "",IDC_CAMERA10,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,144,118,15,13
+    CONTROL         "",IDC_CAMERA11,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,209,118,15,13
+    CONTROL         "",IDC_CAMERA12,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,14,168,15,13
+    CONTROL         "",IDC_CAMERA13,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,79,168,15,13
+    CONTROL         "",IDC_CAMERA14,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,144,168,15,13
+    CONTROL         "",IDC_CAMERA15,"Static",SS_BLACKFRAME | SS_NOTIFY | NOT WS_VISIBLE | WS_DISABLED,209,168,15,13
 END
 
 IDD_DLG_PLAYCONTROL DIALOGEX 0, 0, 360, 164
@@ -140,27 +151,38 @@ FONT 9, "宋体", 400, 0, 0x0
 BEGIN
 END
 
-IDD_FORMVIEW_PLAY DIALOGEX 0, 0, 238, 167
+IDD_FORMVIEW_PLAY DIALOGEX 0, 0, 260, 176
 STYLE DS_SETFONT | WS_CHILD
 FONT 9, "宋体", 400, 0, 0x0
 BEGIN
-    CONTROL         "",IDC_STATIC_PICTURE,"Static",SS_BLACKRECT,0,0,234,126
-    LTEXT           "静态",IDC_TEXT_LEFT,3,150,35,8
-    LTEXT           "静态",IDC_TEXT_MID,91,150,42,8
-    LTEXT           "静态",IDC_TEXT_RIGHT,181,150,37,8
+    CONTROL         "",IDC_CAMERA,"Static",SS_BLACKRECT,0,0,234,144
+    LTEXT           "静态",IDC_TEXT_LEFT,3,150,35,8,NOT WS_VISIBLE | WS_DISABLED
+    LTEXT           "静态",IDC_TEXT_MID,91,150,42,8,NOT WS_VISIBLE | WS_DISABLED
+    LTEXT           "静态",IDC_TEXT_RIGHT,181,150,37,8,NOT WS_VISIBLE | WS_DISABLED
 END
 
-IDD_DIALOG_Player DIALOGEX 0, 0, 362, 32
+IDD_DIALOG_Player DIALOGEX 0, 0, 422, 27
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_SLIDER_POS,"msctls_trackbar32",TBS_TOP | TBS_NOTICKS | WS_TABSTOP,0,0,260,15
-    PUSHBUTTON      "播放",IDC_BUTTON_PLAY,5,17,24,14
-    PUSHBUTTON      "快进",IDC_BUTTON_FAST,40,17,24,14
-    PUSHBUTTON      "慢放",IDC_BUTTON_SLOW,76,17,24,14
-    PUSHBUTTON      "暂停",IDC_BUTTON_PAUSE,112,17,24,14
-    PUSHBUTTON      "停止",IDC_BUTTON_STOP,148,17,24,14
-    LTEXT           "正常速度",IDC_STATIC,189,20,33,8
+    PUSHBUTTON      "",IDC_BUTTON_PLAY,23,16,17,11
+    PUSHBUTTON      "",IDC_BUTTON_FAST,59,16,17,11
+    PUSHBUTTON      "",IDC_BUTTON_SLOW,41,16,17,11
+    PUSHBUTTON      "",IDC_BUTTON_PAUSE,77,16,17,11
+    PUSHBUTTON      "",IDC_BUTTON_STOP,95,16,17,11
+    LTEXT           "正常速度",IDC_STATIC_SPEED,384,18,33,8
+    PUSHBUTTON      "",IDC_BUTTON_OpenFile,5,16,17,11
+    LTEXT           "播放信息",IDC_STATIC_Status,120,18,201,8
+    CONTROL         "",IDC_SLIDER_MP,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,264,0,156,15
+END
+
+IDD_ABOUTBOX_KEWEBCAMOCX DIALOGEX 0, 0, 316, 180
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,205,159,50,14
+    PUSHBUTTON      "取消",IDCANCEL,259,159,50,14
 END
 
 
@@ -196,16 +218,24 @@ BEGIN
 
     IDD_FORMVIEW_PLAY, DIALOG
     BEGIN
-        RIGHTMARGIN, 237
-        BOTTOMMARGIN, 158
+        RIGHTMARGIN, 259
+        BOTTOMMARGIN, 167
     END
 
     IDD_DIALOG_Player, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 355
+        RIGHTMARGIN, 415
         TOPMARGIN, 7
-        BOTTOMMARGIN, 25
+        BOTTOMMARGIN, 20
+    END
+
+    IDD_ABOUTBOX_KEWEBCAMOCX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 173
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -265,6 +295,12 @@ STRINGTABLE
 BEGIN
     IDS_KEWEBCAMOCX         "KeWebCamOCX Control"
     IDS_KEWEBCAMOCX_PPG     "KeWebCamOCX Property Page"
+    IDS_STRING_BtnOpenFile  "打开文件"
+    IDS_STRING_BtnPlay      "播放"
+    IDS_STRING_BtnPlaySlow  "慢放"
+    IDS_STRING_BtnPlayFast  "快放"
+    IDS_STRING_BtnPause     "暂停"
+    IDS_STRING_BtnStop      "停止"
 END
 
 STRINGTABLE 

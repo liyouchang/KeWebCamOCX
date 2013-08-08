@@ -38,5 +38,8 @@ BOOL CreateFolder(CString strPath);
 //创建多层目录
 BOOL CreateFolderEx(const CString& szPath);
 
+std::string UTF8ToGB2312(const char *pText);
+std::string GB2312ToUTF8(const char *pText);
+
 #endif
 

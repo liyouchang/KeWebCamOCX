@@ -9,6 +9,7 @@
 #include "CommonUtility/tstdlibs.h"
 #include "Communication/P2PCmdSocket.h"
 #include "CommonUtility/inifile.h"
+#include "CmdSocket.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -42,7 +43,7 @@ BEGIN_DISPATCH_MAP(CKeWebCamOCXCtrl, COleControl)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "StartRealTimeVideo", dispidStartRealTimeVideo, StartRealTimeVideo, VT_BSTR, VTS_I4 )
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "StopRealTimeVideo", dispidStopRealTimeVideo, StopRealTimeVideo, VT_BSTR, VTS_I4 )
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "ControlPTZ", dispidControlPTZ, ControlPTZ, VT_BSTR, VTS_I4 VTS_UI1 VTS_UI1 VTS_UI1)
-	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "LoginServer", dispidLoginServer, LoginServer, VT_BSTR, VTS_BSTR VTS_BSTR VTS_BSTR)
+	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "LoginServer", dispidLoginServer, LoginServer, VT_BSTR, VTS_BSTR VTS_BSTR)
 	DISP_PROPERTY_NOTIFY_ID(CKeWebCamOCXCtrl, "SnapFilePath", dispidSnapFilePath, m_SnapFilePath, OnSnapFilePathChanged, VT_BSTR)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "TakeSnapshot", dispidTakeSnapshot, TakeSnapshot, VT_BSTR, VTS_I4)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "StartRealTimeAudio", dispidStartRealTimeAudio, StartRealTimeAudio, VT_BSTR, VTS_I4)
@@ -59,6 +60,7 @@ BEGIN_DISPATCH_MAP(CKeWebCamOCXCtrl, COleControl)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "GetDevWifiAP", dispidGetDevWifiAP, GetDevWifiAP, VT_BSTR, VTS_I4)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "SetDevWifiAP", dispidSetDevWifiAP, SetDevWifiAP, VT_BSTR, VTS_I4 VTS_BSTR)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "CheckVersion", dispidCheckVersion, CheckVersion, VT_BSTR, VTS_NONE)
+	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "GetLocalMac", dispidGetLocalMac, GetLocalMac, VT_BSTR, VTS_NONE)
 END_DISPATCH_MAP()
 
 
@@ -213,10 +215,16 @@ void CKeWebCamOCXCtrl::OnDraw(
 	if (!pdc)
 		return;
 
+
 	// TODO: 用您自己的绘图代码替换下面的代码。
 	//pdc->FillRect(rcBounds, CBrush::FromHandle((HBRUSH)GetStockObject(WHITE_BRUSH)));
 	//pdc->Ellipse(rcBounds);
-	m_pannel.MoveWindow(rcBounds,TRUE);
+	if (theApp.g_PlayWnd != NULL)
+	{
+			TRACE("test ondraw!\r\n");
+		m_pannel.MoveWindow(rcBounds,TRUE);
+	}
+	
 }
 
 
@@ -251,7 +259,7 @@ int CKeWebCamOCXCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (COleControl::OnCreate(lpCreateStruct) == -1)
 		return -1;
-
+	
 	theApp.g_pMainWnd = this;
 	m_pannel.Create(IDD_DIALOG_PANNEL,this);
 	theApp.g_PlayWnd = &m_pannel;
@@ -260,6 +268,7 @@ int CKeWebCamOCXCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	//theApp.g_cmdSocket = &m_socketSvr;
 	//theApp.g_cmdSocket->Init();
 	iniFile =GetCurrentPathW() + _T("WebClient.ini");
+	theApp.iniFile = this->iniFile;
 	LOG_DEBUG("CKeWebCamOCXCtrl::OnCreate end!");
 	return 0;
 }
@@ -309,20 +318,18 @@ BSTR CKeWebCamOCXCtrl::StartRealTimeVideo(LONG nCameraID)
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	CString strResult;
-
-	int isPlaying;
 	int ret = KE_SUCCESS;
-	COneCamera * pCamera = theApp.g_PlayWnd->GetOnePlayer(nCameraID,&isPlaying);
-	if (isPlaying == 0)
+	COnePlayer * pCamera = theApp.g_PlayWnd->GetOnePlayer(nCameraID);
+	if (pCamera == NULL)
 	{
-		if (pCamera->IsPlaying())
-		{
-			pCamera->StopRTPlay(true);
-		}
+		pCamera =theApp.g_PlayWnd->ReuseActivePlayer(nCameraID);
+
 		ret = pCamera->StartPlay();
 	}
-//pCamera->StopRTPlay(true);
-//ret = pCamera->StartPlay();
+	else{
+		pCamera->SetActive();
+	}
+
 	Json::Value root;
 	root["retValue"] = ret;
 	root["retDes"] = GetKEErrorDescriptA(ret);
@@ -354,7 +361,7 @@ void CKeWebCamOCXCtrl::OnDestroy()
 	//  在此处添加消息处理程序代码
 	theApp.g_PlayWnd->StopAllRTPlay();
 	CMyAVPlayer::FreePlayer();
-	//
+	
 	
 }
 
@@ -368,8 +375,12 @@ void CKeWebCamOCXCtrl::OnSetClientSite()
 LRESULT CKeWebCamOCXCtrl::OnRTVideoStop( WPARAM wParam, LPARAM lParam )
 {
 	int cameraID = (int)wParam;
-	COneCamera * camera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
-	camera->StopRTPlay();
+	COnePlayer * camera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
+	if (camera != NULL)
+	{
+		camera->StopRTPlay();
+	}
+	
 	int errorCode = (int)lParam;
 
 	Json::Value root;
@@ -419,27 +430,15 @@ BSTR CKeWebCamOCXCtrl::ControlPTZ(LONG cameraID, BYTE PTZCmd, BYTE iSpeed, BYTE 
 	return strResult.AllocSysString();
 }
 
-BSTR CKeWebCamOCXCtrl::LoginServer(LPCTSTR userName, LPCTSTR password, LPCTSTR svrIpAddr)
+BSTR CKeWebCamOCXCtrl::LoginServer(LPCTSTR userName, LPCTSTR password)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	CString strResult;
 	int ret = 0;
-// 	if (!theApp.g_cmdSocket->IsConnect())
-// 	{
-// 		if (theApp.g_cmdSocket->ConnectToServer(svrIpAddr))
-// 		{
-// 			ret = theApp.g_cmdSocket->LoginServer(userName,password);	
-// 		}
-// 		else
-// 		{
-// 			ret = KE_CONNECT_SERVER_ERROR;
-// 		}
-// 	}
-// 	else
-// 	{
-// 		ret = theApp.g_cmdSocket->LoginServer(userName,password);	
-// 	}
+
+	ret = theApp.g_cmd->LoginServer(userName,password);	
+
 	Json::Value root;
 	root["retValue"] = ret;
 	root["retDes"] = GetKEErrorDescriptA(ret);
@@ -483,7 +482,7 @@ LRESULT CKeWebCamOCXCtrl::OnCamStatusReport( WPARAM wParam, LPARAM lParam )
 
 	if ((report->reportType==2|| report->reportType==4)&& report->cameraID != 0)//停止视频
 	{
-		COneCamera * camera = theApp.g_PlayWnd->GetCamera(report->cameraID);
+		COnePlayer * camera = theApp.g_PlayWnd->GetOnePlayer(report->cameraID);
 		if (camera != NULL)
 		{
 			camera->StopRTPlay();
@@ -503,7 +502,7 @@ BSTR CKeWebCamOCXCtrl::TakeSnapshot(LONG nCameraID)
 
 	CString strResult;
 	int ret = 0;
-	COneCamera * pCamera = theApp.g_PlayWnd->GetCamera(nCameraID);
+	COnePlayer * pCamera = theApp.g_PlayWnd->GetOnePlayer(nCameraID);
 	CString fullPath;
 	if (pCamera == NULL)
 	{
@@ -511,25 +510,6 @@ BSTR CKeWebCamOCXCtrl::TakeSnapshot(LONG nCameraID)
 	}
 	else
 	{
-// 		SYSTEMTIME sys;
-// 		GetLocalTime( &sys );
-// 		//镜头id+年月日时分秒+毫秒
-// 		CString fileName ;
-// 		fileName.Format(_T("%d_%d%d%d%d%d%d%d.bmp"), pCamera->m_cameraID,
-// 			sys.wYear,sys.wMonth,sys.wDay,sys.wHour,sys.wMinute,sys.wSecond,sys.wMilliseconds);
-// 		CString filePath;
-// 		if (m_SnapFilePath.GetAt(m_SnapFilePath.GetLength()-1)!=_T('\\'))
-// 		{
-// 			m_SnapFilePath.AppendChar(_T('\\'));
-// 		}
-// 		filePath.Format(_T("%s%d\\"),m_SnapFilePath,pCamera->m_cameraID);
-// 		
-// 		if (!FolderExist(filePath))
-// 		{
-// 			CreateFolderEx(filePath);
-// 		}
-// 
-// 		fullPath = filePath + fileName;
 		fullPath = GetCamTimeFileName(pCamera->m_cameraID,_T("bmp"),m_SnapFilePath);
 		ret = pCamera->m_AVIPlayer->CapPic(fullPath.GetBuffer(0));
 		if (ret != 0)
@@ -580,7 +560,7 @@ BSTR CKeWebCamOCXCtrl::StartRealTimeAudio(LONG cameraID)
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 	CString strResult;
 	int ret = 0;
-	COneCamera * pCamera = theApp.g_PlayWnd->GetCamera(cameraID);
+	COnePlayer * pCamera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
 	if (pCamera == NULL || !pCamera->IsPlaying())
 	{
 		ret = KE_RTV_NOPLAY;
@@ -589,7 +569,9 @@ BSTR CKeWebCamOCXCtrl::StartRealTimeAudio(LONG cameraID)
 	{
 		//先停止其他监听
 		theApp.g_PlayWnd->StopAllAudio();
-		ret = pCamera->m_MediaSocket->ReqestMediaData(pCamera->m_cameraID,Media_Vedio|Media_Listen);
+		CMediaSocket * pMedia = theApp.g_cmd->GetMediaSocket(pCamera->m_cameraID);
+		ret = pMedia->ReqestMediaData(pCamera->m_cameraID,CMediaSocket::Media_Vedio|CMediaSocket::Media_Listen);
+		//ret = pCamera->m_MediaSocket->ReqestMediaData(pCamera->m_cameraID,CMediaSocket::Media_Vedio|CMediaSocket::Media_Listen);
 	}
 	Json::Value root;
 	root["retValue"] = ret;
@@ -607,14 +589,16 @@ BSTR CKeWebCamOCXCtrl::StopRealTimeAudio(LONG cameraID)
 	CString strResult;
 	
 	int ret = 0;
-	COneCamera * pCamera = theApp.g_PlayWnd->GetCamera(cameraID);
+	COnePlayer * pCamera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
 	if (pCamera == NULL || !pCamera->IsPlaying())
 	{
 		ret = KE_RTV_NOPLAY;
 	}
 	else
 	{
-		ret = pCamera->m_MediaSocket->ReqestMediaData(pCamera->m_cameraID,Media_Vedio);
+		//ret = pCamera->m_MediaSocket->ReqestMediaData(pCamera->m_cameraID,CMediaSocket::MediaType::Media_Vedio);
+		CMediaSocket * pMedia = theApp.g_cmd->GetMediaSocket(pCamera->m_cameraID);
+		ret = pMedia->ReqestMediaData(pCamera->m_cameraID,CMediaSocket::Media_Vedio);
 	}
 	Json::Value root;
 	root["retValue"] = ret;
@@ -631,18 +615,20 @@ BSTR CKeWebCamOCXCtrl::StartAudioTalk(LONG cameraID)
 	CString strResult;
 
 	int ret = 0;
-	COneCamera * pCamera = theApp.g_PlayWnd->GetCamera(cameraID);
+	COnePlayer * pCamera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
 	if (pCamera == NULL || !pCamera->IsPlaying())
 	{
 		ret = KE_RTV_NOPLAY;
 	}
 	else
 	{
-		ret = pCamera->m_MediaSocket->ReqestMediaData(pCamera->m_cameraID,Media_Vedio|Media_Listen|Media_Talk);
+		CMediaSocket * pMedia = theApp.g_cmd->GetMediaSocket(pCamera->m_cameraID);
+		ret = pMedia->ReqestMediaData(pCamera->m_cameraID,
+			CMediaSocket::Media_Vedio|CMediaSocket::Media_Listen|CMediaSocket::Media_Talk);
 		if (ret == KE_SUCCESS)
 		{
 			AudioTalkThread::GetInstanse()->Stop();
-			AudioTalkThread::GetInstanse()->Initialize(pCamera->m_MediaSocket,pCamera->m_cameraID);
+			AudioTalkThread::GetInstanse()->Initialize(pMedia,cameraID);
 			AudioTalkThread::GetInstanse()->Start();
 		}
 	}
@@ -662,7 +648,7 @@ BSTR CKeWebCamOCXCtrl::StopAudioTalk(LONG cameraID)
 
 	CString strResult;
 	int ret = 0;
-	COneCamera * pCamera = theApp.g_PlayWnd->GetCamera(cameraID);
+	COnePlayer * pCamera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
 	if (pCamera == NULL || !pCamera->IsPlaying())
 	{
 		ret = KE_RTV_NOPLAY;
@@ -670,7 +656,8 @@ BSTR CKeWebCamOCXCtrl::StopAudioTalk(LONG cameraID)
 	else
 	{
 		//pCamera->m_AVIPlayer->CloseSound();
-		ret = pCamera->m_MediaSocket->ReqestMediaData(pCamera->m_cameraID,Media_Vedio);
+		CMediaSocket * pMedia = theApp.g_cmd->GetMediaSocket(pCamera->m_cameraID);
+		ret = pMedia->ReqestMediaData(pCamera->m_cameraID,CMediaSocket::Media_Vedio);
 		if (ret == KE_SUCCESS)
 		{
 			AudioTalkThread::GetInstanse()->Stop();
@@ -710,7 +697,7 @@ BSTR CKeWebCamOCXCtrl::StartRecord(LONG cameraID)
 	CString strResult;
 	// 在此添加调度处理程序代码
 	int ret = 0;
-	COneCamera * pCamera = theApp.g_PlayWnd->GetCamera(cameraID);
+	COnePlayer * pCamera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
 	CString fullPath;
 	if (pCamera == NULL)
 	{
@@ -718,33 +705,12 @@ BSTR CKeWebCamOCXCtrl::StartRecord(LONG cameraID)
 	}
 	else
 	{
-// 		SYSTEMTIME sys;
-// 		GetLocalTime( &sys );
-// 		//镜头id+年月日时分秒+毫秒
-// 		CString fileName ;
-// 		fileName.Format(_T("%d_%04d%02d%02d%02d%02d%02d%03d.h264"), pCamera->m_cameraID,
-// 			sys.wYear,sys.wMonth,sys.wDay,sys.wHour,sys.wMinute,sys.wSecond,sys.wMilliseconds);
-// 		CString filePath;
-// 		if (m_RecordFilePath.GetAt(m_RecordFilePath.GetLength()-1)!=_T('\\'))
-// 		{
-// 			m_RecordFilePath.AppendChar(_T('\\'));
-// 		}
-// 		filePath.Format(_T("%s%d\\"),m_RecordFilePath,pCamera->m_cameraID);
-// 
-// 		if (!FolderExist(filePath))
-// 		{
-// 			CreateFolderEx(filePath);
-// 		}
-// 
-// 		fullPath = filePath + fileName;
+		CMediaSocket * pMedia = theApp.g_cmd->GetMediaSocket(pCamera->m_cameraID);
 		fullPath = GetCamTimeFileName(pCamera->m_cameraID,_T("h264"),m_RecordFilePath);
 		std::string strPath = tstr_to_str(fullPath.GetBuffer(0));
-		ret = pCamera->m_MediaSocket->StartRecord(strPath.c_str());
-		if (ret != 0)
-		{
-			ret = KE_FAILED;
-		}
-		ret = KE_SUCCESS;
+		pMedia->StopRecord();
+		ret = pMedia->StartRecord(strPath.c_str());
+
 	}
 
 	Json::Value root;
@@ -765,14 +731,15 @@ BSTR CKeWebCamOCXCtrl::StopRecord(LONG cameraID)
 
 	//  在此添加调度处理程序代码
 	int ret;
-	COneCamera * pCamera = theApp.g_PlayWnd->GetCamera(cameraID);
+	COnePlayer * pCamera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
+	CMediaSocket * pMedia = theApp.g_cmd->GetMediaSocket(pCamera->m_cameraID);
 	if (pCamera == NULL)
 	{
 		ret = KE_FAILED;
 	}
 	else
 	{
-		ret = pCamera->m_MediaSocket->StopRecord();
+		ret = pMedia->StopRecord();
 	}
 	Json::Value root;
 	root["retValue"] = ret;
@@ -811,15 +778,28 @@ BSTR CKeWebCamOCXCtrl::InitailCtrl(LONG platform)
 	CString strResult;
 	// 在此添加调度处理程序代码
 	int ret = KE_SUCCESS;
+// 	if (theApp.g_cmd != NULL)
+// 	{
+// 		delete theApp.g_cmd;
+// 		theApp.g_cmd = NULL;
+// 	}
 	switch(platform)
 	{
 	case 1:theApp.g_cmd = new CP2PCmdSocket();break;
+	case 2:theApp.g_cmd = new CCmdSocket();break;
 	default:
 		theApp.g_cmd = new CenterCommand();break;
 	}
 	theApp.g_cmd->platformType = platform;
+
 	//建立心跳定时器,时间间隔为30s  
-	m_HeartBeatTimer=SetTimer(1,10000,NULL);  
+	if (this->GetSafeHwnd() != NULL)
+	{
+		m_HeartBeatTimer=SetTimer(1,10000,NULL);  
+	}
+	
+	iniFile =GetCurrentPathW() + _T("WebClient.ini");
+	theApp.iniFile = this->iniFile;
 
 	CIniFile ini;
 	bool retValue = ini.Load(iniFile);
@@ -854,7 +834,7 @@ BSTR CKeWebCamOCXCtrl::ConnectServer(LPCTSTR svrAddr, LONG svrPort, LONG clientI
 
 	// 在此添加调度处理程序代码
 	int ret  = theApp.g_cmd->ConnectServer(svrAddr,svrPort);
-	if (ret == KE_SUCCESS)
+	if (ret == KE_SUCCESS && clientID != 0)
 	{
 		ret = theApp.g_cmd->SetClientID(clientID);
 	}
@@ -883,7 +863,7 @@ BSTR CKeWebCamOCXCtrl::QueryRecordFileList(LONG cameraID, LONG startTime, LONG e
 	root["retDes"] = theApp.g_cmd->GetErrorDesA(ret);
 	Json::Value arrayObj;
 	Json::Value item;
-	for (int i=0;i< recordFileList.size();i++)
+	for (unsigned int i=0;i< recordFileList.size();i++)
 	{
 		RecordFileInfo info = recordFileList[i];
 		item["fileNo"] = i;
@@ -931,11 +911,12 @@ BSTR CKeWebCamOCXCtrl::GetDevWifiAP(LONG cameraID)
 	{
 		Json::Value arrayObj;
 		Json::Value item;
-		for (int i=0;i< apList.size();i++)
+		for (unsigned int i=0;i< apList.size();i++)
 		{
 			KEDevAPListItem listItem = apList[i];
 			item["listNo"] = i;
-			item["essid"] = listItem.essid;
+			std::string tmpStr = UTF8ToGB2312(listItem.essid);
+			item["essid"] =tmpStr;
 			item["encryptType"] = listItem.encryptType;
 			item["wepPlace"] = listItem.wepPlace;
 			item["pwdFormat"] = listItem.pwdFormat;
@@ -990,8 +971,46 @@ BSTR CKeWebCamOCXCtrl::CheckVersion(void)
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	CString strResult;
+	
+	//  在此添加调度处理程序代码
+	CString url;
+	CString ver;
+	int ret = theApp.g_cmd->QueryVersion(ver,url);
+	bool update = false;
+	int verServer = 0;
+	int verLoacl = _wVerMajor*1000+_wVerMinor;
+	if (ret == KE_SUCCESS )
+	{
+			int dotPos = ver.Find('.');
+			int majorVer = _ttoi(ver.Left(dotPos));
+			int minorVer = _ttoi(ver.Right(dotPos));
+			verServer  = majorVer*1000 + minorVer;
+			if (verLoacl < verServer)
+			{
+				update = true;
+			}
+	}
+	Json::Value root;
+	root["verSvr"] =  verServer;
+	root["verLocal"] = verLoacl;
+	root["update"] = update;
+	root["url"] =tstr_to_str( url.GetString());
+	std::string out = root.toStyledString();
+	strResult = out.c_str();
+
+	return strResult.AllocSysString();
+}
+
+BSTR CKeWebCamOCXCtrl::GetLocalMac(void)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	CString strResult;
 
 	// TODO: 在此添加调度处理程序代码
-
+	Json::Value root;
+	root["mac"] ="";
+	std::string out = root.toStyledString();
+	strResult = out.c_str();
 	return strResult.AllocSysString();
 }

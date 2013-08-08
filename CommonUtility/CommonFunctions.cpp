@@ -3,6 +3,7 @@
 #include "CommonFunctions.h"
 #include <stdio.h>
 
+
 /**********************************************************************************************************************
  *Function atoh
  * input:str:	[in] two bytes char
@@ -253,3 +254,36 @@ BOOL CreateFolderEx( const CString& szPath )
 	return bSuccess;
 }
 
+std::string Convert(const char* strIn, int sourceCodepage, int targetCodepage)
+{
+	int len=strlen(strIn);
+	int unicodeLen=MultiByteToWideChar(sourceCodepage,0,strIn,-1,NULL,0);
+	wchar_t* pUnicode;
+	pUnicode=new wchar_t[unicodeLen+1];
+	memset(pUnicode,0,(unicodeLen+1)*sizeof(wchar_t));
+	MultiByteToWideChar(sourceCodepage,0,strIn,-1,(LPWSTR)pUnicode,unicodeLen);
+	char * pTargetData = NULL;
+	int targetLen=WideCharToMultiByte(targetCodepage,0,(LPWSTR)pUnicode,-1,(char *)pTargetData,0,NULL,NULL);
+	pTargetData=new char[targetLen+1];
+	memset(pTargetData,0,targetLen+1);
+	WideCharToMultiByte(targetCodepage,0,(LPWSTR)pUnicode,-1,pTargetData,targetLen,NULL,NULL);
+	
+	std::string result = pTargetData;
+	delete [] pUnicode;
+	delete [] pTargetData;
+
+	return result;
+}
+
+
+//UTF-8 תΪ GB2312
+std::string UTF8ToGB2312(const char *pText)
+{
+	return 	Convert(pText,CP_UTF8,CP_ACP);
+}
+
+//GB2312 תΪ UTF-8
+std::string GB2312ToUTF8(const char *pText)
+{
+	return Convert(pText,CP_ACP,CP_UTF8);
+}

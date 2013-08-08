@@ -8,6 +8,7 @@ CenterCommand::CenterCommand(void)
 
 CenterCommand::~CenterCommand(void)
 {
+
 }
 
 std::string CenterCommand::GetErrorDesA( int errorCode )
@@ -87,21 +88,22 @@ int CenterCommand::HeartBeat()
 {
 	return KE_FUNCTION_NOTSUPPORT;
 }
-
+//·µ»ØclientID£¬ÎÞ·µ»Ø0
 int CenterCommand::GetClientID()
 {
-	return KE_FUNCTION_NOTSUPPORT;
+	return 0;
 }
 
 CMediaSocket * CenterCommand::GetMediaSocket( int cameraID )
 {
-	COneCamera * tmpCamera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
-	CMediaSocket * media = tmpCamera->m_MediaSocket;//CMediaSocket::GetMediaSocket(videoID,channelNo,true);
-	if (media == NULL)
-	{
-		media = new CMediaSocket;
-		tmpCamera->m_MediaSocket = media;
-	}
+	//COneCamera * tmpCamera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
+	//CMediaSocket * media = tmpCamera->m_MediaSocket;
+	CMediaSocket * media = CMediaSocket::GetVideoSvrMedia(cameraID>>8);
+// 	if (media == NULL)
+// 	{
+// 		media = new CMediaSocket;
+// 		tmpCamera->m_MediaSocket = media;
+// 	}
 	return media;
 }
 
@@ -137,3 +139,24 @@ int CenterCommand::ReportCamStatus( CamStatusReport report )
 	theApp.g_pMainWnd->PostMessage(WM_CAMSTATUSREPORT,0,(LPARAM)pReport);
 	return KE_SUCCESS;
 }
+
+CMyAVPlayer * CenterCommand::GetAVIPlayer( int cameraID )
+{
+	COnePlayer * pCamera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
+	if (pCamera == NULL)
+	{
+		pCamera =theApp.g_PlayWnd->ReuseActivePlayer(cameraID);
+	}
+	return pCamera->m_AVIPlayer;
+}
+
+int CenterCommand::StopView( int cameraID )
+{
+return KE_FUNCTION_NOTSUPPORT;
+}
+
+int CenterCommand::QueryVersion( CString & version ,CString & url )
+{
+	return KE_FUNCTION_NOTSUPPORT;
+}
+

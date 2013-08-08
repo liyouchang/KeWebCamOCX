@@ -86,6 +86,15 @@ const int new_CIF_ID_16[16]  = { 0,  0,  2,  2,  4,  4,  6,  6,  8,  8, 10, 10, 
 #define TOGGLED_FrameColor RGB(200, 200, 200)//clSilver
 #define clBlue	RGB(0, 0, 255)
 #define clBlack	RGB(20,20, 20)
+#define  clWhite RGB(0, 0, 0)	
+
+#define WM_HEARTBEATSTOP (WM_USER+1029)
+#define WM_RTVIDEOSTOP (WM_USER+1030)
+#define WM_CAMSTATUSREPORT (WM_USER + 1031)
+#define WM_TREESTRUCTNOTIFY (WM_USER + 1032)
+#define  WM_PLAYOVER  (WM_USER +2000)
+
+
 
 enum CamStatusReportType
 {

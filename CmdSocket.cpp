@@ -140,7 +140,7 @@ CCmdSocket::~CCmdSocket(void)
 	case KEMSG_TYPE_LOGIN:
 		LoginMsgResp(msgData);
 		break;
-	case KEMSG_TYPE_REALTIMEDATA:
+	case KEMSG_08_REALTIMEDATA:
 		RecvRealTimeMedia(msgData);
 		break;
 	case KEMSG_TYPE_MalfunctionAlert:
@@ -153,6 +153,9 @@ CCmdSocket::~CCmdSocket(void)
 		break;
 	case  KEMSG_TYPE_VideoSvrOnline:
 		RecvVideoSvrOnline(msgData);
+		break;
+	case KEMSG_08_HistoryData:
+		RecvHistoryData(msgData);
 		break;
 	default:
 		break;
@@ -238,11 +241,6 @@ CCmdSocket::~CCmdSocket(void)
 	 memcpy(encryptedData,szMD5,ENCRYPTED_DATA_LEN);
  }
 
- int CCmdSocket::StartView( int vedioID,int ChannelID,long PlayHwd )
- {
-	
-	return 0;
- }
 
  //************************************
  // Method:    SendRealTimeDataMsg
@@ -267,7 +265,7 @@ CCmdSocket::~CCmdSocket(void)
 	 PKEMsgRequestDataReq pReqMsg;
 	 pReqMsg = (PKEMsgRequestDataReq)&msgSend[0];
 	 pReqMsg->protocal = PROTOCOL_HEAD;
-	 pReqMsg->msgType = KEMSG_TYPE_REALTIMEDATA;
+	 pReqMsg->msgType = KEMSG_08_REALTIMEDATA;
 	 pReqMsg->msgLength = msgLen;
 	 pReqMsg->clientID = m_clientID;
 	 pReqMsg->channelNo = channelNo;
@@ -280,6 +278,7 @@ CCmdSocket::~CCmdSocket(void)
 	 {
 		 return KE_SOCKET_WRITEERROR;
 	 }
+
 	 return KE_SUCCESS;
  }
 
@@ -293,7 +292,7 @@ CCmdSocket::~CCmdSocket(void)
 	int online = pMsg->online;
 	int channelNo = pMsg->channelNo;
 	int cameraID = MakeCameraID(videoID,channelNo);
-	if (online >1)
+	if (online >2)
 	{
 		LOG_INFO("the video server is offline!");	
 		theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,KE_RTV_BOTHOFFLINE);
@@ -305,16 +304,8 @@ CCmdSocket::~CCmdSocket(void)
 		theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,KE_RTV_BOTHOFFLINE);
 		return;
 	}
-	int mediaSvrType;
-	
-	COneCamera * tmpCamera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
-	CMediaSocket * media = tmpCamera->m_MediaSocket;//CMediaSocket::GetMediaSocket(videoID,channelNo,true);
-	if (media == NULL)
-	{
-		media = new CMediaSocket;
-		media->Init();
-		tmpCamera->m_MediaSocket = media;
-	}
+
+	CMediaSocket * media = CMediaSocket::GetVideoSvrMedia(videoID);
 	int ret;
 	bool connected = false;
 
@@ -326,7 +317,7 @@ CCmdSocket::~CCmdSocket(void)
 		}
 		else
 		{
-			ret = media->ReqestMediaData(cameraID,Media_Vedio);
+			ret = media->ReqestMediaData(cameraID,CMediaSocket::Media_Vedio);
 			if (ret != KE_SUCCESS)
 			{
 				theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,ret);
@@ -342,7 +333,7 @@ CCmdSocket::~CCmdSocket(void)
 		}
 		else
 		{
-			ret = media->ReqestMediaData(cameraID,Media_Vedio);
+			ret = media->ReqestMediaData(cameraID,CMediaSocket::Media_Vedio);
 			if (ret != KE_SUCCESS)
 			{
 				theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,ret);
@@ -564,3 +555,213 @@ CCmdSocket::~CCmdSocket(void)
 	}
 	return -1;
  }
+
+ int CCmdSocket::ConnectServer( CString svrIp,int svrPort )
+ {
+	this->m_serverPort.Format(_T("%d"),svrPort);
+	if (this->ConnectToServer(svrIp))
+	{
+		return KE_SUCCESS;
+	}
+	else
+	{
+		return KE_CONNECT_SERVER_ERROR;
+	}
+
+ }
+
+int CCmdSocket::StartView( int cameraID )
+{
+	int vid = cameraID / 256;
+	int cid = cameraID % 256;
+
+	return SendRealTimeDataMsg(vid,cid,0,0);
+}
+
+int CCmdSocket::StopView( int cameraID )
+{
+	CMediaSocket *media = GetMediaSocket(cameraID);	
+	media->CloseConnect();
+	return KE_SUCCESS;
+}
+
+int CCmdSocket::PTZControl( int cameraID, BYTE ctrlType ,BYTE speed ,BYTE data )
+{
+	return SendPTZControlMsg(cameraID,ctrlType,speed,data);
+}
+
+
+
+int CCmdSocket::RequestHistoryData( int cameraID,int startTime,int endTime,int fileType,int targetType/*= 2*/ )
+{
+	if (!m_SocketClient.IsOpen())
+	{
+		return KE_SOCKET_NOTOPEN;
+	}
+	int devID = cameraID/256;
+	int channelNo = cameraID%256;
+	std::vector<BYTE> msgSend;
+	int msgLen = sizeof(KEHistoryDataReq);
+	msgSend.resize(msgLen,0);
+	KEHistoryDataReq* pReqMsg;
+	pReqMsg = (KEHistoryDataReq *)&msgSend[0];
+	pReqMsg->protocal = PROTOCOL_HEAD;
+	pReqMsg->msgType = KEMSG_08_HistoryData;
+	pReqMsg->msgLength = msgLen;
+	pReqMsg->clientID = m_clientID;
+	pReqMsg->channelNo = channelNo;
+	pReqMsg->videoID = devID;
+	CTime st(startTime);
+	CTime et(endTime);
+	pReqMsg->startTime[0] = st.GetYear()%2000;
+	pReqMsg->startTime[1] = st.GetMonth();
+	pReqMsg->startTime[2] = st.GetDay();
+	pReqMsg->startTime[3] = st.GetHour();
+	pReqMsg->startTime[4] = st.GetMinute();
+	pReqMsg->startTime[5] = st.GetSecond();
+	pReqMsg->endTime[0] = et.GetYear()%2000;
+	pReqMsg->endTime[1] = et.GetMonth();
+	pReqMsg->endTime[2] = et.GetDay();
+	pReqMsg->endTime[3] = et.GetHour();
+	pReqMsg->endTime[4] = et.GetMinute();
+	pReqMsg->endTime[5] = et.GetSecond();
+
+	pReqMsg->fileType = fileType;
+	pReqMsg->alarmNo = 0;
+	pReqMsg->targetType = targetType;
+
+	int ret = this->Write(&msgSend[0],msgLen);
+	if (ret != msgLen)
+	{
+		return KE_SOCKET_WRITEERROR;
+	}
+
+	ret = this->WaitRecvMsg(KEMSG_08_HistoryData,5000);
+	return ret;
+}
+
+void CCmdSocket::RecvHistoryData( const BYTE * msgData )
+{	
+	KEHistoryDataResp * pMsg = (KEHistoryDataResp *)msgData;
+	int cameraID = (pMsg->videoID<<8)+(pMsg->channelNo&0x7F);
+	CMediaSocket *media = GetMediaSocket(cameraID);
+	static bool startRecv = false;
+	if (!startRecv )//连接媒体服务器
+	{
+		this->mediaTransIp = pMsg->transIp;
+		this->mediaSvrIp = pMsg->vsIp;
+		this->mediaOnline = pMsg->online;
+		if (pMsg->target == 2)//
+		{
+		}
+		else if (pMsg->target == 3)
+		{
+			LOG_ERROR("Donot support target 3 "<< pMsg->target);
+			this->SetRecvMsg(KEMSG_08_HistoryData,KE_FUNCTION_NOTSUPPORT);
+			return;
+		}
+		else
+		{
+			LOG_ERROR("Receive HistoryData target type error which is   "<< pMsg->target);
+			this->SetRecvMsg(KEMSG_08_HistoryData,KE_FAILED);
+			return;
+		}
+	}//end if
+	
+	if (pMsg->msgLength == sizeof(KEHistoryDataResp)) //如果只收到消息头，表示文件内容结束
+	{
+		this->SetRecvMsg(KEMSG_08_HistoryData,KE_SUCCESS);
+		startRecv = false;
+		return;
+	}
+
+	startRecv = true;
+
+	int fileInfoNum = (pMsg->msgLength-sizeof(KEHistoryDataResp))/100;
+	PKERecordFileInfo pRecordFileInfo = (PKERecordFileInfo) (msgData+sizeof(KEHistoryDataResp));
+
+	for (int i=0;i<fileInfoNum;i++,pRecordFileInfo++)
+	{
+		RecordFileInfo fileInfo;
+		fileInfo.fileNo = pRecordFileInfo->fileNo;
+		CTime st(pRecordFileInfo->startTime[0]+2000,pRecordFileInfo->startTime[1],pRecordFileInfo->startTime[2],
+			pRecordFileInfo->startTime[3],pRecordFileInfo->startTime[4],pRecordFileInfo->startTime[5]);
+		CTime et(pRecordFileInfo->endTime[0]+2000,pRecordFileInfo->endTime[1],pRecordFileInfo->endTime[2],
+			pRecordFileInfo->endTime[3],pRecordFileInfo->endTime[4],pRecordFileInfo->endTime[5]);
+
+		fileInfo.startTime = st.GetTime();
+		fileInfo.endTime = et.GetTime();
+		fileInfo.fileSize = pRecordFileInfo->fileSize;
+		memcpy(fileInfo.fileData,pRecordFileInfo->data,80);
+		media->recordFileList.push_back(fileInfo);
+	}
+	if (pMsg->resp == 6)
+	{
+		this->SetRecvMsg(KEMSG_08_HistoryData,KE_SUCCESS);
+		startRecv = false;
+	}
+}
+
+int CCmdSocket::ConnectToMedia( int cameraID )
+{
+
+	CMediaSocket *media = GetMediaSocket(cameraID);
+	if (mediaOnline >2 || (mediaSvrIp==0 &&  mediaTransIp == 0))
+	{
+		LOG_ERROR("the video server is offline!");	
+		return KE_FAILED;
+	}
+	if (mediaSvrIp != 0 )//连接视频服务器
+	{
+		if(media->ConnectToServer(mediaSvrIp,22616,1,m_clientID))
+		{
+			return KE_SUCCESS;	
+		}
+	}
+	if ( mediaTransIp != 0)//连接转发服务器
+	{
+		if(!media->ConnectToServer(mediaTransIp,22615,2,m_clientID))
+		{
+			return KE_SUCCESS;
+		}
+	}
+	LOG_ERROR("connect media server error!");	
+	return KE_CONNECT_SERVER_ERROR;
+}
+
+int CCmdSocket::GetRecordFileList( int cameraID,int startTime,int endTime,int fileType,vector<RecordFileInfo> & fileInfoList )
+{
+	CMediaSocket *media = GetMediaSocket(cameraID);
+	media->recordFileList.clear();
+	int ret = RequestHistoryData(cameraID,startTime,endTime,fileType,2);
+	if (ret == KE_SUCCESS)
+	{
+		fileInfoList = media->recordFileList;
+	}
+	return ret;
+}
+
+int CCmdSocket::PlayRemoteRecord( int cameraID,int fileNo )
+{	
+	int devSvrID = cameraID/256;
+	int ret = KE_SUCCESS;
+	//断开原有连接
+	CMediaSocket *media = GetMediaSocket(cameraID);
+	if (fileNo == -1)
+	{
+		media->CloseConnect();
+		return KE_SUCCESS;
+	}
+
+	ret = ConnectToMedia(cameraID) ;
+	if (ret != KE_SUCCESS)
+	{
+		return ret;
+	}
+	//media = GetMediaSocket(cameraID);
+
+	ret = media->RemoteRecordPlay(cameraID,fileNo);
+	return ret;
+}
+
+

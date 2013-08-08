@@ -4,7 +4,7 @@
 #include "common.h"
 #include "OneCamera.h"
 #include "ClientDemon.h"
-
+#include "OnePlayer.h"
 // CWebCamPannel 对话框
 #include <map>
 #define DIVISION_MAX_CH16		4
@@ -29,7 +29,8 @@ public://重要的属性，需要被复制
 	int m_nActiveCamera;//当前选中的镜头
 	BOOL m_bFullScreen;
 	int m_FnDivision;//当前的分屏方法
-	COneCamera		m_camarray[CAM_MAX];
+	COnePlayer		m_camarray[CAM_MAX];
+	//COnePlayer	m_player[CAM_MAX];
 
 public:
 	CBrush m_brBkgnd;
@@ -77,8 +78,10 @@ protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 	DECLARE_MESSAGE_MAP()
 public:
-	COneCamera * GetOnePlayer(int cameraID,int * isPlaying = NULL);
-	COneCamera * GetCamera(int cameraID);
+	COnePlayer * GetOnePlayer(int cameraID);
+	COnePlayer * ReuseActivePlayer(int cameraID);
+	COnePlayer * GetActivePlayer();
+
 	afx_msg void OnStnClickedCamera0();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnDestroy();

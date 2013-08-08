@@ -16,7 +16,7 @@ CKeWebCamOCXApp theApp;
 
 const GUID CDECL BASED_CODE _tlid =
 		{ 0xFF2B2757, 0xE552, 0x4DA1, { 0x9E, 0x3C, 0x93, 0xBC, 0x40, 0xEF, 0x7E, 0xC3 } };
-const WORD _wVerMajor = 1;
+const WORD _wVerMajor = 2;
 const WORD _wVerMinor = 0;
 
 // CLSID_SafeItem - Necessary for safe ActiveX control
@@ -129,7 +129,7 @@ HRESULT UnRegisterCLSIDInCategory(REFCLSID clsid, CATID catid)
 BOOL CKeWebCamOCXApp::InitInstance()
 {
 	BOOL bInit = COleControlModule::InitInstance();
-
+	TRACE("InitInstance \r\n");
 	if (bInit)
 	{
 		//我的初始化

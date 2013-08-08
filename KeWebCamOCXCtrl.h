@@ -48,6 +48,7 @@ protected:
 // 调度和事件 ID
 public:
 	enum {
+		dispidGetLocalMac = 25L,
 		dispidCheckVersion = 24L,
 		dispidSetDevWifiAP = 23L,
 		dispidGetDevWifiAP = 22L,
@@ -84,13 +85,8 @@ protected:
 	
 public:
 	afx_msg void OnDestroy();
-public:
-
-	
-	HWND m_OldWndParent;
-	CRect m_rcRect;
-	WINDOWPLACEMENT m_OldWndPlacement;
 	virtual void OnSetClientSite();
+
 protected:
 	LRESULT OnRTVideoStop(WPARAM wParam, LPARAM lParam);
 	LRESULT OnHeartbeatStop(WPARAM wParam, LPARAM lParam);
@@ -102,7 +98,7 @@ protected:
 		FireEvent(eventidHeartBeatStop, EVENT_PARAM(VTS_BSTR), reason);
 	}
 	BSTR ControlPTZ(LONG cameraID, BYTE PTZCmd, BYTE iSpeed, BYTE iData);
-	BSTR LoginServer(LPCTSTR userName, LPCTSTR password, LPCTSTR svrIpAddr);
+	BSTR LoginServer(LPCTSTR userName, LPCTSTR password);
 	void OnSnapFilePathChanged(void);
 	CString m_SnapFilePath;
 
@@ -135,5 +131,6 @@ protected:
 	BSTR GetDevWifiAP(LONG cameraID);
 	BSTR SetDevWifiAP(LONG cameraID, LPCTSTR jsonParam);
 	BSTR CheckVersion(void);
+	BSTR GetLocalMac(void);
 };
 

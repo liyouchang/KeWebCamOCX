@@ -4,14 +4,10 @@
 #include "Recorder.h"
 #include <queue>
 #include <vector>
+#include <map>
+#include <list>
 #include "Communication/CloudCtrl.h"
-enum MediaType
-{
-	Media_None = 0x00,
-	Media_Vedio = 0x01,
-	Media_Listen = 0x02,
-	Media_Talk = 0x04
-};
+#include "KeMsg.h"
 
 enum MediaSvrType
 {
@@ -30,6 +26,11 @@ enum MediaMsgType
 	DevMsg_WifiStart = 0xD2,
 	DevMsg_EncryptKey= 0xE0,
 	DevMsg_Login=0xE1,
+	KEMSG_TYPE_VideoSvrOnline = 0x8B,//13.	请求视频服务器的状态
+	KEMSG_TYPE_MEDIATRANS = 0x8F,
+	KEMSG_TYPE_VIDEOSERVER = 0x0C,
+	KEMSG_TYPE_AUDIOSTREAM = 0x38,
+	KEMSG_TYPE_VIDEOSTREAM = 0x39,
 };
 
 
@@ -102,7 +103,7 @@ typedef struct _KEPlayRecordFileReq
 	char channelNo;
 	char fileType;//0 无用
 	int fileNo;//1 无用
-	KETimeStruct startTime;//无用
+	char startTime[6];//无用
 	int clientIp;//0或本机ip
 	char protocalType;//1 无用
 	char fileData[80];
@@ -174,10 +175,10 @@ struct KEDevGetSerialDataHead
 struct KEDevAPListItem
 {
 	char essid[32];
-	char encryptType;//0/1/2/3 关闭/wep/WPA-PSK/WPA2-PSK
-	char wepPlace;//WEP:1-4的数字 PSK:1- TKIP;2-AES
-	char pwdFormat;//0/1 WEP 16禁制/ASCII
-	char wifiStart;//0/1=关/开
+	char encryptType; // 0/1/2/3 关闭/wep/WPA-PSK/WPA2-PSK
+	char wepPlace;      //WEP:1-4的数字 PSK:1- TKIP;2-AES
+	char pwdFormat;  //0/1 WEP 16禁制/ASCII
+	char wifiStart;        //0/1=关/开
 	char password[32];
 };
 struct KEDevWifiCheckReq{
@@ -197,12 +198,12 @@ struct KEDevWifiCheckResp{
 };
 struct KEDevWifiStartReq{
 	BYTE protocal;
-	BYTE msgType;//0xD2
+	BYTE msgType; //0xD2
 	int msgLength;
 	int videoID;
 	int clientID;
 	KEDevAPListItem APItem;
-	char  pppoeUse;//0/1关/开
+	char  pppoeUse;  //0/1关/开
 	char pppoeAccount[30];
 	char pppoePWD[30];
 };
@@ -225,6 +226,12 @@ struct RecordFileInfo
 	int endTime;
 	int fileSize;
 	char fileData[80];
+};
+struct PlayFileInfo
+{
+	std::string fileName;
+	int fileSize;
+	int GetFileSizeKB(){return fileSize/1000;}
 };
 struct DevPTZInfo
 {
@@ -250,16 +257,26 @@ class CMediaSocket :
 	public CSocketThreadHandler
 {
 public:
+	enum MediaType
+	{
+		Media_None = 0x00,
+		Media_Vedio = 0x01,
+		Media_Listen = 0x02,
+		Media_Talk = 0x04
+	};
+public:
 	CMediaSocket(void);
 	virtual ~CMediaSocket(void);
 	virtual bool Init();
 	int  GetMediaSvrType(){return m_SvrType;}
 	bool ConnectToServer(CString severAddr, CString serverPort);
 	bool ConnectToServer(int serverAddr, int serverPort, int svrType = 1, int clientID = 0);
+	bool ConnectToServer();
 	virtual void CloseConnect();
 	int ReqestMediaData(int cameraID,int mediaType);
 	int RemoteRecordPlay(int cameraID,int fileNo);
 	int StartRecord(const char * fileName);
+	int StartRecord(int cameraID,int fileNo=-1);
 	int StopRecord();
 	int GetRecordFileList(int cameraID,int startTime,int endTime,int fileType,std::vector<RecordFileInfo> & fileInfoList);
 	int PTZControl(int cameraID, BYTE ctrlType ,BYTE speed );
@@ -278,6 +295,7 @@ protected://parents functions inherit
 protected:
 	int ReqestMediaTrans( int videoID, int channelNo, int mediaType);
 	int ReqestVideoServer(int videoID, int channelNo, int mediaType);
+	int RequestRecordPlayData(int cameraID,int fileNo);
 	int GetPTZParam(int cameraID);
 	virtual int OpenMedia(int cameraID,int mediaType);
 	int RequestEncryptKey(char * keyt);
@@ -293,7 +311,7 @@ protected://received message functions
 	void RecvSetDevWifiResp(const BYTE * msgData);
 	void RecvHeartBeat(const BYTE * msgData);
 protected:
-	CRecorder * m_Recorder;
+
 	CMyAVPlayer * m_AVPlayer;
 	int m_clientID;
 	CEvent mediaEvent;
@@ -302,7 +320,22 @@ protected:
 	int m_channelNo;
 	int m_SvrType;//1,视频服务器；2，媒体服务器 
 	DevPTZInfo ptzInfo;
+	
 public:
+	CRecorder * m_Recorder;
 	std::vector<RecordFileInfo> recordFileList;
 	std::vector<KEDevAPListItem> APList;
+	
+	std::list<int> downloadFileNoList;
+	std::list<PlayFileInfo> PlayFileInfoList;
+
+	int totalFile;
+	int downloaded;
+	int playedFile;
+
+public:
+	static std::map<int ,CMediaSocket*> videoSvrMediaMap;
+	static CMediaSocket * GetVideoSvrMedia(int videoSvrID);
+	static void DelVideoSvrMedia(int videoSvrID);
+	
 };
