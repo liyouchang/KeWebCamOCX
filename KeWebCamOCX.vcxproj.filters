@@ -1,0 +1,449 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Play">
+      <UniqueIdentifier>{7ab0a7ac-9561-4b1f-bf17-aa6d7f87a51d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dlg">
+      <UniqueIdentifier>{423ca7f0-be94-47a8-95bf-6b2d6ed3decc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CommonUtility">
+      <UniqueIdentifier>{a3431cc3-3b61-44f9-9c9a-4b4611271061}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="json">
+      <UniqueIdentifier>{1eba78db-c532-4c09-b351-19bf11095cd2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Communication">
+      <UniqueIdentifier>{962bd915-8b4a-4704-85f9-e526073e65df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ExtCtrl">
+      <UniqueIdentifier>{c84db96a-c131-464e-ae3a-3de272d19956}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="KeWebCamOCX.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="KeWebCamOCXCtrl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="KeWebCamOCXPropPage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="OleDropTargetEx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MyAVPlayer.cpp">
+      <Filter>Play</Filter>
+    </ClCompile>
+    <ClCompile Include="Recorder.cpp">
+      <Filter>Play</Filter>
+    </ClCompile>
+    <ClCompile Include="OneCamera.cpp">
+      <Filter>Dlg</Filter>
+    </ClCompile>
+    <ClCompile Include="OnePlayer.cpp">
+      <Filter>Dlg</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerCtrlDlg.cpp">
+      <Filter>Dlg</Filter>
+    </ClCompile>
+    <ClCompile Include="PopupPannel.cpp">
+      <Filter>Dlg</Filter>
+    </ClCompile>
+    <ClCompile Include="WebCamPannel.cpp">
+      <Filter>Dlg</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonUtility\CommonFunctions.cpp">
+      <Filter>CommonUtility</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonUtility\inifile.cpp">
+      <Filter>CommonUtility</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonUtility\LogModule.cpp">
+      <Filter>CommonUtility</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonUtility\Markup.cpp">
+      <Filter>CommonUtility</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonUtility\Md5A.cpp">
+      <Filter>CommonUtility</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonUtility\SimpleThreadBase.cpp">
+      <Filter>CommonUtility</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonUtility\SocketHandle.cpp">
+      <Filter>CommonUtility</Filter>
+    </ClCompile>
+    <ClCompile Include="include\json\json_reader.cpp">
+      <Filter>json</Filter>
+    </ClCompile>
+    <ClCompile Include="include\json\json_value.cpp">
+      <Filter>json</Filter>
+    </ClCompile>
+    <ClCompile Include="include\json\json_writer.cpp">
+      <Filter>json</Filter>
+    </ClCompile>
+    <ClCompile Include="CenterCommand.cpp">
+      <Filter>Communication</Filter>
+    </ClCompile>
+    <ClCompile Include="Communication\CloudCtrl.cpp">
+      <Filter>Communication</Filter>
+    </ClCompile>
+    <ClCompile Include="CmdSocket.cpp">
+      <Filter>Communication</Filter>
+    </ClCompile>
+    <ClCompile Include="Communication\CriticalLock.cpp">
+      <Filter>Communication</Filter>
+    </ClCompile>
+    <ClCompile Include="HeartBeatThread.cpp">
+      <Filter>Communication</Filter>
+    </ClCompile>
+    <ClCompile Include="MediaSocket.cpp">
+      <Filter>Communication</Filter>
+    </ClCompile>
+    <ClCompile Include="Communication\P2PCmdSocket.cpp">
+      <Filter>Communication</Filter>
+    </ClCompile>
+    <ClCompile Include="Communication\ResendThread.cpp">
+      <Filter>Communication</Filter>
+    </ClCompile>
+    <ClCompile Include="SocketThreadHandler.cpp">
+      <Filter>Communication</Filter>
+    </ClCompile>
+    <ClCompile Include="CButtonST_src\BkDialogST.cpp">
+      <Filter>ExtCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="CButtonST_src\BtnST.cpp">
+      <Filter>ExtCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayInfo.cpp">
+      <Filter>Dlg</Filter>
+    </ClCompile>
+    <ClCompile Include="NiceSlider.cpp">
+      <Filter>Dlg</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="KeWebCamOCX.def">
+      <Filter>源文件</Filter>
+    </None>
+    <None Include="bitmap1.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\bitmap4.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\bluenormal.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\bluenormalsel.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\DivLogo.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\fastplay.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\fastplay1.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\fastplay2.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\front.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\front1.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\front2.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="KeWebCamOCX.lic">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="KeWebCamOCXCtrl.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\mp_channel.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\mp_channel_active.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\mp_thumb.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\mp_thumb_active.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\normal.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\normalsel.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\open.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\open1.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\open2.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\pause.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\pause1.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\pause2.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\play.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\play1.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\play2.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\save.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\save1.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\save2.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\slide.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\slowplay1.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\sound.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\sound1.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\sound2.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\stop.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\stop1.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\RecordBtn\stop2.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="include\json\json_internalarray.inl">
+      <Filter>json</Filter>
+    </None>
+    <None Include="include\json\json_internalmap.inl">
+      <Filter>json</Filter>
+    </None>
+    <None Include="include\json\json_valueiterator.inl">
+      <Filter>json</Filter>
+    </None>
+    <None Include="ReadMe.txt" />
+    <None Include="WebCamPannel.htm" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="KeWebCamOCX.idl">
+      <Filter>源文件</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Common.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KeWebCamOCX.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KeWebCamOCXCtrl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KeWebCamOCXPropPage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Lock.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="OleDropTargetEx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AVPlay.h">
+      <Filter>Play</Filter>
+    </ClInclude>
+    <ClInclude Include="MyAVPlayer.h">
+      <Filter>Play</Filter>
+    </ClInclude>
+    <ClInclude Include="Recorder.h">
+      <Filter>Play</Filter>
+    </ClInclude>
+    <ClInclude Include="memdc.h">
+      <Filter>Dlg</Filter>
+    </ClInclude>
+    <ClInclude Include="OneCamera.h">
+      <Filter>Dlg</Filter>
+    </ClInclude>
+    <ClInclude Include="OnePlayer.h">
+      <Filter>Dlg</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerCtrlDlg.h">
+      <Filter>Dlg</Filter>
+    </ClInclude>
+    <ClInclude Include="PopupPannel.h">
+      <Filter>Dlg</Filter>
+    </ClInclude>
+    <ClInclude Include="WebCamPannel.h">
+      <Filter>Dlg</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonUtility\CommonFunctions.h">
+      <Filter>CommonUtility</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonUtility\inifile.h">
+      <Filter>CommonUtility</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonUtility\LogModule.h">
+      <Filter>CommonUtility</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonUtility\Markup.h">
+      <Filter>CommonUtility</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonUtility\Md5A.h">
+      <Filter>CommonUtility</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonUtility\SimpleThreadBase.h">
+      <Filter>CommonUtility</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonUtility\SocketClientImpl.h">
+      <Filter>CommonUtility</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonUtility\SocketHandle.h">
+      <Filter>CommonUtility</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonUtility\TConvert.h">
+      <Filter>CommonUtility</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonUtility\tstdlibs.h">
+      <Filter>CommonUtility</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonUtility\TypedFifo.h">
+      <Filter>CommonUtility</Filter>
+    </ClInclude>
+    <ClInclude Include="include\json\autolink.h">
+      <Filter>json</Filter>
+    </ClInclude>
+    <ClInclude Include="include\json\config.h">
+      <Filter>json</Filter>
+    </ClInclude>
+    <ClInclude Include="include\json\features.h">
+      <Filter>json</Filter>
+    </ClInclude>
+    <ClInclude Include="include\json\forwards.h">
+      <Filter>json</Filter>
+    </ClInclude>
+    <ClInclude Include="include\json\json.h">
+      <Filter>json</Filter>
+    </ClInclude>
+    <ClInclude Include="include\json\json_batchallocator.h">
+      <Filter>json</Filter>
+    </ClInclude>
+    <ClInclude Include="include\json\reader.h">
+      <Filter>json</Filter>
+    </ClInclude>
+    <ClInclude Include="include\json\value.h">
+      <Filter>json</Filter>
+    </ClInclude>
+    <ClInclude Include="include\json\writer.h">
+      <Filter>json</Filter>
+    </ClInclude>
+    <ClInclude Include="CenterCommand.h">
+      <Filter>Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="Communication\CloudCtrl.h">
+      <Filter>Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="CmdSocket.h">
+      <Filter>Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="Communication\CriticalLock.h">
+      <Filter>Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="HeartBeatThread.h">
+      <Filter>Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="KeMsg.h">
+      <Filter>Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="Communication\MapTemplet.h">
+      <Filter>Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="MediaSocket.h">
+      <Filter>Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="Communication\P2PCmdSocket.h">
+      <Filter>Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="Communication\ResendThread.h">
+      <Filter>Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="SocketThreadHandler.h">
+      <Filter>Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="CButtonST_src\BkDialogST.h">
+      <Filter>ExtCtrl</Filter>
+    </ClInclude>
+    <ClInclude Include="CButtonST_src\BtnST.h">
+      <Filter>ExtCtrl</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayInfo.h">
+      <Filter>Dlg</Filter>
+    </ClInclude>
+    <ClInclude Include="NiceSlider.h">
+      <Filter>Dlg</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="KeWebCamOCX.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\bin\AVPlay.lib" />
+  </ItemGroup>
+</Project>

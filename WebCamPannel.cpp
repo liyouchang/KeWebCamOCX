@@ -30,7 +30,7 @@ CWebCamPannel::CWebCamPannel(CWnd* pParent /*=NULL*/)
 	m_bFullScreen = FALSE;
 	m_nActiveCamera =0;
 	m_brBkgnd.CreateSolidBrush(clBlack);
-	LOG_DEBUG("CWebCamPannel::CWebCamPannel()");
+	//LOG_DEBUG("CWebCamPannel::CWebCamPannel()");
 }
 
 CWebCamPannel::~CWebCamPannel()
@@ -70,6 +70,7 @@ BEGIN_MESSAGE_MAP(CWebCamPannel, CDialog)
 
 ON_WM_CTLCOLOR()
 ON_WM_MOUSEMOVE()
+ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 COLORREF CWebCamPannel::GetCamFontColor()
@@ -108,6 +109,7 @@ BOOL CWebCamPannel::OnInitDialog()
  		m_camarray[i].SetOwner(this);
  		m_camarray[i].m_bFull = FALSE;
 	}
+	this->SetTimer(1,10000,NULL);
 	SetPlayDivision(4);
 	LOG_DEBUG("Pannel OnInitDialog end " << GetTickCount());
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -380,11 +382,22 @@ void CWebCamPannel::SetActiveCamera( int nCamNo )
 	if (m_nActiveCamera != nCamNo)
 	{
 		m_nActiveCamera = nCamNo;
+		
 		CamStatusReport report;
 		report.cameraID = m_camarray[nCamNo].m_cameraID;
 		report.reportType = CamStatusReportType_SelectCam;
+		if ( m_camarray[nCamNo].m_cameraID != 0)
+		{
+			CMediaSocket * pMedia = theApp.g_cmd->GetMediaSocket(m_camarray[nCamNo].m_cameraID);
+			report.isRecording = pMedia->IsRecording();
+			report.playType = pMedia->m_mediaType;
+		}
+		 
+		
 		DrawCameraFrame();
+
 		theApp.g_cmd->ReportCamStatus(report);
+
 		//theApp.g_pMainWnd->SendMessage(WM_CAMSTATUSREPORT,0,(LPARAM)&report);
 
 	}
@@ -642,4 +655,29 @@ COnePlayer * CWebCamPannel::ReuseActivePlayer( int cameraID )
 COnePlayer * CWebCamPannel::GetActivePlayer()
 {
 	return &m_camarray[m_nActiveCamera];
+}
+
+
+void CWebCamPannel::OnTimer(UINT_PTR nIDEvent)
+{
+	
+	switch(nIDEvent)
+	{
+		case 1://ÖØÁ¬
+			if (m_FnDivision == DIV_PLAYER)
+			{
+				break;
+			}
+			for (int i = 0;i<CAM_MAX;i++)
+			{
+				int cID = m_camarray[i].m_cameraID;
+				
+				if( cID== 0 || m_camarray[i].IsPlaying()){
+					continue;
+				}
+				theApp.g_cmd->StartView(cID);
+			}
+			break;
+	}
+	CDialog::OnTimer(nIDEvent);
 }

@@ -15,7 +15,7 @@ CRecorder::~CRecorder(void)
 
 bool CRecorder::Initialize()
 {
-	const int BufSize = 1024*128;
+	const int BufSize = 1024*2024;
 	BOOL ret =  m_buf.Init(BufSize);
 	if (ret == FALSE)
 	{
@@ -104,6 +104,8 @@ bool CRecorder::MakeRecordFileName( int cameraID )
 	GetLocalTime( &sys );
 	fileName.Format(_T("%d_%04d%02d%02d%02d%02d%02d%03d.%s"), cameraID,
 		sys.wYear,sys.wMonth,sys.wDay,sys.wHour,sys.wMinute,sys.wSecond,sys.wMilliseconds,extName);
+
+	
 
 	CIniFile ini;
 	bool retValue = ini.Load(theApp.g_pMainWnd->iniFile);

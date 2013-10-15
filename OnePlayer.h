@@ -1,7 +1,7 @@
 #pragma once
 #include "afxwin.h"
 #include "OneCamera.h"
-
+#include "PlayInfo.h"
 // COnePlayer 对话框
 class CWebCamPannel;
 
@@ -13,7 +13,7 @@ public:
 	COnePlayer(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~COnePlayer();
 
-// 对话框数据
+	// 对话框数据
 	enum { IDD = IDD_FORMVIEW_PLAY };
 
 protected:
@@ -23,19 +23,22 @@ protected:
 public:
 	COneCamera m_camera;
 	CMyAVPlayer *m_AVIPlayer;
-	int m_cameraID;
+	volatile int m_cameraID;
 	BOOL	m_bDrawable;	//是否显示 6, 8, 13 mode
 	BOOL	m_bFull;
 	BOOL	m_bDrag;
 	int	m_nCamNo; //在父窗口中的镜头数组中的位置
 	CWebCamPannel * m_pOwner;
 	CPlayerCtrlDlg * ctrlDlg;
+	CPlayInfo * playInfo;
 	bool showCtrlDlg;
+	bool showPlayInfo;
 	CMenu	menu;
 
-		CBrush m_brBkgnd; 
+	CBrush m_brBkgnd; 
 public:
 	bool IsPlaying();
+	bool IsRecording();
 	void ExchangeAVIPlayer(CMyAVPlayer *otherPlayer);
 	void SwapVideo(COnePlayer * otherPlayer);
 	void StopRTPlay(bool reUse = false);
@@ -44,7 +47,7 @@ public:
 	bool IsActive();
 public:
 	void SetOwner(CWebCamPannel* pOwner);
-	
+
 public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnPaint();
@@ -57,4 +60,8 @@ protected:
 public:
 	afx_msg void OnMenuReset();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
+	afx_msg void OnMenuShowplayinfo();
+	afx_msg void OnMenuHideplayinfo();
+//	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };

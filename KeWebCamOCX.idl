@@ -46,6 +46,10 @@ library KeWebCamOCXLib
 			[id(23), helpstring("方法SetDevWifiAP")] BSTR SetDevWifiAP(LONG cameraID, BSTR jsonParam);
 			[id(24), helpstring("方法CheckVersion")] BSTR CheckVersion(void);
 			[id(25), helpstring("方法GetLocalMac")] BSTR GetLocalMac(void);
+			[id(26), helpstring("方法QueryRecordFileList2")] BSTR QueryRecordFileList2(LONG cameraID, BSTR jsonParam);
+			[id(27), helpstring("方法GetLocalPath")] BSTR GetLocalPath(void);
+			[id(28)] BSTR SetVideoParam(LONG cameraID, BSTR jsonParam);
+			[id(29)] BSTR GetVideoParam(LONG cameraID);
 	};
 
 	//  CKeWebCamOCXCtrl 的事件调度接口

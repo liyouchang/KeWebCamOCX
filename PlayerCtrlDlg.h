@@ -4,6 +4,7 @@
 #include "SliderGdiCtrlSource/SliderGDICtrl.h"
 #include "CButtonST_src/BtnST.h"
 #include "resource.h"
+#include "NiceSlider.h"
 // CPlayerCtrlDlg 对话框
 
 class CPlayerCtrlDlg : public CDialog
@@ -21,6 +22,7 @@ public:
 	void GetPlayPos();
 	void PlayStart();
 	void PlayStop();
+
 // 对话框数据
 	enum { IDD = IDD_DIALOG_Player };
 
@@ -33,7 +35,7 @@ protected:
 	virtual void OnCancel();
 public:
 	virtual BOOL OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pLResult);
-	afx_msg void OnNMReleasedcaptureSliderPos(NMHDR *pNMHDR, LRESULT *pResult);
+//	afx_msg void OnNMReleasedcaptureSliderPos(NMHDR *pNMHDR, LRESULT *pResult);
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
 
@@ -44,7 +46,6 @@ public:
 	afx_msg void OnBnClickedButtonStop();
 	afx_msg void OnBnClickedButtonOpenfile();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
-	afx_msg void OnNMCustomdrawSliderPos(NMHDR *pNMHDR, LRESULT *pResult);
 
 	CButtonST m_btnPlay;
 	CButtonST m_btnFast;
@@ -53,6 +54,9 @@ public:
 	CButtonST m_btnStop;
 	CButtonST m_btnOpen;
 	afx_msg LRESULT  FilePlayOver(WPARAM wParam, LPARAM lParam);
-	CSliderCtrl m_playpos;
-//	afx_msg void OnStnClickedSlowplay();
+	CNiceSliderCtrl m_playpos;
+//	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+//	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+//	afx_msg void OnNMCustomdrawSliderMp(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 };

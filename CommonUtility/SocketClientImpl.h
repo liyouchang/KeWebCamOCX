@@ -134,7 +134,7 @@ void SocketClientImpl<T, tBufferSize>::Run()
 {
     SockAddrIn addrIn;
     std::vector<unsigned char> data;
-    data.resize( tBufferSize );
+    data.resize( tBufferSize);
     DWORD dwRead;
     DWORD dwError;
 

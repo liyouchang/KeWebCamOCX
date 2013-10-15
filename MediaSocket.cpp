@@ -14,7 +14,7 @@ CMediaSocket::CMediaSocket(void)
 	this->totalFile = 0;
 	this->downloaded = 0;
 	this->playedFile = 0;
-	
+	m_mediaType = Media_None
 }
 
 CMediaSocket::~CMediaSocket(void)
@@ -67,6 +67,12 @@ void CMediaSocket::HandleMessage( const BYTE* msgData )
 	case DevMsg_HeartBeat:
 		RecvHeartBeat(msgData);
 		break;
+	case DevMsg_SETVIDEOPARAM:
+		RecvSetVideoParam(msgData);
+		break;
+	case DevMsg_GETVIDEOPARAM:
+		RecvGetVideoParam(msgData);
+		break;
 	default:
 		break;
 		//LOG_INFO("Receive unkown message: " <<pHead->msgType);
@@ -82,19 +88,20 @@ bool CMediaSocket::Init()
 		m_Recorder->Initialize();
 	}
 	IniCloudData();
-	const int recvBufSize = 128*1024;
+	const int recvBufSize = 1024*2024;
 	return __super::Init(recvBufSize);
 }
 
 bool CMediaSocket::ConnectToServer(CString severAddr,CString serverPort )
 {
-	LOG_DEBUG("Connect to server, serverAddr="<<severAddr.GetString()<<";serverPort="<<serverPort.GetString());
+	//trace("Connect to server, serverAddr="<<severAddr.GetString()<<";serverPort="<<serverPort.GetString());
 	if ( !m_SocketClient.StartClient(NULL, severAddr, serverPort, AF_INET,SOCK_STREAM) )
 	{
 		int errorCode = WSAGetLastError();
 		LOG_ERROR("Failed to start client connection." << errorCode);
 		return false;
 	}
+	//Sleep(1000);
 	this->m_serverIP  = severAddr;
 	this->m_serverPort = serverPort;
 	ptzInfo.isgot = false;
@@ -109,8 +116,15 @@ bool CMediaSocket::ConnectToServer( int serverAddr,int serverPort ,int svrType ,
 		TRACE("ConnectToServer--FormatIP Error!");
 		return false;
 	}
-	this->m_SvrType = svrType;
-	this->m_clientID = clientID;
+	if (svrType != 0)
+	{
+		this->m_SvrType = svrType;
+	}
+	if (clientID != 0)
+	{
+		this->m_clientID = clientID;
+	}
+	trace("ConnectToServer,this->m_SvrType = %d",this->m_SvrType);
 	TCHAR strPort[8];
 	_itot(serverPort,strPort,10);
 	ptzInfo.isgot = false;
@@ -151,6 +165,7 @@ int CMediaSocket::ReqestMediaTrans( int videoID,int channelNo,int mediaType )
 	{
 		return KE_SOCKET_WRITEERROR;
 	}
+
 	DWORD dw = WaitForSingleObject(mediaEvent.m_hObject,MSG_WAIT_TIMEOUT);
 	if (dw == WAIT_TIMEOUT)
 	{
@@ -178,7 +193,7 @@ void CMediaSocket::RecvMediaTransResp( const BYTE* msgData )
 	respData = pMsg->respType;
 	Sleep(0);
 	mediaEvent.SetEvent();
-
+	trace("RecvMediaTransResp,respType=%d",pMsg->respType);
 }
 
 void CMediaSocket::RecvVideoStream( const BYTE * msgData )
@@ -232,6 +247,7 @@ void CMediaSocket::CloseConnect()
 	m_SocketClient.Terminate();
 	//Çå¿Õ¶Á»º³å
 	m_recvBuf.Drain(m_recvBuf.GetCount() );
+	m_MsgRecv.clear();
 	this->m_clientID = 0;
 	
 	this->downloadFileNoList.clear();
@@ -240,6 +256,8 @@ void CMediaSocket::CloseConnect()
 	this->totalFile = 0;
 	this->downloaded = 0;
 	this->playedFile =0;
+	this->toPlay = false;
+	m_mediaType = Media_None;
 }
 
 int CMediaSocket::ReqestVideoServer( int videoID,int channelNo ,int mediaType)
@@ -297,7 +315,8 @@ void CMediaSocket::RecvVideoServer( const BYTE *msgData )
 
 int CMediaSocket::OpenMedia( int cameraID, int mediaType )
 {
-	m_AVPlayer = theApp.g_PlayWnd->GetOnePlayer(cameraID)->m_AVIPlayer;
+	//m_AVPlayer = theApp.g_PlayWnd->GetOnePlayer(cameraID)->m_AVIPlayer;
+	m_AVPlayer = theApp.g_cmd->GetAVIPlayer(cameraID);
 	if ( (mediaType & Media_Vedio) && !m_AVPlayer->IsPlaying())
 	{
 		int ret = m_AVPlayer->OpenStream();
@@ -344,12 +363,14 @@ int CMediaSocket::ReqestMediaData( int cameraID,int mediaType )
 	int channelNo = cameraID %256;
 	m_videoID = videoID;
 	m_channelNo = channelNo;
+	toPlay = true;
+	this->m_mediaType = mediaType;
 	int ret ;
-	if (m_SvrType == 1)
+	if (m_SvrType == MediaSvr_DVS)
 	{
 		ret =  ReqestVideoServer(videoID,channelNo,mediaType);
 	} 
-	if (m_SvrType == 2)
+	if (m_SvrType == MediaSvr_Trans)
 	{
 		ret =  ReqestMediaTrans(videoID,channelNo,mediaType);
 	}
@@ -367,8 +388,9 @@ void CMediaSocket::RecvAudioStream( const BYTE *msgData )
 	int videoID = pMsg->videoID;
 	int channelNo = pMsg->channelNo;
 	int cameraID = videoID*256+channelNo;
-	CMyAVPlayer *AVIPlayer = theApp.g_PlayWnd->GetOnePlayer(cameraID)->m_AVIPlayer;
-	int ret = AVIPlayer->InputStream(msgData+sizeof(KERTStreamHead),pMsg->msgLength-sizeof(KERTStreamHead));
+
+	//CMyAVPlayer *AVIPlayer = theApp.g_PlayWnd->GetOnePlayer(cameraID)->m_AVIPlayer;
+	int ret = m_AVPlayer->InputStream(msgData+sizeof(KERTStreamHead),pMsg->msgLength-sizeof(KERTStreamHead));
 	if (ret != 0)
 	{
 		LOG_ERROR(" input stream error: "<<ret);
@@ -408,7 +430,16 @@ int CMediaSocket::StartRecord( int cameraID,int fileNo/*=-1*/ )
 			CString filePath;
 			CString extName = _T("h264");
 			RecordFileInfo recordInfo = recordFileList[fileNo];
-			fileName.Format(_T("%d_%d-%d.%s"), cameraID,recordInfo.startTime,recordInfo.endTime,extName);
+
+			CTime st(recordInfo.startTime);
+			CTime et(recordInfo.endTime);
+
+			fileName.Format(_T("%d_%04d%02d%02d%02d%02d%02d-%04d%02d%02d%02d%02d%02d.%s"), cameraID,
+				st.GetYear(),st.GetMonth(),st.GetDay(),st.GetHour(),st.GetMinute(),st.GetSecond(),
+				et.GetYear(),et.GetMonth(),et.GetDay(),et.GetHour(),et.GetMinute(),et.GetSecond(),
+				extName);
+
+			//fileName.Format(_T("%d_%d-%d.%s"), cameraID,recordInfo.startTime,recordInfo.endTime,extName);
 			CString recordPath = CRecorder::GetRecordFilePath();
 			filePath.Format(_T("%s%d\\"),recordPath,cameraID);
 			if (!FolderExist(filePath))
@@ -570,6 +601,7 @@ void CMediaSocket::RecvRecordPlayData( const BYTE * msgData )
 		if (m_Recorder->isRunning())
 		{
 			m_Recorder->InputBuf(msgData+sizeof(KEPlayRecordDataHead),pMsg->msgLength-sizeof(KEPlayRecordDataHead));
+			m_Recorder->SetTotalFileSize(1);
 		}
 		StopRecord();
 
@@ -591,6 +623,8 @@ void CMediaSocket::RecvRecordPlayData( const BYTE * msgData )
 			StartRecord(cameraID,fileNo);
 			RequestRecordPlayData(cameraID,fileNo);
 		}
+
+		return;
 	}
 	if (pMsg->resp == 13)
 	{
@@ -609,6 +643,7 @@ void CMediaSocket::RecvRecordPlayData( const BYTE * msgData )
 		if (PlayFileInfoList.size() == 1)
 		{
 			m_AVPlayer =  theApp.g_cmd->GetAVIPlayer(cameraID);
+			trace("get avplayer error cameraID = %d \n",cameraID);
 			m_AVPlayer->PlayFile(playInfo.fileName.c_str(),playInfo.GetFileSizeKB());	
 		}
 	}
@@ -815,11 +850,12 @@ bool CMediaSocket::GetMessageData()
 		nRead = m_recvBuf.Read( (BYTE*)&head , headLen );
 		if (nRead != headLen)
 		{
+			trace("Read fifo buffer error:nRead != headLen\r\n ");
 			return false;
 		}
 		if (head.protocal != PROTOCOL_HEAD|| head.msgLength>8192)
 		{
-			LOG_ERROR("The message Protocal Head error, Clear the recv buffer!");
+			trace("The message Protocal Head error, Clear the recv buffer!\r\n");
 			m_recvBuf.Drain(m_recvBuf.GetCount());
 			m_MsgRecv.clear();
 			return false;
@@ -831,6 +867,7 @@ bool CMediaSocket::GetMessageData()
 			nRead = m_recvBuf.Read(&m_MsgRecv[headLen], head.msgLength-headLen);
 			if (nRead != head.msgLength-headLen)
 			{
+				//trace("Read fifo buffer error:2 \r\n");
 				return false;
 			}
 		}
@@ -841,7 +878,7 @@ bool CMediaSocket::GetMessageData()
 		nRead = m_recvBuf.Read(&m_MsgRecv[headLen],waitRecv);
 		if (nRead != waitRecv)
 		{
-			//TRACE("Read fifo buffer error:1 ");
+			//trace("Read fifo buffer error:3\r\n");
 			return false;
 		}
 	}
@@ -988,6 +1025,106 @@ int CMediaSocket::RequestRecordPlayData( int cameraID,int fileNo )
 		return KE_SOCKET_WRITEERROR;
 	}
 	return KE_SUCCESS;
+}
+
+bool CMediaSocket::IsRecording()
+{
+	return m_Recorder->isRunning();
+}
+
+void CMediaSocket::RecvGetVideoParam( const BYTE * msgData )
+{
+	KEVideoParamMsg * pMsg = (KEVideoParamMsg*)msgData;
+	
+	KEVedioParam * param	= new KEVedioParam;
+	*param = pMsg->param;
+	videoParam = pMsg->param;
+	SetRecvMsg(DevMsg_GETVIDEOPARAM,KE_SUCCESS,param);
+}
+
+int CMediaSocket::GetVideoParam( int cameraID,KEVedioParam & videoParam )
+{
+	if (!m_SocketClient.IsOpen())
+	{
+		return KE_SOCKET_NOTOPEN;
+	}
+	if (this->m_SvrType != MediaSvr_DVS)
+	{
+		return KE_RTV_DVSOFFLINE;
+	}
+	int devID = cameraID/256;
+	int channelNo = cameraID%256;
+	std::vector<BYTE> msgSend;
+	int msgLen = sizeof(KEDevMsgCommonReq);
+	msgSend.resize(msgLen,0);
+	KEDevMsgCommonReq* pReqMsg;
+	pReqMsg = (KEDevMsgCommonReq*)&msgSend[0];
+	pReqMsg->protocal = PROTOCOL_HEAD;
+	pReqMsg->msgType = DevMsg_GETVIDEOPARAM;
+	pReqMsg->msgLength = msgLen;
+	pReqMsg->clientID = m_clientID;
+	pReqMsg->videoID = devID;
+	pReqMsg->chanelNo = channelNo;
+	int ret = this->Write(&msgSend[0],msgLen);
+	if (ret != msgLen)
+	{
+		return KE_SOCKET_WRITEERROR;
+	}
+	KEVedioParam * vParam;
+	ret = this->WaitRecvMsg(DevMsg_GETVIDEOPARAM,MSG_WAIT_TIMEOUT,(void **)&vParam);
+	if (ret != KE_MSG_TIMEOUT)
+	{
+		videoParam = *vParam;
+	}
+	return ret;
+}
+
+void CMediaSocket::RecvSetVideoParam( const BYTE * msgData )
+{
+	KEDevMsgCommonResp * pMsg = (KEDevMsgCommonResp*)msgData;
+	SetRecvMsg(DevMsg_SETVIDEOPARAM,pMsg->resp);
+}
+
+int CMediaSocket::SetVideoParam( int cameraID,const KEVedioParam & videoParam )
+{
+	if (!m_SocketClient.IsOpen())
+	{
+		return KE_SOCKET_NOTOPEN;
+	}
+	if (this->m_SvrType != MediaSvr_DVS)
+	{
+		return KE_RTV_DVSOFFLINE;
+	}
+
+	int devID = cameraID/256;
+	int channelNo = cameraID%256;
+	std::vector<BYTE> msgSend;
+	int msgLen = sizeof(KEVideoParamMsg);
+	msgSend.resize(msgLen,0);
+	KEVideoParamMsg* pReqMsg;
+	pReqMsg = (KEVideoParamMsg*)&msgSend[0];
+	pReqMsg->head.protocal = PROTOCOL_HEAD;
+	pReqMsg->head.msgType = DevMsg_SETVIDEOPARAM;
+	pReqMsg->head.msgLength = msgLen;
+	pReqMsg->head.clientID = m_clientID;
+	pReqMsg->head.videoID = devID;
+	pReqMsg->head.chanelNo = channelNo;
+	pReqMsg->param = videoParam;
+
+	int ret = this->Write(&msgSend[0],msgLen);
+	if (ret != msgLen)
+	{
+		return KE_SOCKET_WRITEERROR;
+	}
+	ret = this->WaitRecvMsg(DevMsg_SETVIDEOPARAM);
+	return ret;
+}
+
+void CMediaSocket::OnDataReceived( CSocketHandle* pSH, const BYTE* pbData, DWORD dwCount, const SockAddrIn& addr )
+{
+	ASSERT( pSH == m_SocketClient );
+	(pSH);
+	m_recvBuf.Write(pbData,dwCount);
 }
 
 std::map<int ,CMediaSocket*> CMediaSocket::videoSvrMediaMap;

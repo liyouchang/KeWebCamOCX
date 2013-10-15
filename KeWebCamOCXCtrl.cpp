@@ -10,6 +10,7 @@
 #include "Communication/P2PCmdSocket.h"
 #include "CommonUtility/inifile.h"
 #include "CmdSocket.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -61,6 +62,10 @@ BEGIN_DISPATCH_MAP(CKeWebCamOCXCtrl, COleControl)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "SetDevWifiAP", dispidSetDevWifiAP, SetDevWifiAP, VT_BSTR, VTS_I4 VTS_BSTR)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "CheckVersion", dispidCheckVersion, CheckVersion, VT_BSTR, VTS_NONE)
 	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "GetLocalMac", dispidGetLocalMac, GetLocalMac, VT_BSTR, VTS_NONE)
+	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "QueryRecordFileList2", dispidQueryRecordFileList2, QueryRecordFileList2, VT_BSTR, VTS_I4 VTS_BSTR)
+	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "GetLocalPath", dispidGetLocalPath, GetLocalPath, VT_BSTR, VTS_NONE)
+	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "SetVideoParam", dispidSetVideoParam, SetVideoParam, VT_BSTR, VTS_I4 VTS_BSTR)
+	DISP_FUNCTION_ID(CKeWebCamOCXCtrl, "GetVideoParam", dispidGetVideoParam, GetVideoParam, VT_BSTR, VTS_I4)
 END_DISPATCH_MAP()
 
 
@@ -191,7 +196,7 @@ CKeWebCamOCXCtrl::CKeWebCamOCXCtrl()
 	//  在此初始化控件的实例数据。
 	InitLogModule();
 	CSocketHandle::InitLibrary( MAKEWORD(2,2) );
-	LOG_DEBUG("CKeWebCamOCXCtrl::CKeWebCamOCXCtrl()");
+	trace("CKeWebCamOCXCtrl::CKeWebCamOCXCtrl()");
 }
 
 
@@ -201,7 +206,7 @@ CKeWebCamOCXCtrl::CKeWebCamOCXCtrl()
 CKeWebCamOCXCtrl::~CKeWebCamOCXCtrl()
 {
 	// 在此清理控件的实例数据。
-	LOG_DEBUG("CKeWebCamOCXCtrl::~CKeWebCamOCXCtrl()\n");
+	trace("CKeWebCamOCXCtrl::~CKeWebCamOCXCtrl()\n");
 
 }
 
@@ -221,7 +226,6 @@ void CKeWebCamOCXCtrl::OnDraw(
 	//pdc->Ellipse(rcBounds);
 	if (theApp.g_PlayWnd != NULL)
 	{
-			TRACE("test ondraw!\r\n");
 		m_pannel.MoveWindow(rcBounds,TRUE);
 	}
 	
@@ -264,12 +268,9 @@ int CKeWebCamOCXCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_pannel.Create(IDD_DIALOG_PANNEL,this);
 	theApp.g_PlayWnd = &m_pannel;
 	CMyAVPlayer::InitPlayer();
-	//theApp.g_cmdSocket = new CCmdSocket;
-	//theApp.g_cmdSocket = &m_socketSvr;
-	//theApp.g_cmdSocket->Init();
 	iniFile =GetCurrentPathW() + _T("WebClient.ini");
 	theApp.iniFile = this->iniFile;
-	LOG_DEBUG("CKeWebCamOCXCtrl::OnCreate end!");
+	//LOG_DEBUG("CKeWebCamOCXCtrl::OnCreate end!");
 	return 0;
 }
 
@@ -306,7 +307,7 @@ BSTR CKeWebCamOCXCtrl::QueryUserCamera(void)
 	root["array"] = arrayObj;
 	root.toStyledString();
 	std::string out = root.toStyledString();
-	//std::cout << out << std::endl;
+
 	strResult = out.c_str();
 	return strResult.AllocSysString();
 }
@@ -376,13 +377,20 @@ LRESULT CKeWebCamOCXCtrl::OnRTVideoStop( WPARAM wParam, LPARAM lParam )
 {
 	int cameraID = (int)wParam;
 	COnePlayer * camera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
-	if (camera != NULL)
-	{
-		camera->StopRTPlay();
-	}
+	
 	
 	int errorCode = (int)lParam;
-
+	if (camera != NULL)
+	{
+		if (errorCode == 0)
+		{
+			camera->StopRTPlay();
+		}
+		else
+		{
+			camera->StopRTPlay(true);
+		}
+	}
 	Json::Value root;
 	root["reportType"] = 2;
 	root["cameraID"] = cameraID;
@@ -420,7 +428,7 @@ BSTR CKeWebCamOCXCtrl::ControlPTZ(LONG cameraID, BYTE PTZCmd, BYTE iSpeed, BYTE 
 	}
 	//  在此添加调度处理程序代码
 	int ret = theApp.g_cmd->PTZControl(toCtrlID,PTZCmd,iSpeed,iData);
-	TRACE1("SendPTZControlMsg %d!\n",PTZCmd);
+	//TRACE1("SendPTZControlMsg %d!\n",PTZCmd);
 	Json::Value root;
 	root["retValue"] = ret;
 	root["retDes"] = theApp.g_cmd->GetErrorDesA(ret);
@@ -456,8 +464,9 @@ void CKeWebCamOCXCtrl::OnSnapFilePathChanged(void)
 	
 	CIniFile ini;
 	bool retValue = ini.Load(iniFile);
-	if(!retValue)
-		TRACE(_T("Load WebClient.ini file error"));
+	if(!retValue){
+			//TRACE(_T("Load WebClient.ini file error"));
+	}
 	else
 	{
 		tstd::tstring snapPath = m_SnapFilePath.GetString();
@@ -477,6 +486,8 @@ LRESULT CKeWebCamOCXCtrl::OnCamStatusReport( WPARAM wParam, LPARAM lParam )
 	root["retValue"] = report->errorCode;
 	root["retDes"] = theApp.g_cmd->GetErrorDesA(report->errorCode);
 	root["devID"] = report->devID;
+	root["isRecording"] = report->isRecording;
+	root["playType"] = report->playType;
 	std::string out = root.toStyledString();
 	tstd::tstring tout = str_to_tstr(out);
 
@@ -485,9 +496,8 @@ LRESULT CKeWebCamOCXCtrl::OnCamStatusReport( WPARAM wParam, LPARAM lParam )
 		COnePlayer * camera = theApp.g_PlayWnd->GetOnePlayer(report->cameraID);
 		if (camera != NULL)
 		{
-			camera->StopRTPlay();
+			camera->StopRTPlay(true);
 		}
-		
 	}
 
 	delete report;
@@ -756,7 +766,7 @@ void CKeWebCamOCXCtrl::OnTimer(UINT_PTR nIDEvent)
 	switch(nIDEvent)
 	{
 	case 1://心跳定时器
-		theApp.g_cmd->HeartBeat();
+		int ret = theApp.g_cmd->HeartBeat();
 		break;
 	}
 	COleControl::OnTimer(nIDEvent);
@@ -857,7 +867,7 @@ BSTR CKeWebCamOCXCtrl::QueryRecordFileList(LONG cameraID, LONG startTime, LONG e
 	int ret = KE_SUCCESS;
 
 	std::vector<RecordFileInfo> recordFileList;
-	ret  = theApp.g_cmd->GetRecordFileList(cameraID,startTime,endTime,fileType,recordFileList);
+	ret  = theApp.g_cmd->GetRecordFileList(cameraID,startTime,endTime,fileType,2,recordFileList);
 	Json::Value root;
 	root["retValue"] = ret;
 	root["retDes"] = theApp.g_cmd->GetErrorDesA(ret);
@@ -1012,5 +1022,111 @@ BSTR CKeWebCamOCXCtrl::GetLocalMac(void)
 	root["mac"] ="";
 	std::string out = root.toStyledString();
 	strResult = out.c_str();
+	return strResult.AllocSysString();
+}
+
+BSTR CKeWebCamOCXCtrl::QueryRecordFileList2(LONG cameraID, LPCTSTR jsonParam)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	CString strResult;
+
+	Json::Reader reader;  
+	Json::Value root;  
+	std::string strToRead= tstr_to_str(jsonParam);
+	int ret = KE_SUCCESS;
+	std::vector<RecordFileInfo> recordFileList;
+
+	if (reader.parse(strToRead, root))  // reader将Json字符串解析到root，root将包含Json里所有子元素  
+	{  
+		int startTime = root["startTime"].asInt();
+		int endTime = root["endTime"].asInt();
+		int fileType = root["fileType"].asInt();
+		int targetType = root["targetType"].asInt();
+		ret  = theApp.g_cmd->GetRecordFileList(cameraID,startTime,endTime,fileType,targetType,recordFileList);
+	}  
+	else{
+		ret = KE_ERROR_PARAM;
+	}
+	root["retValue"] = ret;
+	root["retDes"] = theApp.g_cmd->GetErrorDesA(ret);
+	Json::Value arrayObj;
+	Json::Value item;
+	for (unsigned int i=0;i< recordFileList.size();i++)
+	{
+		RecordFileInfo info = recordFileList[i];
+		item["fileNo"] = i;
+		item["fileSize"] = info.fileSize;
+		item["startTime"] = info.startTime;
+		item["endTime"] = info.endTime;
+		//item["data"] = info.data;
+		arrayObj.append(item);
+	}
+	root["fileList"] = arrayObj;
+	std::string out = root.toStyledString();
+	strResult = out.c_str();
+	return strResult.AllocSysString();
+}
+
+BSTR CKeWebCamOCXCtrl::GetLocalPath(void)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+	CString strResult;
+	strResult = GetDirectory();
+	return strResult.AllocSysString();
+}
+
+
+BSTR CKeWebCamOCXCtrl::SetVideoParam(LONG cameraID, LPCTSTR jsonParam)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	CString strResult;
+
+	KEVedioParam param;
+	int ret = theApp.g_cmd->GetOldVideoParam(cameraID,param);
+
+	Json::Reader reader;  
+	Json::Value root;  
+	std::string strToRead= tstr_to_str(jsonParam);
+	if (ret == KE_SUCCESS)
+	{
+	
+		if (reader.parse(strToRead, root))  // reader将Json字符串解析到root，root将包含Json里所有子元素  
+		{  
+			if(root.isMember("videoFormat")) param.videoFormat=root["videoFormat"].asInt();
+			ret = theApp.g_cmd->SetVideoParam(cameraID,param);
+		}  
+		else{
+			ret = KE_ERROR_PARAM;
+		}
+	}
+	Json::Value retValue;
+	retValue["retValue"] = ret;
+	retValue["retDes"] = theApp.g_cmd->GetErrorDesA(ret);
+	std::string out = retValue.toStyledString();
+	strResult = out.c_str();
+	return strResult.AllocSysString();
+}
+
+
+BSTR CKeWebCamOCXCtrl::GetVideoParam(LONG cameraID)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	CString strResult;
+
+	KEVedioParam param;
+	int ret = theApp.g_cmd->GetVideoParam(cameraID,param);
+	Json::Value root;
+	root["retValue"] = ret;
+	root["retDes"] = theApp.g_cmd->GetErrorDesA(ret);
+	if (ret == KE_SUCCESS)
+	{
+		root["videoFormat"] = param.videoFormat;
+	}
+	std::string out = root.toStyledString();
+	strResult = out.c_str();
+
 	return strResult.AllocSysString();
 }

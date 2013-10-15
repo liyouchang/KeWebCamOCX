@@ -13,18 +13,21 @@ IMPLEMENT_DYNAMIC(COnePlayer, CDialog)
 COnePlayer::COnePlayer(CWnd* pParent /*=NULL*/)
 	: CDialog(COnePlayer::IDD, pParent)
 {
-	m_pOwner	 = NULL;
+	m_pOwner = NULL;
 	m_nCamNo = 0;
 	m_cameraID = 0;
-	m_bFull			= FALSE;
+	m_bFull	 = FALSE;
 	m_bDrawable = FALSE;
 	m_AVIPlayer = new CMyAVPlayer;
 	m_bDrag = FALSE;
 	ctrlDlg = NULL;
+	playInfo = NULL;
 	showCtrlDlg = false;
+	showPlayInfo = false;
 	menu.LoadMenu(IDR_MENU_CAMSELECT);
 
 	m_brBkgnd.CreateSolidBrush(clBlack);
+
 }
 
 COnePlayer::~COnePlayer()
@@ -32,7 +35,8 @@ COnePlayer::~COnePlayer()
 
 	if (m_cameraID != 0)
 	{
-		CMediaSocket::DelVideoSvrMedia(m_cameraID>>8);
+		//CMediaSocket::DelVideoSvrMedia(m_cameraID>>8);
+		CMediaSocket::DelVideoSvrMedia(m_cameraID);
 	}
 	 	if (m_AVIPlayer != NULL)
 	 	{
@@ -62,6 +66,10 @@ BEGIN_MESSAGE_MAP(COnePlayer, CDialog)
 	ON_COMMAND(ID_MENU_RESET, &COnePlayer::OnMenuReset)
 	ON_WM_CTLCOLOR()
 	//ON_STN_CLICKED(IDC_TEXT_RIGHT, &COnePlayer::OnStnClickedTextRight)
+	ON_WM_LBUTTONDBLCLK()
+	ON_COMMAND(ID_Menu_ShowPlayInfo, &COnePlayer::OnMenuShowplayinfo)
+	ON_COMMAND(ID_MENU_HidePlayInfo, &COnePlayer::OnMenuHideplayinfo)
+//	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 bool COnePlayer::IsPlaying()
@@ -100,8 +108,6 @@ void COnePlayer::SetOwner( CWebCamPannel* pOwner )
 void COnePlayer::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
-
-
 	CRect rect;
 	GetClientRect(rect);
 
@@ -125,20 +131,36 @@ void COnePlayer::OnPaint()
 	}
 	else
 	{
-		this->m_camera.MoveWindow(rect);
+		if (playInfo == NULL)
+		{
+			playInfo = new CPlayInfo;
+			playInfo->Create(IDD_PlayInfo,this);
+		}
+		if (!showPlayInfo)
+		{
+			playInfo->ShowWindow(SW_HIDE);
+			this->m_camera.MoveWindow(rect);
+		}
+		else{
+			CRect ctrlRect;
+			playInfo->GetClientRect(ctrlRect);
+			int startY = rect.bottom-ctrlRect.Height() ;
+			playInfo->ShowWindow(SW_SHOW);
+			playInfo->MoveWindow(rect.top,startY,rect.Width(),ctrlRect.Height());
+			this->m_camera.MoveWindow(rect.top,rect.left,rect.Width(),rect.Height()-ctrlRect.Height());
+			TRACE1("move camera windows height is %d\r\n",rect.Height()-ctrlRect.Height());
+		}
+		//this->m_camera.MoveWindow(rect);
 	}
-	
-	
-
 }
 
-void COnePlayer::ExchangeAVIPlayer( CMyAVPlayer *otherPlayer )
+void COnePlayer::ExchangeAVIPlayer(CMyAVPlayer *otherPlayer )
 {
 	this->m_AVIPlayer = otherPlayer;
-	m_AVIPlayer->SetPlayWnd(this->GetSafeHwnd());
+	m_AVIPlayer->SetPlayWnd(this->m_camera.GetSafeHwnd());
 }
 
-void COnePlayer::SwapVideo( COnePlayer * otherPlayer )
+void COnePlayer::SwapVideo(COnePlayer * otherPlayer )
 {
 	int tmpID = otherPlayer->m_cameraID;
 	otherPlayer->m_cameraID = this->m_cameraID;
@@ -152,8 +174,10 @@ void COnePlayer::SwapVideo( COnePlayer * otherPlayer )
 void COnePlayer::StopRTPlay( bool reUse /*= false*/ )
 {
 	//Í£Ö¹·¢ËÍÊý¾Ý
-	CMediaSocket * pMedia = CMediaSocket::GetVideoSvrMedia(m_cameraID>>8);
-	pMedia->ReqestMediaData(m_cameraID,CMediaSocket::Media_None);
+	//CMediaSocket * pMedia = CMediaSocket::GetVideoSvrMedia(m_cameraID>>8);
+	CMediaSocket * pMedia = CMediaSocket::GetVideoSvrMedia(m_cameraID);
+
+	//pMedia->ReqestMediaData(m_cameraID,CMediaSocket::Media_None);
 	pMedia->CloseConnect();
 	//Í£Ö¹²¥·Å
 	if (m_AVIPlayer->IsPlaying())
@@ -233,6 +257,17 @@ void COnePlayer::OnRButtonDown(UINT nFlags, CPoint point)
 		menu.GetSubMenu(0)->EnableMenuItem(ID_MENU_RESET,MF_BYCOMMAND|MF_ENABLED  );  
 		TRACE("Right click is playing\n");
 	}
+
+	if (showPlayInfo)//ÒÑ¾­ÏÔÊ¾×´Ì¬À¸
+	{
+		menu.GetSubMenu(0)->ModifyMenu(ID_Menu_ShowPlayInfo,MF_BYCOMMAND ,ID_MENU_HidePlayInfo,_T("Òþ²Ø×´Ì¬À¸"));
+		
+	}
+	else
+	{
+		menu.GetSubMenu(0)->ModifyMenu(ID_MENU_HidePlayInfo,MF_BYCOMMAND ,ID_Menu_ShowPlayInfo,_T("ÏÔÊ¾×´Ì¬À¸"));
+		
+	}
 	menu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
 	CDialog::OnRButtonDown(nFlags, point);
 }
@@ -300,3 +335,61 @@ bool COnePlayer::IsActive()
 {
 	return (m_pOwner->m_nActiveCamera == this->m_nCamNo);
 }
+
+bool COnePlayer::IsRecording()
+{
+	CMediaSocket * pMedia = CMediaSocket::GetVideoSvrMedia(m_cameraID);
+	return pMedia->IsRecording();
+}
+
+
+void COnePlayer::OnLButtonDblClk(UINT nFlags, CPoint point)
+{
+	if(m_pOwner->m_nActiveCamera == m_nCamNo)
+	{
+		if( m_pOwner->m_FnDivision == DIV_TOGGLED)
+		{
+			m_pOwner->SetPlayDivision(m_pOwner->m_nToggledDivision);
+		}
+		else
+		{
+			if(m_pOwner->m_FnDivision == DIV_CH1 || m_pOwner->m_FnDivision==DIV_PLAYER)
+				return;
+			m_pOwner->m_nToggledDivision = m_pOwner->m_FnDivision;
+			m_pOwner->SetPlayDivision(DIV_TOGGLED);
+		}
+	}
+	CDialog::OnLButtonDblClk(nFlags, point);
+}
+
+
+void COnePlayer::OnMenuShowplayinfo()
+{
+	this->showPlayInfo = true;
+	this->Invalidate();
+}
+
+
+void COnePlayer::OnMenuHideplayinfo()
+{
+	this->showPlayInfo = false;
+	this->Invalidate();
+}
+
+
+//void COnePlayer::OnTimer(UINT_PTR nIDEvent)
+//{
+//	switch(nIDEvent)
+//	{
+//	case 1://ÖØÁ¬
+//		if (m_cameraID == 0 || IsPlaying() )
+//		{
+//			return;
+//		}
+//		theApp.g_cmd->StartView(m_cameraID);
+//		break;
+//	}
+//	
+//
+//	CDialog::OnTimer(nIDEvent);
+//}

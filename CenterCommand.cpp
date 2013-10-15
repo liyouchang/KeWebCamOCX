@@ -17,7 +17,7 @@ std::string CenterCommand::GetErrorDesA( int errorCode )
 	{
 	case KE_SUCCESS:											return "成功";
 	case KE_FAILED:												return "失败";
-	case KE_RTV_DVSOFFLINE:			return "视频服务器不在线";
+	case KE_RTV_DVSOFFLINE:			return "无法连接终端";
 	case KE_RTV_CHANNELDISABLE:					return "通道被禁用";
 	case KE_SOCKET_NOTOPEN:							return "通讯未建立";
 	case KE_CONNECT_SERVER_ERROR:			return "连接服务器失败";
@@ -98,7 +98,8 @@ CMediaSocket * CenterCommand::GetMediaSocket( int cameraID )
 {
 	//COneCamera * tmpCamera = theApp.g_PlayWnd->GetOnePlayer(cameraID);
 	//CMediaSocket * media = tmpCamera->m_MediaSocket;
-	CMediaSocket * media = CMediaSocket::GetVideoSvrMedia(cameraID>>8);
+	//CMediaSocket * media = CMediaSocket::GetVideoSvrMedia(cameraID>>8);
+	CMediaSocket * media = CMediaSocket::GetVideoSvrMedia(cameraID);
 // 	if (media == NULL)
 // 	{
 // 		media = new CMediaSocket;
@@ -112,7 +113,7 @@ int CenterCommand::ConnectServer( CString svrIp,int svrPort )
 	return KE_FUNCTION_NOTSUPPORT;
 }
 
-int CenterCommand::GetRecordFileList( int cameraID,int startTime,int endTime,int fileType,std::vector<RecordFileInfo> & fileInfoList )
+int CenterCommand::GetRecordFileList( int cameraID,int startTime,int endTime,int fileType,int targetType,std::vector<RecordFileInfo> & fileInfoList )
 {
 return KE_FUNCTION_NOTSUPPORT;
 }
@@ -132,7 +133,7 @@ int CenterCommand::SetDevWifi( int cameraID,int listNo,KEDevWifiStartReq wifiSta
 return KE_FUNCTION_NOTSUPPORT;
 }
 
-int CenterCommand::ReportCamStatus( CamStatusReport report )
+int CenterCommand::ReportCamStatus( const CamStatusReport& report )
 {
 	CamStatusReport * pReport = new CamStatusReport;
 	*pReport = report;
@@ -156,6 +157,21 @@ return KE_FUNCTION_NOTSUPPORT;
 }
 
 int CenterCommand::QueryVersion( CString & version ,CString & url )
+{
+	return KE_FUNCTION_NOTSUPPORT;
+}
+
+int CenterCommand::GetVideoParam( int cameraID,KEVedioParam & param )
+{
+	return KE_FUNCTION_NOTSUPPORT;
+}
+
+int CenterCommand::SetVideoParam( int cameraID,const KEVedioParam & param )
+{
+	return KE_FUNCTION_NOTSUPPORT;
+}
+
+int CenterCommand::GetOldVideoParam( int cameraID,KEVedioParam & param )
 {
 	return KE_FUNCTION_NOTSUPPORT;
 }

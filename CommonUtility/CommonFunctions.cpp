@@ -287,3 +287,51 @@ std::string GB2312ToUTF8(const char *pText)
 {
 	return Convert(pText,CP_ACP,CP_UTF8);
 }
+
+/*****************************************************************
+** 函数名:GetPath
+** 输 入: 无
+** 输 出: CString strPath
+**        strPath非空, 表示用户选择的文件夹路径
+**        strPath为空, 表示用户点击了“取消”键，取消选择
+** 功能描述:显示“选择文件夹”对话框，让用户选择文件夹
+****************************************************************/
+CString GetDirectory()
+{
+	CString strPath = _T("");
+	BROWSEINFO bInfo;
+	ZeroMemory(&bInfo, sizeof(bInfo));
+	bInfo.hwndOwner = AfxGetMainWnd()->GetSafeHwnd();
+	bInfo.lpszTitle = _T("请选择路径: ");
+	bInfo.ulFlags = BIF_RETURNONLYFSDIRS;    
+
+	LPITEMIDLIST lpDlist; //用来保存返回信息的IDList
+	lpDlist = SHBrowseForFolder(&bInfo) ; //显示选择对话框
+	if(lpDlist != NULL)  //用户按了确定按钮
+	{
+		TCHAR chPath[255]; //用来存储路径的字符串
+		SHGetPathFromIDList(lpDlist, chPath);//把项目标识列表转化成字符串
+		strPath = chPath; //将TCHAR类型的字符串转换为CString类型的字符串
+	}
+
+	if(strPath.IsEmpty())
+		return _T("");
+
+	if(strPath.Right(1)!=_T("\\"))
+		strPath+=_T("\\");
+
+	return strPath;
+}
+
+
+void trace( const char* format, ... )
+{
+	char buffer[1000];
+
+	va_list argptr;
+	va_start(argptr, format);
+	vsprintf(buffer, format, argptr);
+	va_end(argptr);
+
+	OutputDebugStringA(buffer);
+}

@@ -59,7 +59,7 @@ int CMyAVPlayer::PlayFile(const char * fileName,int fileSize,HWND endMsgWnd)
 		//AV_SetSpeed(m_lPlayHandle,m_iPlaySpeed);
 		this->NormalPlay();
 		m_PlayStatus = PLAYSTATUS_PlayStream;
-		m_CtrlDlg->PlayStart();
+		//m_CtrlDlg->PlayStart();
 	}else{
 		TRACE(TEXT("打开文件失败"));
 	}
@@ -71,7 +71,7 @@ int CMyAVPlayer::OpenStream()
 	int iRet = AV_OpenStream_Ex(m_lPlayHandle);
 	if (iRet != 0)
 	{
-		TRACE("播放器打开失败 iRet=%d\n",iRet);
+		trace("播放器打开失败 iRet=%d\n",iRet);
 		m_PlayStatus = PLAYSTATUS_Free;
 		return iRet;
 	}
@@ -119,7 +119,6 @@ int CMyAVPlayer::CloseStream()
 	//CSingleLock lock(&m_cs, TRUE);
 	int ret = AV_CloseStream_Ex(m_lPlayHandle);
 	m_PlayStatus = PLAYSTATUS_Free;
-	
 	return ret;
 }
 
@@ -127,6 +126,7 @@ int CMyAVPlayer::CapPic( LPCTSTR pFileName )
 {
 	std::string fileName = tstr_to_str(pFileName);
 	return AV_CapPic_Ex(m_lPlayHandle,fileName.c_str());
+	//return 0;
 }
 
 int CMyAVPlayer::InitPlayer()
@@ -238,6 +238,59 @@ void CMyAVPlayer::SetCtrlDlg( CPlayerCtrlDlg * dlg )
 int CMyAVPlayer::SetFileSize( long fileSize )
 {
 	return AV_SetFileSize(m_lPlayHandle,fileSize);
+}
+
+float CMyAVPlayer::GetPlayFluxRate()
+{
+	return AV_GetPlayFluxRate(m_lPlayHandle);
+}
+
+int CMyAVPlayer::GetPlayFrameRate()
+{
+	return AV_GetPlayFrameRate(m_lPlayHandle);
+}
+
+//************************************
+// Method:    GetEncodeFormat
+// FullName:  CMyAVPlayer::GetEncodeFormat
+// Access:    public 
+// Returns:   int
+// 0: strName := 'D1';
+// 1: strName := 'QCIF';
+// 2: strName := 'CIF';
+// 3: strName := 'HD1';
+// 4: strName := 'QVGA';
+// 5: strName := 'UXGA';
+// 6: strName := '1080P';
+// 7: strName := 'VGA';
+// 8: strName := 'QQVGA';
+// 9: strName := 'D2';
+// 10: strName := 'SVGA';
+// 11: strName := 'XGA';
+// 12: strName := '720P';
+// 13: strName := 'WXGA';
+// 14: strName := '960P';
+// Qualifier:
+//************************************
+int CMyAVPlayer::GetEncodeFormat()
+{
+	//const char * encodeName[] = {"D1","QCIF","CIF","HD1","QVGA","UXGA","1080P","VGA","QQVGA","D2","SVGA","XGA","720P","WXGA","960P"};
+	int code =  AV_GetEncodeFormat(m_lPlayHandle);
+	return code;
+}
+
+CString CMyAVPlayer::GetEncodeFormatName()
+{
+	const TCHAR * encodeName[] = {_T("D1"),_T("QCIF"),_T("CIF"),_T("HD1"),_T("QVGA"),_T("UXGA"),
+		_T("1080P"),_T("VGA"),_T("QQVGA"),_T("D2"),_T("SVGA"),_T("XGA"),_T("720P"),_T("WXGA"),_T("960P")};
+	int code =  AV_GetEncodeFormat(m_lPlayHandle);
+	if (code < 0)
+	{
+		return _T("");
+	}
+	
+	return encodeName[code];
+	
 }
 
 // int CMyAVPlayer::SetFileEndMsgWnd( HWND fileWnd )

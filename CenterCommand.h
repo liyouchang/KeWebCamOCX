@@ -14,6 +14,8 @@ struct CamStatusReport
 	int cameraID;
 	int devID;
 	int errorCode;
+	bool isRecording;//0-无录像，1-正在本地录像
+	int playType;//1-只有视频播放，3-视频和音频播放，7-视频、音频和对讲
 };
 
 
@@ -35,17 +37,19 @@ public:
 	virtual int HeartBeat();
 	virtual int SetClientID(int clientID);
 	virtual int GetClientID();
-	virtual int GetRecordFileList(int cameraID,int startTime,int endTime,int fileType,std::vector<RecordFileInfo> & fileInfoList);
+	virtual int GetRecordFileList(int cameraID,int startTime,int endTime,int fileType,int targetType,std::vector<RecordFileInfo> & fileInfoList);
 	virtual int PlayRemoteRecord(int cameraID,int fileNo);
 	virtual int GetDevWifiAPList(int cameraID,std::vector<KEDevAPListItem> &apList);
 	virtual int SetDevWifi(int cameraID,int listNo,KEDevWifiStartReq wifiStart);
 	virtual int QueryVersion(CString & version ,CString & url);
-
+	virtual int GetVideoParam(int cameraID,KEVedioParam & param);
+	virtual int SetVideoParam(int cameraID,const KEVedioParam & param);
+	virtual int GetOldVideoParam(int cameraID,KEVedioParam & param);
 	std::string GetErrorDesA(int errorCode);
 	int platformType;
 	CMediaSocket * GetMediaSocket(int cameraID);
 	CMyAVPlayer * GetAVIPlayer(int cameraID);
-	int ReportCamStatus(CamStatusReport report);
+	int ReportCamStatus(const CamStatusReport& report);
 	void SetErrorDesA(std::string des,int errorCode);
 protected:
 private:

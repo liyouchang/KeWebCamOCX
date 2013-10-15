@@ -947,7 +947,7 @@ bool CSocketHandle::FormatIP(LPTSTR pszIPAddr, UINT nSize, const SockAddrIn& add
         } else {
             addr = &((const sockaddr_in6*)&addrIn)->sin6_addr;
         }
-        if (inet_ntop(addrIn.ss_family, addr, szIPAddr, MAX_PATH) != NULL)
+        if (inet_ntop(addrIn.ss_family, (void *)addr, szIPAddr, MAX_PATH) != NULL)
         {
 #ifdef _UNICODE
             return (0 != MultiByteToWideChar(CP_ACP, 0, szIPAddr, -1, pszIPAddr, nSize ));
@@ -1093,7 +1093,7 @@ bool CSocketHandle::GetLocalAddress(LPTSTR pszAddress, UINT nSize, int nFamily /
             } else {
                 addr = &((const sockaddr_in6*)&addr_store)->sin6_addr;
             }
-            if (inet_ntop(addr_store.ss_family, addr, szAddress, MAX_PATH) != NULL)
+            if (inet_ntop(addr_store.ss_family,(void *) addr, szAddress, MAX_PATH) != NULL)
             {
                 // Unicode conversion
 #ifdef _UNICODE

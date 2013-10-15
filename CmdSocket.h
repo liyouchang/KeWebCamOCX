@@ -18,14 +18,14 @@ public:
 	virtual ~CCmdSocket(void);
 
 	virtual bool Init();
-	virtual int ConnectServer(CString svrIp,int svrPort);
+	virtual int ConnectServer(CString svrIp, int svrPort);
 	virtual int LoginServer(CString userName,CString pwd);
 	virtual int StartView(int cameraID);
 	virtual int StopView(int cameraID);
 	virtual int PTZControl(int cameraID, BYTE ctrlType ,BYTE speed ,BYTE data);
-	virtual int GetRecordFileList(int cameraID,int startTime,int endTime,int fileType,vector<RecordFileInfo> & fileInfoList);
+	virtual int GetRecordFileList(int cameraID,int startTime,int endTime,int fileType,int targetType,vector<RecordFileInfo> & fileInfoList);
 	virtual int PlayRemoteRecord(int cameraID,int fileNo);
-//	virtual int HeartBeat();
+	virtual int HeartBeat();
 	virtual int GetClientID(){return m_clientID;}
 
 	bool ConnectToServer(CString severAddr);
@@ -38,7 +38,6 @@ public:
 
 protected:
 	virtual void HandleMessage(const BYTE* msgData);
-	virtual void Run();
 	int ConnectToMedia(int cameraID);
 	
 	
@@ -56,7 +55,7 @@ protected:
 	void RecvVideoSvrOnline(const BYTE * msgData);
 	void RecvHistoryData(const BYTE * msgData);
 	//heartbeat
-	CHeartBeatThread  m_HeartbeatThread;
+	//CHeartBeatThread  m_HeartbeatThread;
 	XMLInfoThread m_xmlInfoThread;
 protected:
 	static unsigned int __stdcall XMLInfoThreadProc(void* arg);
@@ -68,6 +67,8 @@ private:
 	int mediaSvrIp;
 	int mediaTransIp;
 	int mediaOnline;
+	int mediaTarget;
+	volatile   int m_heartCount;
 private:
 	void EncryptData(const char * userName, const char * pwd, const char * keyt, char * encryptedData);
 	int FindChNodeByID(const std::vector<CHNODE> & nodes,int nID);
@@ -100,8 +101,9 @@ struct KEHistoryDataReq
 	char targetType; //2视频服务器  3=录像服务器;data = 0）
 	char startTime[6];
 	char endTime[6];
-	char fileType;//1计划录像；2表示传感器报警；	3移动侦测报警；4抓拍照片；
+	char fileType;//=0全部,1计划录像,2传感器报警,3移动侦测报警,4查看远程快照,5传感器联动报警,6平安互助联动报警,10终端串口输出日志.
 	char alarmNo;//1
+	char mediaType;// 0-主媒体 1-备用媒体
 };
 
 struct KEHistoryDataResp

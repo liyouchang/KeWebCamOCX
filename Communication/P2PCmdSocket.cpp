@@ -157,7 +157,8 @@ void CP2PCmdSocket::HandleMessage( const BYTE* msgData )
 		RecvRecordFileList(msgData);
 		break;
 	default:
-		TRACE("Receive unkown message\n");
+		break;
+		//TRACE("Receive unkown message\n");
 	}
 }
 
@@ -290,7 +291,7 @@ void CP2PCmdSocket::RecvDevList( const BYTE* msgData )
 {
 	PKEMsgHead pMsg = (PKEMsgHead)msgData;
 	char * data = (char *)(msgData+sizeof(KEMsgHead));
-	TRACE1("RecvDevList--Data: %s\n",data);
+	//TRACE1("RecvDevList--Data: %s\n",data);
 	m_ResendThread->RemoveResendMsg(KEMSG_TYPE_DEVLIST);
 	//GetViewPointer()->SetMyCamList(data);
 }
@@ -299,7 +300,7 @@ void CP2PCmdSocket::RecvShareDevList( const BYTE* msgData )
 {
 	PKEMsgHead pMsg = (PKEMsgHead)msgData;
 	char * data = (char *)(msgData+sizeof(KEMsgHead));
-	TRACE1("RecvShareDevList--Data: %s\n",data);
+	//TRACE1("RecvShareDevList--Data: %s\n",data);
 	m_ResendThread->RemoveResendMsg(KEMSG_TYPE_SHAREDEVLIST);
 	//GetViewPointer()->SetSharedCamList(data);
 }
@@ -398,7 +399,7 @@ void CP2PCmdSocket::RecvAddCamResp( const BYTE *msgData )
 	} 
 	else
 	{
-		TRACE("添加操作类型错误");
+		//TRACE("添加操作类型错误");
 		return;
 	}
 }
@@ -491,7 +492,7 @@ int CP2PCmdSocket::AddDevice( CString mac,CString devName )
 	if (resp == KE_SUCCESS)
 	{
 		int devID = transData->devSvrID;
-		TRACE3("AddDevice--Success,devID=%d,name=%s,mac=%s\n",devID,devName,mac);
+		//TRACE3("AddDevice--Success,devID=%d,name=%s,mac=%s\n",devID,devName,mac);
 		//GetViewPointer()->AddDevice(devID,devName,mac);
 	}
 	delete transData;
@@ -510,7 +511,7 @@ void CP2PCmdSocket::RecvUserRegister( const BYTE *msgData )
 	if (pMsg->respData == 8)
 	{
 		m_clientID = pMsg->head.clientID;
-		TRACE1("RecvUserRegister--clientID=%d\n",m_clientID);
+		//TRACE1("RecvUserRegister--clientID=%d\n",m_clientID);
 	}
 	respData[KEMSG_EVENT_USERREGISTER] = pMsg->respData;
 // 	if (pMsg->respData == 5 && resendTime > 0)
@@ -577,7 +578,7 @@ void CP2PCmdSocket::RecvDevNetInfoResp( const BYTE *msgData )
 	PKEDevNetInfoResp pMsg = (PKEDevNetInfoResp)msgData;
 	
 	m_ResendThread->RemoveResendMsg(KEMSG_TYPE_DEVNETINFO);
-	TRACE1("RecvDevNetInfoResp--onLine=%d\n" , pMsg->respData);
+	//TRACE1("RecvDevNetInfoResp--onLine=%d\n" , pMsg->respData);
 	if (pMsg->respData == 1)//设备在线
 	{	
 		KEDevNetInfoResp * respMsg = new KEDevNetInfoResp;
@@ -588,11 +589,11 @@ void CP2PCmdSocket::RecvDevNetInfoResp( const BYTE *msgData )
 	if (pMsg->respData == 0)// 设备不在线
 	{
 		devSvrMap[pMsg->devID].connectSuccess = false;
-		TRACE("RecvDevNetInfoResp--设备不在线\n");
+		//TRACE("RecvDevNetInfoResp--设备不在线\n");
 		this->SetRecvMsg(KEMSG_TYPE_DEVNETINFO,KE_DEVOFFLINE);
 		return;
 	} 
-	TRACE("RecvDevNetInfoResp--错误的应答信息!\n");
+	//TRACE("RecvDevNetInfoResp--错误的应答信息!\n");
 }
 
 int CP2PCmdSocket::ChangeDevName( int devID,CString devNewName )
@@ -658,7 +659,7 @@ void CP2PCmdSocket::RecvShareDevResp( const BYTE * msgData )
 		keEvent[respType].PulseEvent();
 	} 
 	else{
-		TRACE("RecvShareDevResp--添加操作类型错误");	
+		//TRACE("RecvShareDevResp--添加操作类型错误");	
 	}
 }
 
@@ -675,7 +676,7 @@ int CP2PCmdSocket::CheckDevShareUser( int devSvrID )
 	DWORD dw = WaitForSingleObject(keEvent[KEMSG_EVENT_CHKSHAREDUSER].m_hObject,MSG_WAIT_TIMEOUT);
 	if (dw == WAIT_TIMEOUT)
 	{
-		TRACE("CheckDevShareUser--Timeout\n");
+		//TRACE("CheckDevShareUser--Timeout\n");
 		return KE_MSG_TIMEOUT;
 	}
 	int resp = respData[KEMSG_EVENT_CHKSHAREDUSER];
@@ -686,12 +687,12 @@ void CP2PCmdSocket::RecvChkSharedUserResp( const BYTE *msgData )
 {
 	PKEMsgHead pMsg = (PKEMsgHead)msgData;
 	char * data = (char *)(msgData+sizeof(KEMsgHead));
-	TRACE1("RecvChkSharedUserResp--%s\n ",data);
+	//TRACE1("RecvChkSharedUserResp--%s\n ",data);
 	//GetViewPointer()->SetShareUser(data);
 	respData[KEMSG_EVENT_CHKSHAREDUSER] = KE_SUCCESS;
 	Sleep(0);
 	keEvent[KEMSG_EVENT_CHKSHAREDUSER].PulseEvent();	
-	TRACE("RecvChkSharedUserResp--end\n");
+	//TRACE("RecvChkSharedUserResp--end\n");
 }
 void CP2PCmdSocket::RecvDevNotSharedNotice( const BYTE *msgData )
 {
@@ -715,7 +716,7 @@ int CP2PCmdSocket::CancelDevShare( int devSvrID,int sharedUserID )
 	DWORD dw = WaitForSingleObject(keEvent[KEMSG_EVENT_CANCELSHAREDDEV].m_hObject,MSG_WAIT_TIMEOUT);
 	if (dw == WAIT_TIMEOUT)
 	{
-		TRACE("CancelDevShare--Timeout\n");
+		//TRACE("CancelDevShare--Timeout\n");
 		return KE_MSG_TIMEOUT;
 	}
 	int resp = respData[KEMSG_EVENT_CANCELSHAREDDEV];
@@ -728,7 +729,7 @@ void CP2PCmdSocket::RecvCancelSharedDevResp( const BYTE * msgData )
 	respData[KEMSG_EVENT_CANCELSHAREDDEV] = pMsg->respData;
 	Sleep(0);
 	keEvent[KEMSG_EVENT_CANCELSHAREDDEV].SetEvent();	
-	TRACE("RecvCancelSharedDevResp--end\n");
+	//TRACE("RecvCancelSharedDevResp--end\n");
 }
 
 
@@ -782,7 +783,7 @@ void CP2PCmdSocket::RecvChangeUserPwdResp( const BYTE * msgData )
 	respData[KEMSG_EVENT_CHGUSERPWD] = pMsg->respData;
 	Sleep(0);
 	keEvent[KEMSG_EVENT_CHGUSERPWD].SetEvent();	
-	TRACE("RecvCancelSharedDevResp--end\n");
+	//TRACE("RecvCancelSharedDevResp--end\n");
 }
 
 void CP2PCmdSocket::CheckShareDevListAsyn()
@@ -814,7 +815,7 @@ int CP2PCmdSocket::DeviceReboot( int devID )
 	DWORD dw = WaitForSingleObject(keEvent[KEMSG_EVENT_DEVREBOOT].m_hObject,MSG_WAIT_TIMEOUT);
 	if (dw == WAIT_TIMEOUT)
 	{
-		TRACE("DevReboot--Timeout\n");
+		//TRACE("DevReboot--Timeout\n");
 		return KE_MSG_TIMEOUT;
 	}
 	int resp = respData[KEMSG_EVENT_DEVREBOOT];
@@ -827,7 +828,7 @@ void CP2PCmdSocket::RecvDevRebootResp( const BYTE * msgData )
 	respData[KEMSG_EVENT_DEVREBOOT] = pMsg->respData;
 	Sleep(0);
 	keEvent[KEMSG_EVENT_DEVREBOOT].SetEvent();	
-	TRACE("RecvCancelSharedDevResp--end\n");
+	//TRACE("RecvCancelSharedDevResp--end\n");
 }
 
 struct VersionInfo
@@ -877,7 +878,7 @@ void CP2PCmdSocket::RecvCheckVersionResp( const BYTE * msgData )
 	//respData[KEMSG_EVENT_CHECKVERSION] = (int)info;
 	//Sleep(0);
 	//keEvent[KEMSG_EVENT_CHECKVERSION].SetEvent();	
-	TRACE("RecvCheckVersionResp--end\n");
+	//TRACE("RecvCheckVersionResp--end\n");
 }
 
 int CP2PCmdSocket::ResetForgetPwd( CString uname,CString email )
@@ -932,7 +933,7 @@ void CP2PCmdSocket::RecvForgetPWD( const BYTE * msgData )
 	respData[KEMSG_EVENT_FORGETPWD] = pMsg->respData;
 	Sleep(0);
 	keEvent[KEMSG_EVENT_FORGETPWD].SetEvent();	
-	TRACE("RecvCancelSharedDevResp--end\n");
+	//TRACE("RecvCancelSharedDevResp--end\n");
 }
 
 int CP2PCmdSocket::RequestTransIp( int devID )
@@ -962,6 +963,7 @@ int CP2PCmdSocket::RequestTransIp( int devID )
 	}
 	devSvrMap[devID].svrIp = info->svrIp;
 	devSvrMap[devID].svrPort = info->svrPort;
+	devSvrMap[devID].connectSuccess = true;
 	//delete info;
 	//info = NULL;
 	return ret;
@@ -977,7 +979,7 @@ void CP2PCmdSocket::RecvTransIp( const BYTE * msgData )
 		info->svrPort = pMsg->transPort;
 
 		this->SetRecvMsg(KEMSG_TYPE_GetTransIP,pMsg->respData,info);
-		TRACE2("RecvTransIp-- Ip %d,port %d\n",pMsg->transIp,pMsg->transPort);
+		//TRACE2("RecvTransIp-- Ip %d,port %d\n",pMsg->transIp,pMsg->transPort);
 	}
 	else
 		this->SetRecvMsg(KEMSG_TYPE_GetTransIP,pMsg->respData);
@@ -1083,7 +1085,7 @@ int CP2PCmdSocket::ConnectToMedia( PKEDevNetInfoResp pMsg )
 	tmpIP = inet_ntoa(in);
 	//TRACE2("RecvDevNetInfoResp--外网登陆,设备IP:%s;端口%d\n",tmpIP,pMsg->devOuterPort);
 	LOG_DEBUG("outer IP login,device IP:"<<tmpIP.GetString()<<";port:"<<pMsg->devOuterPort);
-	if (media->ConnectToServer(pMsg->devOuterIP,pMsg->devOuterPort) &&
+	if (media->ConnectToServer(pMsg->devOuterIP,pMsg->devOuterPort,MediaSvr_DVS) &&
 		media->CheckHeartBeat(pMsg->devID)==KE_SUCCESS)
 	{
 
@@ -1099,7 +1101,7 @@ int CP2PCmdSocket::ConnectToMedia( PKEDevNetInfoResp pMsg )
 	//TRACE2("RecvDevNetInfoResp--连线IP登陆,设备IP:%s;端口%d\n",tmpIP,pMsg->devOuterPort);
 	LOG_DEBUG("connect IP login ,device IP:"<<tmpIP.GetString()<<";port:"<<pMsg->devOuterPort);
 	if ((pMsg->devSvrIp != pMsg->devOuterIP) &&
-		media->ConnectToServer(pMsg->devSvrIp,pMsg->devOuterPort)&&
+		media->ConnectToServer(pMsg->devSvrIp,pMsg->devOuterPort,MediaSvr_DVS)&&
 		media->CheckHeartBeat(pMsg->devID)==KE_SUCCESS)
 	{
 		LOG_INFO("Device login by connect IP success!");
@@ -1114,7 +1116,7 @@ int CP2PCmdSocket::ConnectToMedia( PKEDevNetInfoResp pMsg )
 	//TRACE2("RecvDevNetInfoResp--内网登陆,设备IP:%s;端口%d\n",tmpIP,pMsg->devInnerPort);
 	LOG_DEBUG("inner ip login,device IP:"<<tmpIP.GetString()<<";port:"<<pMsg->devInnerPort);
 	if ((pMsg->devInnerIP != pMsg->devOuterIP || pMsg->devOuterPort != pMsg->devInnerPort)  && 
-		media->ConnectToServer(pMsg->devInnerIP,pMsg->devInnerPort)&&
+		media->ConnectToServer(pMsg->devInnerIP,pMsg->devInnerPort,MediaSvr_DVS)&&
 		media->CheckHeartBeat(pMsg->devID)==KE_SUCCESS)
 	{
 		LOG_INFO("device login by inner ip success!");
@@ -1130,7 +1132,7 @@ int CP2PCmdSocket::ConnectToMedia( PKEDevNetInfoResp pMsg )
 	//TRACE2("RecvDevNetInfoResp--PPPOE登陆,设备IP:%s;端口%d\n",tmpIP,pMsg->devInnerPort);
 	LOG_DEBUG("PPPOE login, device IP:"<<tmpIP.GetString()<<";port:"<<pMsg->devInnerPort);
 	if ((pMsg->devSvrIp != pMsg->devInnerIP) && 
-		media->ConnectToServer(pMsg->devSvrIp,pMsg->devInnerPort)&&
+		media->ConnectToServer(pMsg->devSvrIp,pMsg->devInnerPort,MediaSvr_DVS)&&
 		media->CheckHeartBeat(pMsg->devID)==KE_SUCCESS)
 	{
 		LOG_INFO("Device login by PPPOE success!\n");
@@ -1153,12 +1155,12 @@ int CP2PCmdSocket::ConnectToMedia( PKEDevNetInfoResp pMsg )
 	{
 		in.s_addr =pMsg->mediaBackIP ;
 		tmpIP = inet_ntoa(in);
-		TRACE2("Media login,Device IP:%s;port:%d\n",tmpIP.GetString(),pMsg->mediaBackPort);
+		//TRACE2("Media login,Device IP:%s;port:%d\n",tmpIP.GetString(),pMsg->mediaBackPort);
 		devSvrMap[pMsg->devID].svrIp = pMsg->mediaBackIP;
 		devSvrMap[pMsg->devID].svrPort = pMsg->mediaBackPort;
 		devSvrMap[pMsg->devID].connectSuccess = true;
 	}
-	if (media->ConnectToServer(devSvrMap[pMsg->devID].svrIp,devSvrMap[pMsg->devID].svrPort,2,m_clientID))
+	if (media->ConnectToServer(devSvrMap[pMsg->devID].svrIp,devSvrMap[pMsg->devID].svrPort,MediaSvr_Trans,m_clientID))
 	{
 		LOG_INFO("Device connect media success!\n");
 		return KE_SUCCESS;
@@ -1180,7 +1182,7 @@ int CP2PCmdSocket::ConnectServer( CString svrIp,int svrPort )
 		
 }
 
-int CP2PCmdSocket::GetRecordFileList( int cameraID,int startTime,int endTime,int fileType,vector<RecordFileInfo> & fileInfoList )
+int CP2PCmdSocket::GetRecordFileList( int cameraID,int startTime,int endTime,int fileType,int targetType,vector<RecordFileInfo> & fileInfoList )
 {
 	int ret = SetCameraMedia(cameraID);
 	if (ret != KE_SUCCESS)
@@ -1457,6 +1459,42 @@ int CP2PCmdSocket::StopView( int cameraID )
 	CMediaSocket *media = GetMediaSocket(cameraID);	
 	media->CloseConnect();
 	return KE_SUCCESS;
+}
+
+int CP2PCmdSocket::GetVideoParam( int cameraID,KEVedioParam & param )
+{
+	int ret = SetCameraMedia(cameraID);
+	if (ret != KE_SUCCESS)
+	{
+		return ret;
+	}
+	CMediaSocket *media = GetMediaSocket(cameraID);
+	ret = media->GetVideoParam(cameraID,param);
+	return ret;
+}
+
+int CP2PCmdSocket::SetVideoParam( int cameraID,const KEVedioParam & param )
+{
+	int ret = SetCameraMedia(cameraID);
+	if (ret != KE_SUCCESS)
+	{
+		return ret;
+	}
+	CMediaSocket *media = GetMediaSocket(cameraID);
+	ret = media->SetVideoParam(cameraID,param);
+	return ret;
+}
+
+int CP2PCmdSocket::GetOldVideoParam( int cameraID,KEVedioParam & param )
+{
+	int ret = SetCameraMedia(cameraID);
+	if (ret != KE_SUCCESS)
+	{
+		return ret;
+	}
+	CMediaSocket *media = GetMediaSocket(cameraID);
+	param = media->videoParam;
+	return ret;
 }
 
 

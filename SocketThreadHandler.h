@@ -82,5 +82,5 @@ protected:
 
 
 //add by lht for print log
-std::ostream& operator<<(std::ostream& output, const SockAddrIn& obj);
-std::wostream& operator<<(std::wostream& output,const  SockAddrIn& obj);
+//std::ostream& operator<<(std::ostream& output, const SockAddrIn& obj);
+//std::wostream& operator<<(std::wostream& output,const  SockAddrIn& obj);

@@ -48,14 +48,16 @@
 #include <crtdbg.h>
 
 
-#include <string>
-#include <sstream>
+//#include <string>
+//#include <sstream>
 #include <iomanip>
 #include <limits>
 #include <stdio.h>
 #include <tchar.h>
 #include <gdiplus.h>
+#include <iostream>
 
+using namespace std;
 
 #ifdef _UNICODE
 #if defined _M_IX86

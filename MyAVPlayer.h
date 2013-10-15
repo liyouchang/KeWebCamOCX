@@ -53,7 +53,10 @@ public:
 	int NormalPlay();
 	int SetFileSize(long fileSize);
 	void SetCtrlDlg(CPlayerCtrlDlg * dlg);
-
+	float GetPlayFluxRate();
+	int GetPlayFrameRate();
+	int GetEncodeFormat();
+	CString GetEncodeFormatName();
 public://¾²Ì¬·½·¨
 	static int StartTalk();
 	static int StopTalk();

@@ -13,6 +13,7 @@
 #define IDS_STRING_BtnStop              8
 #define IDD_DLG_PLAYCONTROL             101
 #define IDR_HTML_WEBCAMPANNEL           103
+#define IDD_PlayInfo                    103
 #define IDS_KEWEBCAMOCX_PPG_CAPTION     200
 #define IDD_PROPPAGE_KEWEBCAMOCX        200
 #define IDC_CAMERA0                     201
@@ -71,6 +72,8 @@
 #define IDB_PLAY2                       233
 #define IDC_SLIDER_MP                   234
 #define IDC_SlowPlay                    235
+#define IDC_PlayInfo                    236
+#define IDC_RecordInfo                  237
 #define IDB_BITMAP23                    241
 #define IDB_Stop1                       241
 #define IDB_BITMAP24                    242
@@ -105,14 +108,20 @@
 #define ID_MENU_AllFullScreen           32794
 #define ID_SELECTCAMERA_32795           32795
 #define ID_MENU_CancelFullScreen        32796
+#define ID_Menu32797                    32797
+#define ID_Menu_PlayInfo                32798
+#define ID_SELECTCAMERA_32799           32799
+#define ID_Menu_ShowPlayInfo            32800
+#define ID_HidePlayInfo                 32801
+#define ID_MENU_HidePlayInfo            32802
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        246
-#define _APS_NEXT_COMMAND_VALUE         32797
-#define _APS_NEXT_CONTROL_VALUE         236
+#define _APS_NEXT_COMMAND_VALUE         32803
+#define _APS_NEXT_CONTROL_VALUE         238
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

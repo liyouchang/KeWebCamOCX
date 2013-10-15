@@ -12,6 +12,8 @@ CCmdSocket::CCmdSocket(void)
 	m_nSockType = SOCK_TCP;
 	m_msgWaitTime = 10000;//10s 一个消息
 	m_serverPort = TEXT("22616");
+	Init();
+	m_heartCount = 0;
 // 	currentPackage = 0;
 // 	totalPackageRecv = 0;
 	//m_HeartbeatThread = new CHeartBeatThread;
@@ -23,7 +25,7 @@ CCmdSocket::~CCmdSocket(void)
 	
 	//delete m_HeartbeatThrea
 	m_xmlInfoThread.Stop();
-	m_HeartbeatThread.Stop();
+	//m_HeartbeatThread.Stop();
 	CloseConnect();
 	
 	LOG_DEBUG("delete CCmdSocket time end " );
@@ -36,7 +38,7 @@ CCmdSocket::~CCmdSocket(void)
 	 if ( !m_SocketClient.StartClient(NULL, severAddr, m_serverPort, AF_INET,SOCK_STREAM) )
 	 {
 		 int errorCode = WSAGetLastError();
-		LOG_ERROR("Failed to start client connection." << errorCode);
+		 LOG_ERROR("Failed to start client connection." << errorCode);
 		 return false;
 	 }
 	 this->m_serverIP  = severAddr;
@@ -70,8 +72,9 @@ CCmdSocket::~CCmdSocket(void)
 	if (ret == KE_SUCCESS)
 	{
 		//开始心跳
-		m_HeartbeatThread.Initialize(this,m_clientID);
-		m_HeartbeatThread.Start();
+		//m_HeartbeatThread.Initialize(this,m_clientID);
+		//m_HeartbeatThread.Start();
+		m_heartCount = 0;
 	}
 	AskAllRootNodes(0);
 
@@ -122,7 +125,7 @@ CCmdSocket::~CCmdSocket(void)
  bool CCmdSocket::Init()
  {
 	 LOG_DEBUG("Init CCmdSocket");
-	 const int nRecvBufSize = 0x2000;
+	 const int nRecvBufSize = 32*1024;
 	return __super::Init(nRecvBufSize);
  }
 
@@ -166,11 +169,11 @@ CCmdSocket::~CCmdSocket(void)
 
  void CCmdSocket::AskKeyMsgResp( const BYTE* msgData )
  {
-	 LOG_DEBUG("Receive ask key response");
+	//LOG_DEBUG("Receive ask key response");
 	PMsgSecretKeyResp pMsg = (PMsgSecretKeyResp)msgData;
 	BYTE *secretKey= new BYTE[SECRETKEY_LEN];	//从服务器获取的密钥
 	memcpy(secretKey,pMsg->keyt,SECRETKEY_LEN);
-	SetRecvMsg(pMsg->head.msgType,0,secretKey);
+	SetRecvMsg(pMsg->head.msgType,KE_SUCCESS,secretKey);
  }
 
  void CCmdSocket::LoginMsgResp( const BYTE* msgData )
@@ -292,28 +295,29 @@ CCmdSocket::~CCmdSocket(void)
 	int online = pMsg->online;
 	int channelNo = pMsg->channelNo;
 	int cameraID = MakeCameraID(videoID,channelNo);
-	if (online >2)
+	if (online >1)
 	{
-		LOG_INFO("the video server is offline!");	
+		trace("the video server is offline!");	
 		theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,KE_RTV_BOTHOFFLINE);
 		return;
 	}
 	if (transIp==0 &&  videoSvrIp == 0)
 	{
-		LOG_INFO("All the vedio server is offline!");	
+		trace("All the vedio server is offline!");	
 		theApp.g_pMainWnd->PostMessage(WM_RTVIDEOSTOP,cameraID,KE_RTV_BOTHOFFLINE);
 		return;
 	}
 
-	CMediaSocket * media = CMediaSocket::GetVideoSvrMedia(videoID);
+	//CMediaSocket * media = CMediaSocket::GetVideoSvrMedia(videoID);
+	CMediaSocket * media = CMediaSocket::GetVideoSvrMedia(cameraID);
 	int ret;
 	bool connected = false;
 
 	if (videoSvrIp != 0 )//连接视频服务器
 	{
-		if(!media->ConnectToServer(videoSvrIp,port,1,m_clientID))
+		if(!media->ConnectToServer(videoSvrIp,port,MediaSvr_DVS,m_clientID))
 		{
-			LOG_WARN("Connect video server failed!");
+			trace("Connect video server failed!");
 		}
 		else
 		{
@@ -327,9 +331,9 @@ CCmdSocket::~CCmdSocket(void)
 	}
 	if ( transIp != 0)//连接转发服务器
 	{
-		if(!media->ConnectToServer(transIp,22615,2,m_clientID))
+		if(!media->ConnectToServer(transIp,22615,MediaSvr_Trans,m_clientID))
 		{
-			LOG_WARN("Connect trans server failed!");
+			trace("Connect trans server failed!");
 		}
 		else
 		{
@@ -357,41 +361,17 @@ CCmdSocket::~CCmdSocket(void)
 	PKEMsgHeartBeat pMsg = (PKEMsgHeartBeat)msgData;
 	if (pMsg->status == 0x0d )
 	{
-		m_HeartbeatThread.ResetCount();
+		m_heartCount = 0;
 	}
  }
 
- void CCmdSocket::Run()
- {
-	 while (m_SocketClient->IsOpen() && !this->toStop)
-	 {
-		 //TRACE1("LOOP  time %d\n",GetTickCount());
-		 if (m_recvBuf.GetCount() == 0 )
-		 {
-			 DWORD dw = m_recvBuf.WaitForNewData(m_msgWaitTime);
-			 if (dw ==WAIT_TIMEOUT )
-			 {
-				 continue;
-			 }
-		 }		
-		 if (!GetMessageData())
-		 {
-			 Sleep(10);
-			 continue;
-		 }
-		 this->HandleMessage(&m_MsgRecv[0]);
-		 m_MsgRecv.clear();
-	 }
- }
 
  void CCmdSocket::CloseConnect()
  {
 	 //取消读等待
-	m_HeartbeatThread.Stop();
+	//m_HeartbeatThread.Stop();
 	m_recvBuf.CancelWaitNewData();
 	m_SocketClient.Terminate();
-	
-	
 	//清空读缓冲
 	m_recvBuf.Drain( m_recvBuf.GetCount() );
  }
@@ -497,32 +477,46 @@ CCmdSocket::~CCmdSocket(void)
 
  void CCmdSocket::RecvVideoSvrOnline( const BYTE * msgData )
  {
-	 //LOG_DEBUG("RecvVideoSvrOnline data receive!\n");
-	 PKEMsgHead pMsg = (PKEMsgHead)msgData;
-	 int dataLen = pMsg->msgLength - sizeof(KEMsgHead);
+	//LOG_DEBUG("RecvVideoSvrOnline data receive!\n");
+	PKEMsgHead pMsg = (PKEMsgHead)msgData;
+	int dataLen = pMsg->msgLength - sizeof(KEMsgHead);
 	const BYTE * data = msgData + sizeof(KEMsgHead);
 	const int EachNodeStatusLen = 7;
 	int nodeNum = dataLen/EachNodeStatusLen;
 	if (dataLen%EachNodeStatusLen != 0)
 	{
 		LOG_WARN("RecvVideoSvrOnline data error  1!\n");
-		SetRecvMsg(KEMSG_TYPE_VideoSvrOnline,0);
+		SetRecvMsg(KEMSG_TYPE_VideoSvrOnline,KE_SUCCESS);
 		return;
 	}
 	if (nodeNum == 1)
 	{
+		short vid = *((short *)data);
+		int online = data[2];
+		CamStatusReport report;
+		report.devID = vid;
+		report.cameraID = vid*256+1;
+		if (online == 0)
+		{
+			report.reportType = CamStatusReportType_DevOffline;
+		}else{
+			report.reportType = CamStatusReportType_DevOnline;
+		}
+		this->ReportCamStatus(report);
 		return;
 	}
-	if (m_xmlInfoThread.videoSvrNodes.size() != nodeNum)
+	int nodeSize = m_xmlInfoThread.videoSvrNodes.size();
+	if (nodeSize != nodeNum)
 	{
 		LOG_WARN("RecvVideoSvrOnline data error  ,nodeNum="<< nodeNum);
 		//SetRecvMsg(KEMSG_TYPE_VideoSvrOnline,nodeNum);
-		//return;
+		return;
 	}
 	
 	for(int i=0;i<nodeNum;i++)
 	{
 		short nodeID = *((short *)data);
+
 		CHNODE * node = &m_xmlInfoThread.videoSvrNodes[i];
 		if (node->NodeID != nodeID)
 		{
@@ -540,7 +534,7 @@ CCmdSocket::~CCmdSocket(void)
 		node->onLine = data[2];
 		data += EachNodeStatusLen;
 	}
-	 SetRecvMsg(KEMSG_TYPE_VideoSvrOnline,0);
+	 SetRecvMsg(KEMSG_TYPE_VideoSvrOnline,KE_SUCCESS);
  }
 //返回与nID相同的节点id的索引。成功返回在vector中的位置，失败返回-1
  int CCmdSocket::FindChNodeByID(const std::vector<CHNODE> & nodes,int nID )
@@ -627,9 +621,9 @@ int CCmdSocket::RequestHistoryData( int cameraID,int startTime,int endTime,int f
 	pReqMsg->endTime[5] = et.GetSecond();
 
 	pReqMsg->fileType = fileType;
-	pReqMsg->alarmNo = 0;
+	pReqMsg->alarmNo = 1;
 	pReqMsg->targetType = targetType;
-
+	pReqMsg->mediaType  = 0;
 	int ret = this->Write(&msgSend[0],msgLen);
 	if (ret != msgLen)
 	{
@@ -648,24 +642,10 @@ void CCmdSocket::RecvHistoryData( const BYTE * msgData )
 	static bool startRecv = false;
 	if (!startRecv )//连接媒体服务器
 	{
+		this->mediaTarget = pMsg->target;
+		this->mediaOnline = pMsg->online;
 		this->mediaTransIp = pMsg->transIp;
 		this->mediaSvrIp = pMsg->vsIp;
-		this->mediaOnline = pMsg->online;
-		if (pMsg->target == 2)//
-		{
-		}
-		else if (pMsg->target == 3)
-		{
-			LOG_ERROR("Donot support target 3 "<< pMsg->target);
-			this->SetRecvMsg(KEMSG_08_HistoryData,KE_FUNCTION_NOTSUPPORT);
-			return;
-		}
-		else
-		{
-			LOG_ERROR("Receive HistoryData target type error which is   "<< pMsg->target);
-			this->SetRecvMsg(KEMSG_08_HistoryData,KE_FAILED);
-			return;
-		}
 	}//end if
 	
 	if (pMsg->msgLength == sizeof(KEHistoryDataResp)) //如果只收到消息头，表示文件内容结束
@@ -706,34 +686,47 @@ int CCmdSocket::ConnectToMedia( int cameraID )
 {
 
 	CMediaSocket *media = GetMediaSocket(cameraID);
+	if (media->IsConnect())
+	{
+		return KE_SUCCESS;
+	}
 	if (mediaOnline >2 || (mediaSvrIp==0 &&  mediaTransIp == 0))
 	{
 		LOG_ERROR("the video server is offline!");	
 		return KE_FAILED;
 	}
-	if (mediaSvrIp != 0 )//连接视频服务器
+	if (mediaTarget == 3)
 	{
-		if(media->ConnectToServer(mediaSvrIp,22616,1,m_clientID))
+		if(media->ConnectToServer(mediaSvrIp,22614,MediaSvr_Trans,m_clientID))
 		{
 			return KE_SUCCESS;	
 		}
 	}
-	if ( mediaTransIp != 0)//连接转发服务器
-	{
-		if(!media->ConnectToServer(mediaTransIp,22615,2,m_clientID))
+	else{
+		if (mediaSvrIp != 0 )//连接视频服务器
 		{
-			return KE_SUCCESS;
+			if(media->ConnectToServer(mediaSvrIp,22616,MediaSvr_DVS,m_clientID))
+			{
+				return KE_SUCCESS;	
+			}
+		}
+		if ( mediaTransIp != 0)//连接转发服务器
+		{
+			if(media->ConnectToServer(mediaTransIp,22615,MediaSvr_Trans,m_clientID))
+			{
+				return KE_SUCCESS;
+			}
 		}
 	}
 	LOG_ERROR("connect media server error!");	
 	return KE_CONNECT_SERVER_ERROR;
 }
 
-int CCmdSocket::GetRecordFileList( int cameraID,int startTime,int endTime,int fileType,vector<RecordFileInfo> & fileInfoList )
+int CCmdSocket::GetRecordFileList( int cameraID,int startTime,int endTime,int fileType,int targetType,vector<RecordFileInfo> & fileInfoList )
 {
 	CMediaSocket *media = GetMediaSocket(cameraID);
 	media->recordFileList.clear();
-	int ret = RequestHistoryData(cameraID,startTime,endTime,fileType,2);
+	int ret = RequestHistoryData(cameraID,startTime,endTime,fileType,targetType);
 	if (ret == KE_SUCCESS)
 	{
 		fileInfoList = media->recordFileList;
@@ -763,5 +756,24 @@ int CCmdSocket::PlayRemoteRecord( int cameraID,int fileNo )
 	ret = media->RemoteRecordPlay(cameraID,fileNo);
 	return ret;
 }
+
+int CCmdSocket::HeartBeat()
+{
+	if (!m_SocketClient.IsOpen())
+	{
+		return KE_SOCKET_NOTOPEN;
+	}
+
+	KEMsgHeartBeat msg;
+	msg.head.clientID = m_clientID;
+	msg.head.msgLength = sizeof(KEMsgHeartBeat);
+	msg.head.msgType = 0x82;
+	msg.head.protocal = PROTOCOL_HEAD;
+	msg.status = 0;
+	this->Write((BYTE *)&msg,msg.head.msgLength);
+	m_heartCount++;
+	return KE_SUCCESS;
+
+}	
 
 

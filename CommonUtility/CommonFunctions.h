@@ -41,5 +41,9 @@ BOOL CreateFolderEx(const CString& szPath);
 std::string UTF8ToGB2312(const char *pText);
 std::string GB2312ToUTF8(const char *pText);
 
+CString GetDirectory();
+
+void trace(const char* format, ...);
+
 #endif
 

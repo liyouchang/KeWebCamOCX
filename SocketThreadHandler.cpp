@@ -4,7 +4,7 @@
 #include <strsafe.h>
 #include "SocketThreadHandler.h"
 #include <iostream>
-
+using namespace std;
 
 CSocketThreadHandler::CSocketThreadHandler(void)
 {
@@ -36,7 +36,7 @@ void CSocketThreadHandler::OnDataReceived( CSocketHandle* pSH, const BYTE* pbDat
 
 	if (!CheckMessage(pbData,dwCount))
 	{
-		LOG_WARN( m_loacalAddr<< " received error message from " << addr);
+		//LOG_WARN( m_loacalAddr<< " received error message from " << addr);
 		return;
 	}
 
@@ -48,7 +48,7 @@ void CSocketThreadHandler::OnDataReceived( CSocketHandle* pSH, const BYTE* pbDat
 
 void CSocketThreadHandler::OnThreadBegin( CSocketHandle* pSH )
 {
-	LOG_INFO("Connection "<<m_loacalAddr<<" thread start");
+	//LOG_INFO("Connection "<<m_loacalAddr<<" thread start");
 	try
 	{
 		this->Start();
@@ -59,7 +59,7 @@ void CSocketThreadHandler::OnThreadBegin( CSocketHandle* pSH )
 	}
 	catch (std::exception& e)
 	{
-		LOG_ERROR("start thread error:"<<e.what());
+		//LOG_ERROR("start thread error:"<<e.what());
 	}
 }
 
@@ -103,7 +103,7 @@ void CSocketThreadHandler::Run()
 
 void CSocketThreadHandler::OnThreadExit( CSocketHandle* pSH )
 {
-	LOG_INFO("Connection "<<m_loacalAddr<<" thread exit");
+	//LOG_INFO("Connection "<<m_loacalAddr<<" thread exit");
 	//停止缓存数据线程
 	this->Stop();
 	//pSH->Close();	
@@ -211,7 +211,7 @@ int CSocketThreadHandler::WaitRecvMsg( int msgType , int timeout /*= MSG_WAIT_TI
 	DWORD dw = msgEventMap[msgType].WaitMsgEvent(timeout);
 	if (dw == WAIT_TIMEOUT)
 	{
-		LOG_ERROR("Wait msg event time out, msgType = "<< msgType);
+		//LOG_ERROR("Wait msg event time out, msgType = "<< msgType);
 		return KE_MSG_TIMEOUT;
 	}
 	TRACE2("WaitMsg %d success at %d\n",msgType,GetTickCount());
@@ -242,32 +242,32 @@ int CSocketThreadHandler::GetRecvMsgData( int msgType ,void ** respPtr /*= NULL*
 
 void CSocketThreadHandler::OnConnectionDropped( CSocketHandle* pSH )
 {
-	LOG_WARN("OnConnectionDropped-------\n");
+	trace("OnConnectionDropped-------\n");
 	pSH->Close();
 }
 
 void CSocketThreadHandler::OnConnectionError( CSocketHandle* pSH, DWORD dwError )
 {
-	LOG_WARN("OnConnectionError-------\n");
+	trace("OnConnectionError-------\n");
 	pSH->Close();
 }
 
 
-std::ostream& operator<<( std::ostream& output,const SockAddrIn& obj )
-{
-	CString info;
-	CSocketThreadHandler::GetAddress(obj,info);
-	output<<info.GetString();
-	return output;
-}
+// std::ostream& operator<<( std::ostream& output,const SockAddrIn& obj )
+// {
+// 	CString info;
+// 	CSocketThreadHandler::GetAddress(obj,info);
+// 	//output<<info.GetString();
+// 	return output;
+// }
 
-std::wostream& operator<<( std::wostream& output,const  SockAddrIn& obj )
-{
-	CString info;
-	CSocketThreadHandler::GetAddress(obj,info);
-	output<<info.GetString();
-	return output;
-}
+// std::wostream& operator<<( std::wostream& output,const  SockAddrIn& obj )
+// {
+// 	CString info;
+// 	CSocketThreadHandler::GetAddress(obj,info);
+// 	//output<<info.GetString();
+// 	return output;
+// }
 
 RecvMsgEvent::RecvMsgEvent()
 {
@@ -302,7 +302,7 @@ void RecvMsgEvent::ResetMsgEvent( int msgType /*= 0*/ )
 		pEvent = new CEvent();
 	}
 	pEvent->ResetEvent();
-	if (respPtr != NULL)
+	if (respPtr != NULL)//这里删除respPtr，让使用者无需delete
 	{
 		delete respPtr;
 		respPtr = NULL;

@@ -67,6 +67,7 @@ void InitLogModule()
 		log4cplus::tstring pattern = LOG4CPLUS_TEXT("%D{%m/%d/%y %H:%M:%S,%Q} [%t] %-5p - %m [%l]%n");
 		append_1->setLayout( std::auto_ptr<log4cplus::Layout>(new log4cplus::PatternLayout(pattern)));
 		log4cplus::Logger::getRoot().addAppender(append_1);
+		
 	}
 
 #endif

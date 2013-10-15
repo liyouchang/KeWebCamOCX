@@ -47,7 +47,10 @@ protected:
 
 // 调度和事件 ID
 public:
+
 	enum {
+		dispidGetLocalPath = 27L,
+		dispidQueryRecordFileList2 = 26L,
 		dispidGetLocalMac = 25L,
 		dispidCheckVersion = 24L,
 		dispidSetDevWifiAP = 23L,
@@ -75,6 +78,7 @@ public:
 		dispidQueryUserCamera = 3L,
 		dispidSetDivision = 1L
 	};
+
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	
 protected:
@@ -114,7 +118,6 @@ protected:
 	}
 	BSTR StartRealTimeAudio(LONG cameraID);
 	BSTR StopRealTimeAudio(LONG cameraID);
-
 	BSTR StartAudioTalk(LONG cameraID);
 	BSTR StopAudioTalk(LONG cameraID);
 	void OnRecordFilePathChanged(void);
@@ -127,10 +130,23 @@ protected:
 	BSTR InitailCtrl(LONG platform);
 	BSTR ConnectServer(LPCTSTR svrAddr, LONG svrPort, LONG clientID);
 	BSTR QueryRecordFileList(LONG cameraID, LONG startTime, LONG endTime, LONG fileType);
+
 	BSTR PlayRemoteRecord(LONG cameraID, LONG fileNo);
 	BSTR GetDevWifiAP(LONG cameraID);
 	BSTR SetDevWifiAP(LONG cameraID, LPCTSTR jsonParam);
 	BSTR CheckVersion(void);
 	BSTR GetLocalMac(void);
+	BSTR QueryRecordFileList2(LONG cameraID, LPCTSTR jsonParam);
+
+	BSTR GetLocalPath(void);
+
+	BSTR SetVideoParam(LONG cameraID, LPCTSTR jsonParam);
+
+	enum 
+	{
+		dispidGetVideoParam = 29L,
+		dispidSetVideoParam = 28L
+	};
+	BSTR GetVideoParam(LONG cameraID);
 };
 

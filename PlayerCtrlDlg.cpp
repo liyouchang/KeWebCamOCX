@@ -35,7 +35,7 @@ void CPlayerCtrlDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CPlayerCtrlDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_PLAY, &CPlayerCtrlDlg::OnBnClickedButtonPlay)
-	ON_NOTIFY(NM_RELEASEDCAPTURE, IDC_SLIDER_MP, &CPlayerCtrlDlg::OnNMReleasedcaptureSliderPos)
+//	ON_NOTIFY(NM_RELEASEDCAPTURE, IDC_SLIDER_MP, &CPlayerCtrlDlg::OnNMReleasedcaptureSliderPos)
 	ON_WM_PAINT()
 	ON_BN_CLICKED(IDC_BUTTON_FAST, &CPlayerCtrlDlg::OnBnClickedButtonFast)
 	ON_BN_CLICKED(IDC_BUTTON_SLOW, &CPlayerCtrlDlg::OnBnClickedButtonSlow)
@@ -43,9 +43,14 @@ BEGIN_MESSAGE_MAP(CPlayerCtrlDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_STOP, &CPlayerCtrlDlg::OnBnClickedButtonStop)
 	ON_BN_CLICKED(IDC_BUTTON_OpenFile, &CPlayerCtrlDlg::OnBnClickedButtonOpenfile)
 	ON_WM_TIMER()
-	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER_MP, &CPlayerCtrlDlg::OnNMCustomdrawSliderPos)
+//	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER_MP, &CPlayerCtrlDlg::OnNMCustomdrawSliderPos)
 	ON_MESSAGE(WM_PLAYOVER,FilePlayOver)
 //	ON_STN_CLICKED(IDC_SlowPlay, &CPlayerCtrlDlg::OnStnClickedSlowplay)
+//ON_NOTIFY(TRBN_THUMBPOSCHANGING, IDC_SLIDER_MP, &CPlayerCtrlDlg::OnTRBNThumbPosChangingSliderMp)
+//ON_WM_LBUTTONDOWN()
+//ON_WM_LBUTTONUP()
+//ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER_MP, &CPlayerCtrlDlg::OnNMCustomdrawSliderMp)
+ON_WM_HSCROLL()
 END_MESSAGE_MAP()
 
 
@@ -74,13 +79,15 @@ BOOL CPlayerCtrlDlg::OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, L
 	return CDialog::OnChildNotify(message, wParam, lParam, pLResult);
 }
 
-void CPlayerCtrlDlg::OnNMReleasedcaptureSliderPos(NMHDR *pNMHDR, LRESULT *pResult)
-{
-	COnePlayer * pCamera = (COnePlayer *)this->GetParent();
-	int pos = m_playpos.GetPos();
-	pCamera->m_AVIPlayer->SetPlayPos(pos);
-	*pResult = 0;
-}
+//void CPlayerCtrlDlg::OnNMReleasedcaptureSliderPos(NMHDR *pNMHDR, LRESULT *pResult)
+//{
+//	
+//	COnePlayer * pCamera = (COnePlayer *)this->GetParent();
+//	int pos = m_playpos.GetPos();
+//	pCamera->m_AVIPlayer->SetPlayPos(pos);
+//	
+//	*pResult = 0;
+//}
 
 BOOL CPlayerCtrlDlg::OnInitDialog()
 {
@@ -97,6 +104,7 @@ BOOL CPlayerCtrlDlg::OnInitDialog()
 	m_playpos.SetRange(0,100);
 // 	CRect rect;
 // 	GetClientRect(rect);
+	m_iTimeHandle = SetTimer(1,1000,NULL);
 
 	m_btnOpen.SetBitmaps(IDB_OPEN1,clBlack);
 	m_btnOpen.SetTooltipText(IDS_STRING_BtnOpenFile);
@@ -121,7 +129,6 @@ void CPlayerCtrlDlg::OnPaint()
 	this->ScreenToClient(infoRect);
 	infoRect.MoveToX(rect.Width()-infoRect.Width());
 	GetDlgItem(IDC_STATIC_SPEED)->MoveWindow(infoRect);
-
 
 	CRect slideRect;
 	m_playpos.GetClientRect(slideRect);
@@ -227,21 +234,22 @@ void CPlayerCtrlDlg::OnBnClickedButtonOpenfile()
 
 void CPlayerCtrlDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	if (nIDEvent == m_iTimeHandle)
+	if (nIDEvent == 1)
 	{
-		//GetDownloadRate();
-		GetPlayPos();
-
 		COnePlayer * pCamera = (COnePlayer *)this->GetParent();
 		if (pCamera->m_cameraID != 0)
 		{
+			if(!pCamera->IsPlaying())
+				return;
+			//GetDownloadRate();
+			GetPlayPos();
 			CMediaSocket * media = theApp.g_cmd->GetMediaSocket(pCamera->m_cameraID);
 			CString tmpStr;
 			int playNo = media->playedFile+1;
 			int downloadNo = media->downloaded;
 			int totalNo = media->totalFile;
 			int rate =media->m_Recorder->GetDownloadPercent();
-			tmpStr.Format(_T("文件总数:%d,正在播放:%d,下载完成:%d,下载进度%d%%"),totalNo,playNo,downloadNo,rate);
+			tmpStr.Format(_T("总数:%d,播放:%d,下载完成:%d,下载进度%d%%"),totalNo,playNo,downloadNo,rate);
 			SetDlgItemText(IDC_STATIC_Status,tmpStr);
 
 		}
@@ -250,12 +258,12 @@ void CPlayerCtrlDlg::OnTimer(UINT_PTR nIDEvent)
 	CDialog::OnTimer(nIDEvent);
 }
 
-void CPlayerCtrlDlg::OnNMCustomdrawSliderPos(NMHDR *pNMHDR, LRESULT *pResult)
-{
-	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
-	// TODO: 在此添加控件通知处理程序代码
-	*pResult = 0;
-}
+//void CPlayerCtrlDlg::OnNMCustomdrawSliderPos(NMHDR *pNMHDR, LRESULT *pResult)
+//{
+//	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+//	// TODO: 在此添加控件通知处理程序代码
+//	*pResult = 0;
+//}
 
 void CPlayerCtrlDlg::SetWindowEnable( int id )
 {
@@ -319,8 +327,8 @@ LRESULT CPlayerCtrlDlg::FilePlayOver( WPARAM wParam, LPARAM lParam )
 
 void CPlayerCtrlDlg::PlayStart()
 {
-	m_iTimeHandle = 1;
-	SetTimer(m_iTimeHandle,1000,NULL);
+	
+	
 	SetPlayState(0);
 	//SetWindowEnable(0);
 }
@@ -328,12 +336,59 @@ void CPlayerCtrlDlg::PlayStart()
 void CPlayerCtrlDlg::PlayStop()
 {
 	//SetWindowEnable(2);
-	KillTimer(m_iTimeHandle);
+	//KillTimer(m_iTimeHandle);
 	m_playpos.SetPos(0);
 }
 
-//void CPlayerCtrlDlg::OnStnClickedSlowplay()
+
+//void CPlayerCtrlDlg::OnLButtonDown(UINT nFlags, CPoint point)
 //{
-//	// TODO: 在此添加控件通知处理程序代码
-//	GetDlgItem(IDC_SlowPlay)->EnableWindow(FALSE);
+//	trace("CPlayerCtrlDlg::OnLButtonDown");
+//	CDialog::OnLButtonDown(nFlags, point);
 //}
+
+
+//void CPlayerCtrlDlg::OnLButtonUp(UINT nFlags, CPoint point)
+//{
+//	
+//	trace("CPlayerCtrlDlg::OnLButtonUp");
+//	CDialog::OnLButtonUp(nFlags, point);
+//}
+
+
+//void CPlayerCtrlDlg::OnNMCustomdrawSliderMp(NMHDR *pNMHDR, LRESULT *pResult)
+//{
+//	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+//	// TODO: 在此添加控件通知处理程序代码
+//	*pResult = 0;
+//}
+
+
+void CPlayerCtrlDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	trace("CPlayerCtrlDlg::OnHScroll %d %d\r\n",nSBCode,nPos);
+
+	if (pScrollBar == (CScrollBar*)&this->m_playpos)
+	{
+		if (nSBCode == TB_THUMBPOSITION)
+		{
+			COnePlayer * pCamera = (COnePlayer *)this->GetParent();
+			pCamera->m_AVIPlayer->SetPlayPos(nPos);
+			if (m_iTimeHandle == 0)
+			{
+				m_iTimeHandle =SetTimer(1,1000,NULL);
+			}
+		}
+		if (nSBCode == TB_THUMBTRACK)
+		{
+			if (m_iTimeHandle != 0)
+			{
+				KillTimer(m_iTimeHandle);
+				m_iTimeHandle = 0;
+			}
+		}
+		
+	}
+	CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
+}

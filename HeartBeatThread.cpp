@@ -223,11 +223,11 @@ int XMLInfoThread::SendVideoSvrOnline()
 		LOG_ERROR("Wait SendVideoSvrOnline  time out");
 		return KE_MSG_TIMEOUT;
 	}
-	ret = m_socketHandle->GetRecvMsgData(KEMSG_TYPE_VideoSvrOnline);
-	if (ret > 0)
-	{
-		return KE_SUCCESS;
-	}
+// 	ret = m_socketHandle->GetRecvMsgData(KEMSG_TYPE_VideoSvrOnline);
+// 	if (ret > 0)
+// 	{
+// 		return KE_SUCCESS;
+// 	}
 	if (!toStop && theApp.g_pMainWnd->GetSafeHwnd() != NULL)
 	{
 		theApp.g_pMainWnd->SendMessage(WM_TREESTRUCTNOTIFY,

@@ -298,12 +298,14 @@ public:
 	virtual int RefreshCameraList();
 	virtual int SetClientID(int clientID);
 	virtual int HeartBeat();
-	virtual int GetRecordFileList(int cameraID,int startTime,int endTime,int fileType,vector<RecordFileInfo> & fileInfoList);
+	virtual int GetRecordFileList(int cameraID,int startTime,int endTime,int fileType,int targetType,vector<RecordFileInfo> & fileInfoList);
 	virtual int PlayRemoteRecord(int cameraID,int fileNo);
 	virtual int GetDevWifiAPList(int cameraID,std::vector<KEDevAPListItem> &apList);
 	virtual int SetDevWifi(int cameraID,int listNo,KEDevWifiStartReq wifiStart);
 	virtual int QueryVersion(CString & version ,CString & url);
-	
+	virtual int GetVideoParam(int cameraID,KEVedioParam & param);
+	virtual int GetOldVideoParam(int cameraID,KEVedioParam & param);
+	virtual int SetVideoParam(int cameraID,const KEVedioParam & param);
 	int LogoutServer();
 	
 
